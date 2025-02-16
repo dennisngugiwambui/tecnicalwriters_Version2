@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,8 +9,8 @@
     <title>TechnicalWriters</title>
     <link rel="icon" type="image/jpeg" href="writers/technicalwriters2.jpg">
 
-
     <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for icons -->
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
@@ -16,7 +19,7 @@
     <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-lg text-center">
         <!-- Logo -->
         <div class="flex flex-col items-center">
-            <img src="{{ asset('../writers/technicalwriters.jpg') }}" alt="Uvocorp Logo" class="w-20 mb-3">
+            <img src="{{ asset('writers/technicalwriters.jpg') }}" alt="TechnicalWriters Logo" class="w-20 mb-3">
             <h1 class="text-2xl font-bold text-gray-800">TechnicalWriters</h1>
         </div>
 
@@ -36,18 +39,36 @@
         <form method="POST" action="{{ route('login') }}">
             @csrf
 
+            <!-- General Error Message -->
+            @if ($errors->any())
+                <div class="mb-4 text-red-500 text-sm">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <!-- Email Input -->
             <div class="relative mb-4">
-                <span class="absolute left-3 top-2 text-green-500"><i class="fas fa-user"></i></span>
-                <input type="email" name="email" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-                    placeholder="Ellyruchu@gmail.com" value="{{ old('email') }}" required />
+                <span class="absolute left-3 top-2 text-green-500"><i class="fa fa-user"></i></span>
+                <input type="number" name="phone" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-400 focus:border-blue-400 @error('phone') is-invalid border-red-500 @enderror"
+                    placeholder="phone" value="{{ old('phone') }}" required autocomplete="phone" autofocus />
+                    @error('password')
+                    <span class="invalid-feedback" role="alert">
+                        <strong>{{ $message }}</strong>
+                    </span>
+                @enderror
             </div>
 
             <!-- Password Input -->
             <div class="relative mb-4">
                 <span class="absolute left-3 top-2 text-green-500"><i class="fas fa-lock"></i></span>
-                <input type="password" name="password" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-                    placeholder="•••••" required />
+                <input type="password" name="password" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-400 focus:border-blue-400 @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" placeholder="Password"/>
+                @error('password')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                @enderror
             </div>
 
             <!-- Login Button -->
@@ -83,3 +104,4 @@
     </div>
 </body>
 </html>
+

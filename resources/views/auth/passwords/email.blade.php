@@ -49,7 +49,7 @@
             <div class="relative mb-4">
                 <span class="absolute left-3 top-2 text-green-500"><i class="fas fa-user"></i></span>
                 <input type="email" name="email" class="w-full pl-10 px-3 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-                @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" required />
+                @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="email" required />
             </div>
             @error('email')
             <span class="invalid-feedback" role="alert">
