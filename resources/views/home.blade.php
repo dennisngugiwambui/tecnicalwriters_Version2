@@ -15,14 +15,7 @@
 </head>
 <body class="bg-gray-100">
     <div class="flex flex-col min-h-screen">
-        <!-- Navbar -->
-        <nav class="bg-white shadow-md py-3 px-6 flex justify-between items-center">
-            <div class="hidden md:flex space-x-6 text-gray-700">
-                <a href="#" class="hover:text-black">Info</a>
-                <a href="#" class="hover:text-black">Terms & Policies</a>
-                <a href="#" class="hover:text-black">News</a>
-                <a href="#" class="hover:text-black">Blog</a>
-            </div>
+      
             <div class="relative">
                 <button id="rating-toggle" class="flex items-center bg-gray-200 p-2 rounded-full">
                     ⭐ 80%
