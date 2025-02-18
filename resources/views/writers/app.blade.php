@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Dashboard UI</title>
+    <title>TechnicalWriters</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
@@ -15,7 +15,7 @@
             to { transform: translateY(0); opacity: 1; }
         }
         .select2-container .select2-selection--single {
-            block-size: 38px !important;
+            height: 38px !important;
             border-radius: 4px !important;
             border: 1px solid #e5e7eb !important;
             display: flex !important;
@@ -23,20 +23,20 @@
             padding: 0 10px !important;
         }
         .select2-container--default .select2-selection--single .select2-selection__arrow {
-            block-size: 36px !important;
+            height: 36px !important;
         }
         .select2-dropdown {
             border: 1px solid #e5e7eb !important;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
         }
         .filter-section-enter {
-            max-block-size: 0;
+            max-height: 0;
             opacity: 0;
             transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
             overflow: hidden;
         }
         .filter-section-enter.show {
-            max-block-size: 500px;
+            max-height: 500px;
             opacity: 1;
         }
         .animate-slide-in {
@@ -58,7 +58,7 @@
             backdrop-filter: blur(4px);
         }
         .select2-container .select2-selection--single {
-            block-size: 42px !important;
+            height: 42px !important;
             padding: 8px !important;
             border-radius: 0.5rem !important;
             border: 1px solid #e5e7eb !important;
@@ -88,14 +88,14 @@
 
         .dropdown-menu {
         position: absolute;
-        inset-inline-end: 0;
-        inset-block-start: 100%;
+        right: 0;
+        top: 100%;
         background-color: white;
         border-radius: 0.375rem;
         border: 1px solid #e5e7eb;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         z-index: 50;
-        min-inline-size: 12rem;
+        min-width: 12rem;
         display: none;
     }
     .dropdown-menu.show {
@@ -110,7 +110,7 @@
         display: flex;
         align-items: center;
         padding: 0.75rem 1rem;
-        margin-block-end: 0.25rem;
+        margin-bottom: 0.25rem;
         border-radius: 0.375rem;
         transition: all 0.2s;
     }
@@ -122,7 +122,7 @@
         font-weight: 500;
     }
     .menu-icon {
-        margin-inline-end: 0.75rem;
+        margin-right: 0.75rem;
     }
     .orders-counter {
         background-color: #f3f4f6;
@@ -130,7 +130,7 @@
         border-radius: 9999px;
         font-size: 0.75rem;
         padding: 0.125rem 0.375rem;
-        margin-inline-start: auto;
+        margin-left: auto;
     }
     </style>
 </head>
@@ -142,12 +142,12 @@
         <div class="flex justify-between h-16">
             <!-- Left side - Logo -->
             <div class="flex items-center">
-                <button id="menuToggle" class="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100">
+                <button id="menuToggle" class="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
                 </button>
                 <a href="#" class="flex items-center space-x-2 ml-2 lg:ml-0">
-                    <img src="/api/placeholder/32/32" alt="Logo" class="h-8 w-8">
-                    <span class="text-xl font-semibold text-gray-800">LIVOCORP</span>
+                    <img src="{{ '../writers/technicalwriters.jpg' }}" alt="Logo" class="h-8 w-8">
+                    <span class="text-xl font-semibold text-gray-800">Technicalwriters</span>
                 </a>
             </div>
 
@@ -177,14 +177,13 @@
                             <span class="text-sm font-medium text-gray-700">Philip</span>
                             <span class="text-xs text-gray-500">Looking for orders</span>
                         </div>
-                        <img src="/api/placeholder/32/32" alt="Profile" class="h-8 w-8 rounded-full">
+                        
                         <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
                     </button>
                     <!-- Dropdown Menu -->
                     <div class="dropdown-menu" id="userDropdown">
                         <div class="py-1">
                             <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
                             <div class="border-t border-gray-200 my-1"></div>
                             <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
                         </div>
@@ -263,194 +262,7 @@
     </div>
 </aside>
 
-
-
-
-
-        <!-- Main Content -->
-        <main class="flex-1 px-4 lg:px-8 pb-8 lg:ml-72 transition-all duration-300 pt-16">
-            <!-- Header with New Order button -->
-            <div class="flex justify-between items-center mb-8">
-                <h1 class="text-2xl font-bold text-gray-800">Available Orders</h1>
-                <button class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition shadow-md hover:shadow-lg">
-                    <i class="fas fa-plus mr-2"></i>New Order
-                </button>
-            </div>
-
-            <!-- Filter Section -->
-        <div class="max-w-7xl mx-auto px-4 py-4">
-            <div class="bg-white rounded-lg shadow-sm p-4">
-                <div class="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4">
-                    <div class="flex-1">
-                        <select class="select2-basic w-full" id="levelSelect">
-                            <option value="">All available</option>
-                            <option value="1">Level 1</option>
-                            <option value="2">Level 2</option>
-                            <option value="3">Level 3</option>
-                        </select>
-                    </div>
-                    <div class="flex-1">
-                        <select class="select2-basic w-full" id="disciplineSelect">
-                            <option value="">All disciplines</option>
-                            <option value="programming">Programming</option>
-                            <option value="writing">Writing</option>
-                            <option value="math">Mathematics</option>
-                        </select>
-                    </div>
-                    <div class="flex space-x-2">
-                        <label class="flex items-center space-x-2">
-                            <input type="checkbox" class="form-checkbox h-4 w-4 text-green-600">
-                            <span class="text-sm text-gray-600">Only Orders</span>
-                        </label>
-                        <label class="flex items-center space-x-2">
-                            <input type="checkbox" class="form-checkbox h-4 w-4 text-green-600">
-                            <span class="text-sm text-gray-600">Only New</span>
-                        </label>
-                    </div>
-                    <button class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
-                        <i class="fas fa-search mr-2"></i>Search
-                    </button>
-                </div>
-            </div>
-            <!-- Enhanced Filter Section -->
-            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-                <!-- Mobile Filter Toggle -->
-                <button id="filterToggle" class="md:hidden w-full flex justify-between items-center mb-4">
-                    <span class="text-lg font-semibold text-gray-700">Filters</span>
-                    <i class="fas fa-filter text-green-500"></i>
-                </button>
-
-                <!-- Filter Content -->
-                <div id="filterContent" class="filter-section-mobile md:block">
-                    <div class="grid md:grid-cols-3 gap-4">
-                        <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Level</label>
-                            <select class="select2-search w-full" id="levelSelect">
-                                <option value="">All available</option>
-                                <option value="1">Level 1</option>
-                                <option value="2">Level 2</option>
-                                <option value="3">Level 3</option>
-                            </select>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="block text-sm font-medium text-gray-700">Discipline</label>
-                            <select class="select2-search w-full" id="disciplineSelect">
-                                <option value="">All disciplines</option>
-                                <option value="programming">Programming</option>
-                                <option value="writing">Writing</option>
-                                <option value="math">Mathematics</option>
-                            </select>
-                        </div>
-                        <div class="flex items-end">
-                            <button class="w-full bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition shadow-md hover:shadow-lg flex items-center justify-center">
-                                <i class="fas fa-search mr-2"></i>Search
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Orders Grid -->
-            <div class="space-y-6">
-                <!-- Mobile Headers -->
-                <div class="md:hidden bg-gray-50 p-4 rounded-lg">
-                    <div class="grid grid-cols-3 gap-4 text-sm font-medium text-gray-600">
-                        <div>Pages</div>
-                        <div>Deadline</div>
-                        <div>Cost</div>
-                    </div>
-                </div>
-
-                <!-- Desktop Headers -->
-                <div class="hidden md:grid grid-cols-7 gap-4 bg-gray-50 p-4 rounded-lg text-sm font-medium text-gray-600">
-                    <div>Order ID</div>
-                    <div>Topic Title</div>
-                    <div>Discipline</div>
-                    <div>Pages</div>
-                    <div>Deadline</div>
-                    <div>CPP</div>
-                    <div>Cost</div>
-                </div>
-
-                <!-- First Order Item -->
-                <div class="bg-white rounded-xl shadow-lg hover-scale p-6 transition-all duration-300">
-                    <a href="#" class="block">
-                        <!-- Mobile View -->
-                        <div class="md:hidden space-y-3">
-                            <div class="text-sm text-green-600 font-medium">Available</div>
-                            <div class="text-lg font-semibold text-gray-800">Programming - SPSS</div>
-                            <div class="grid grid-cols-3 gap-4 text-sm mt-2">
-                                <div>
-                                    <div class="font-medium">0</div>
-                                </div>
-                                <div>
-                                    <div class="font-medium">2d 22h 1m</div>
-                                </div>
-                                <div>
-                                    <div class="font-bold text-black">$45.00</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Desktop View -->
-                        <div class="hidden md:grid grid-cols-7 gap-4 items-center">
-                            <div>
-                                <div class="text-sm text-green-600 font-medium mb-1">Available</div>
-                                <div class="text-gray-600">#605375174</div>
-                            </div>
-                            <div class="text-gray-800 font-medium">Data Analysis</div>
-                            <div class="space-y-1">
-                                <div>Programming</div>
-                                <div class="text-sm text-gray-500">Medium</div>
-                            </div>
-                            <div>0</div>
-                            <div>2d 22h 1m</div>
-                            <div>Medium</div>
-                            <div class="font-bold text-black">$45.00</div>
-                        </div>
-                    </a>
-                </div>
-
-                <!-- Second Order Item -->
-                <div class="bg-white rounded-xl shadow-lg hover-scale p-6 transition-all duration-300">
-                    <a href="#" class="block">
-                        <!-- Mobile View -->
-                        <div class="md:hidden space-y-3">
-                            <div class="text-sm text-green-600 font-medium">Available</div>
-                            <div class="text-lg font-semibold text-gray-800">Programming - Java</div>
-                            <div class="grid grid-cols-3 gap-4 text-sm mt-2">
-                                <div>
-                                    <div class="font-medium">3</div>
-                                </div>
-                                <div>
-                                    <div class="font-medium">5d 12h 30m</div>
-                                </div>
-                                <div>
-                                    <div class="text-black">$32.00</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Desktop View -->
-                        <div class="hidden md:grid grid-cols-7 gap-4 items-center">
-                            <div>
-                                <div class="text-sm text-green-600 font-medium mb-1">Available</div>
-                                <div class="text-gray-600">#605375175</div>
-                            </div>
-                            <div class="text-gray-800 font-medium">Software Development</div>
-                            <div class="space-y-1">
-                                <div>Programming</div>
-                                <div class="text-sm text-gray-500">High</div>
-                            </div>
-                            <div>3</div>
-                            <div>5d 12h 30m</div>
-                            <div>High</div>
-                            <div class="text-black">$32.00</div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </main>
+        @yield('content')
     </div>
 
     <script>
@@ -471,7 +283,7 @@
             $('.select2-search').select2({
                 placeholder: "Select an option",
                 allowClear: true,
-                inline-size: '100%',
+                width: '100%',
                 minimumResultsForSearch: 5,
                 dropdownParent: $('#filterContent')
             });

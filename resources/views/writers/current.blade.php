@@ -1,0 +1,169 @@
+@extends('writers.app')
+@section('content')
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<style>
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #16a34a !important;
+    }
+    .select2-container--default .select2-selection--single {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        border-color: #e5e7eb;
+        border-radius: 0.5rem;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px;
+    }
+    .status-confirmed { color: #16a34a; font-weight: bold; }
+    .status-done { color: #f59e0b; font-weight: bold; }
+    .status-delivered { color: #ef4444; font-weight: bold; }
+    .truncate-text { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    
+    /* All section titles should be visible on all screen sizes */
+    .text-2xl, .text-lg {
+        display: block !important;
+    }
+    
+    /* Base order card styles */
+    .order-card { 
+        padding: 8px; 
+    }
+    
+    /* Default desktop styles - all columns visible */
+    @media (min-width: 1024px) {
+        .order-card {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+        .grid-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+    }
+    
+    /* Tablet/medium screen styles */
+    @media (min-width: 768px) and (max-width: 1023px) {
+        .order-card {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+        }
+        .grid-header {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+        }
+        .order-card > div:nth-child(5),
+        .order-card > div:nth-child(6),
+        .grid-header > div:nth-child(5),
+        .grid-header > div:nth-child(6) {
+            display: none;
+        }
+    }
+    
+    /* Mobile styles - only show order ID, deadline and cost */
+    @media (max-width: 767px) {
+        .order-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        /* Hide all columns except order ID (1st), deadline (4th), and cost (7th) */
+        .order-card > div:nth-child(2),
+        .order-card > div:nth-child(3),
+        .order-card > div:nth-child(5),
+        .order-card > div:nth-child(6) {
+            display: none;
+        }
+        /* Ensure deadline and cost are visible */
+        .order-card > div:nth-child(4),
+        .order-card > div:nth-child(7) {
+            display: block;
+        }
+        
+        /* Custom header for mobile */
+        .grid-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+        .grid-header > div:not(:nth-child(1)):not(:nth-child(4)):not(:nth-child(7)) {
+            display: none;
+        }
+    }
+</style>
+
+<!-- Main Content -->
+<main class="flex-1 px-4 lg:px-8 pb-8 lg:ml-72 transition-all duration-300 pt-16">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">Writer Assigned Orders</h1>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6 animate-slide-in">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Writer Assigned Orders</h3>
+        
+        <div class="font-semibold bg-gray-100 p-3 rounded-md grid-header">
+            <div>Order ID</div>
+            <div>Topic Title</div>
+            <div>Discipline</div>
+            <div>Deadline</div>
+            <div>Notes</div>
+            <div>Pages</div>
+            <div>Cost</div>
+        </div>
+        
+        <div class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
+            <div>
+                <div class="text-blue-600 font-semibold text-lg">#123456</div>
+                <div class="status-confirmed">CONFIRMED</div>
+            </div>
+            <div class="truncate-text">Research Paper on Climate Change</div>
+            <div class="truncate-text">Environmental Science</div>
+            <div class="text-gray-600 font-bold">12h 45m</div>
+            <div class="truncate-text">Include latest research</div>
+            <div>8</div>
+            <div class="text-gray-800 font-semibold text-lg">$75.00</div>
+        </div>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6 mt-6 animate-slide-in">
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Done, Delivered Orders</h3>
+        
+        <div class="font-semibold bg-gray-100 p-3 rounded-md grid-header">
+            <div>Order ID</div>
+            <div>Topic Title</div>
+            <div>Discipline</div>
+            <div>Deadline</div>
+            <div>Notes</div>
+            <div>Pages</div>
+            <div>Cost</div>
+        </div>
+        
+        <div class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
+            <div>
+                <div class="text-blue-600 font-semibold text-lg">#654321</div>
+                <div class="status-delivered">DELIVERED</div>
+            </div>
+            <div class="truncate-text">Marketing Strategy Analysis</div>
+            <div class="truncate-text">Business</div>
+            <div class="text-gray-600 font-bold">Completed</div>
+            <div class="truncate-text">Case study format</div>
+            <div>12</div>
+            <div class="text-gray-800 font-semibold text-lg">$120.00</div>
+        </div>
+        
+        <div class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
+            <div>
+                <div class="text-blue-600 font-semibold text-lg">#789012</div>
+                <div class="status-done">DONE</div>
+            </div>
+            <div class="truncate-text">Essay on Modern Literature</div>
+            <div class="truncate-text">English</div>
+            <div class="text-gray-600 font-bold">Completed</div>
+            <div class="truncate-text">MLA format</div>
+            <div>10</div>
+            <div class="text-gray-800 font-semibold text-lg">$95.00</div>
+        </div>
+    </div>
+</main>
+
+@endsection
