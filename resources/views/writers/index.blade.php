@@ -87,8 +87,10 @@
             <div class="md:hidden space-y-4">
                 <!-- Search Bar -->
                 <div class="w-full">
-                    <input type="text" placeholder="Search orders..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                    <input type="text" placeholder="Search orders..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" id="searchOrdersMobile">
                 </div>
+
+               
 
                 <!-- Level Select -->
                 <div class="w-full">

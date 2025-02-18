@@ -19,3 +19,5 @@ Route::get('/revision', [App\Http\Controllers\HomeController::class,'currentOrde
 Route::get('/finished', [App\Http\Controllers\HomeController::class,'completedOrders'])->name('finished');
 
 Route::get('/dispute', [App\Http\Controllers\HomeController::class,'orderOnDispute'])->name('dispute');
+
+Route::get('/messages', [App\Http\Controllers\HomeController::class,'Messages'])->name('messages');

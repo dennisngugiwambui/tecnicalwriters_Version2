@@ -177,7 +177,9 @@
                             <span class="text-sm font-medium text-gray-700">Philip</span>
                             <span class="text-xs text-gray-500">Looking for orders</span>
                         </div>
-                        
+                        <div class="ml-2">
+                            <i class="fas fa-circle text-green-500 animate-pulse" style="font-size: 0.75rem;"></i>
+                        </div>
                         <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
                     </button>
                     <!-- Dropdown Menu -->
@@ -208,47 +210,47 @@
         <h2 class="text-lg font-bold text-gray-800 mb-6">Orders</h2>
         <ul class="space-y-1">
             <li>
-                <a href="#" class="menu-item active">
+                <a href="{{ route('home') }}" class="menu-item {{ request()->routeIs('home') ? 'active' : '' }}">
                     <i class="fas fa-circle text-yellow-500 menu-icon"></i>
                     <span>Available</span>
                 </a>
             </li>
             <li>
-                <a href="#" class="menu-item">
+                <a href="{{ route('curret') }}" class="menu-item {{ request()->routeIs('curret') ? 'active' : '' }}">
                     <i class="fas fa-circle text-gray-400 menu-icon"></i>
                     <span>Current</span>
-                    <span class="orders-counter">1</span>
+                    <span class="orders-counter bg-red-500 text-white">1</span>
                 </a>
             </li>
             <li>
-                <a href="#" class="menu-item">
+                <a href="{{ route('revision') }}" class="menu-item {{ request()->routeIs('revision') ? 'active' : '' }}">
                     <i class="fas fa-sync text-gray-400 menu-icon"></i>
                     <span>Revision</span>
                 </a>
             </li>
             <li>
-                <a href="#" class="menu-item">
+                <a href="{{ route('dispute') }}" class="menu-item {{ request()->routeIs('dispute') ? 'active' : '' }}">
                     <i class="fas fa-exclamation-circle text-gray-400 menu-icon"></i>
                     <span>Dispute</span>
                 </a>
             </li>
             <li>
-                <a href="#" class="menu-item">
+                <a href="{{ route('finished') }}" class="menu-item {{ request()->routeIs('finished') ? 'active' : '' }}">
                     <i class="fas fa-check-circle text-gray-400 menu-icon"></i>
                     <span>Finished</span>
                 </a>
             </li>
             <li>
-                <a href="#" class="menu-item">
+                <a href="{{ route('bids') }}" class="menu-item {{ request()->routeIs('bids') ? 'active' : '' }}">
                     <i class="fas fa-gavel text-gray-400 menu-icon"></i>
                     <span>Bids</span>
                 </a>
             </li>
             <li>
-                <a href="#" class="menu-item">
+                <a href="{{ route('messages') }}" class="menu-item {{ request()->routeIs('messages') ? 'active' : '' }}">
                     <i class="fas fa-comment text-gray-400 menu-icon"></i>
                     <span>Messages</span>
-                    <span class="orders-counter">1</span>
+                    <span class="orders-counter bg-red-500 text-white">1</span>
                 </a>
             </li>
             <li>

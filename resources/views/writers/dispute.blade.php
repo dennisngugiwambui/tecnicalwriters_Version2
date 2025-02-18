@@ -113,7 +113,7 @@
         
         <div class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
             <div>
-                <div class="text-sm text-green-600 font-medium mb-1">Available</div>
+                <div class="text-sm text-green-600 font-medium mb-1">Dispute</div>
                 <div class="text-gray-600">#605375174</div>
             </div>
             <div class="truncate-text">Research Paper on Climate Change</div>

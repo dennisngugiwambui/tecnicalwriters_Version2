@@ -50,6 +50,11 @@ class HomeController extends Controller
     {
         return view('writers.dispute');
     }
+
+    public function Messages()
+    {
+        return view('writers.messages');
+    }
     
 }
 
