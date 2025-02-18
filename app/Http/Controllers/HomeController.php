@@ -35,6 +35,21 @@ class HomeController extends Controller
     {
         return view('writers.bids');
     }
+
+    public function currentOrdersOnRevision()
+    {
+        return view('writers.revision');
+    }
+
+    public function completedOrders()
+    {
+        return view('writers.finished');
+    }
+
+    public function orderOnDispute()
+    {
+        return view('writers.dispute');
+    }
     
 }
 
