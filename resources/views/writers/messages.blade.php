@@ -206,7 +206,10 @@
     // Toggle the message detail visibility
     function toggleMessage(messageId, button) {
         const messageDetail = document.getElementById(messageId);
+        const truncatedMessage = button.querySelector('.truncate');
+        
         messageDetail.classList.toggle('hidden');
+        truncatedMessage.classList.toggle('hidden');
 
         // Change the font weight based on visibility
         const label = button.querySelector('span');

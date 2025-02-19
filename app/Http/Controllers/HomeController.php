@@ -55,6 +55,11 @@ class HomeController extends Controller
     {
         return view('writers.messages');
     }
+
+    public function userFinance()
+    {
+        return view('writers.finance');
+    }
     
 }
 
