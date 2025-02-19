@@ -60,6 +60,11 @@ class HomeController extends Controller
     {
         return view('writers.finance');
     }
+
+    public function profile()
+    {
+        return view('writers.profile');
+    }
     
 }
 

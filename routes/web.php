@@ -24,3 +24,6 @@ Route::get('/messages', [App\Http\Controllers\HomeController::class,'Messages'])
 
 
 Route::get('/finance', [App\Http\Controllers\HomeController::class,'userFinance'])->name('finance');
+
+
+Route::get('/profile', [App\Http\Controllers\HomeController::class,'profile'])->name('profile');
