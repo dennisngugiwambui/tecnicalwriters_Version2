@@ -21,3 +21,6 @@ Route::get('/finished', [App\Http\Controllers\HomeController::class,'completedOr
 Route::get('/dispute', [App\Http\Controllers\HomeController::class,'orderOnDispute'])->name('dispute');
 
 Route::get('/messages', [App\Http\Controllers\HomeController::class,'Messages'])->name('messages');
+
+
+Route::get('/finance', [App\Http\Controllers\HomeController::class,'userFinance'])->name('finance');
