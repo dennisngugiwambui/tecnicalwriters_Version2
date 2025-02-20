@@ -1,169 +1,175 @@
 @extends('writers.app')
-@section('content')
 
+@section('content')
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <style>
-    .select2-container--default .select2-results__option--highlighted[aria-selected] {
-        background-color: #16a34a !important;
-    }
-    .select2-container--default .select2-selection--single {
-        height: 40px;
-        display: flex;
-        align-items: center;
-        border-color: #e5e7eb;
-        border-radius: 0.5rem;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 40px;
-    }
     .status-confirmed { color: #16a34a; font-weight: bold; }
     .status-done { color: #f59e0b; font-weight: bold; }
     .status-delivered { color: #ef4444; font-weight: bold; }
-    .truncate-text { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .truncate-text { max-inline-size: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     
-    /* All section titles should be visible on all screen sizes */
-    .text-2xl, .text-lg {
-        display: block !important;
+    /* Tooltip styles */
+    .tooltip {
+        position: relative;
+        display: inline-block;
+        font-size: 1.5rem; /* Increase emoji size */
     }
-    
-    /* Base order card styles */
-    .order-card { 
-        padding: 8px; 
+    .tooltip .tooltiptext {
+        visibility: hidden;
+        inline-size: 150px;
+        background-color: #555;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px 0;
+        position: absolute;
+        z-index: 1;
+        inset-block-end: 125%; /* Position the tooltip above the text */
+        inset-inline-start: 50%;
+        margin-inline-start: -75px;
+        opacity: 0;
+        transition: opacity 0.3s;
     }
-    
-    /* Default desktop styles - all columns visible */
-    @media (min-width: 1024px) {
-        .order-card {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-        }
-        .grid-header {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-        }
+    .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
     }
-    
-    /* Tablet/medium screen styles */
-    @media (min-width: 768px) and (max-width: 1023px) {
-        .order-card {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-        }
-        .grid-header {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-        }
-        .order-card > div:nth-child(5),
-        .order-card > div:nth-child(6),
-        .grid-header > div:nth-child(5),
-        .grid-header > div:nth-child(6) {
+
+    /* Media queries to hide emoji on mobile */
+    @media (max-width: 1024px) {
+        .tooltip {
             display: none;
         }
     }
-    
-    /* Mobile styles - only show order ID, deadline and cost */
-    @media (max-width: 767px) {
-        .order-card {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-        }
-        /* Hide all columns except order ID (1st), deadline (4th), and cost (7th) */
-        .order-card > div:nth-child(2),
-        .order-card > div:nth-child(3),
-        .order-card > div:nth-child(5),
-        .order-card > div:nth-child(6) {
-            display: none;
-        }
-        /* Ensure deadline and cost are visible */
-        .order-card > div:nth-child(4),
-        .order-card > div:nth-child(7) {
-            display: block;
-        }
-        
-        /* Custom header for mobile */
-        .grid-header {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-        }
-        .grid-header > div:not(:nth-child(1)):not(:nth-child(4)):not(:nth-child(7)) {
-            display: none;
-        }
+
+    /* Add margin to the filter section */
+    .filter-section {
+        margin-bottom: 2rem;
     }
 </style>
 
 <!-- Main Content -->
 <main class="flex-1 px-4 lg:px-8 pb-8 lg:ml-72 transition-all duration-300 pt-16">
     <div class="flex justify-between items-center mb-8">
-        <h1 class="text-2xl font-bold text-gray-800">Writer Assigned Orders</h1>
+        <h1 class="text-2xl font-bold text-gray-800">Finished Orders</h1>
+    </div>
+
+    <!-- Mobile Filter Toggle Button -->
+    <div class="lg:hidden flex items-center justify-between">
+        <button onclick="toggleMobileFilter()" class="flex items-center bg-green-500 text-white px-4 py-2 rounded-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2.586a1 1 0 01-.293.707l-3 3V14a1 1 0 01-.293.707l-3 3A1 1 0 019 17v-5.586l-3-3A1 1 0 015 6.586V4z" clip-rule="evenodd" />
+            </svg>
+            <span>Filters</span>
+        </button>
+        <button class="text-red-500 text-sm font-medium">Clear filters</button>
+    </div>
+
+    <!-- Desktop Filter Section -->
+    <div class="bg-white p-4 rounded-lg shadow hidden lg:block mt-4 filter-section" id="desktopFilter">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold">Filters</h3>
+            <button onclick="toggleFilter()" class="text-gray-500">Less options ▲</button>
+        </div>
+        <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <label class="flex items-center space-x-2">
+                <input type="checkbox" checked class="form-checkbox text-green-500" />
+                <span>Finished</span>
+            </label>
+            <label class="flex items-center space-x-2">
+                <input type="checkbox" class="form-checkbox text-green-500" />
+                <span>Cancelled</span>
+            </label>
+            <input type="date" class="p-2 border rounded w-full" />
+            <input type="date" class="p-2 border rounded w-full" />
+            <select class="p-2 border rounded w-full">
+                <option>All available</option>
+            </select>
+            <select class="p-2 border rounded w-full">
+                <option>All available</option>
+            </select>
+            <input type="text" class="p-2 border rounded w-full" placeholder="Order ID" />
+            <input type="text" class="p-2 border rounded w-full" placeholder="Topic Title" />
+        </div>
+        <button class="mt-4 p-2 bg-green-500 text-white rounded flex items-center justify-center w-full">
+            <span class="mr-2 hidden lg:inline tooltip">🔍<span class="tooltiptext">Search</span></span> Search
+        </button>
+    </div>
+
+    <!-- Mobile Filter Modal -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center" id="mobileFilter">
+        <div class="bg-white p-6 rounded-lg shadow w-11/12 max-w-md">
+            <div class="flex justify-between mb-4">
+                <h3 class="font-semibold">Filters</h3>
+                <button onclick="toggleMobileFilter()" class="text-gray-500">✖</button>
+            </div>
+            <div class="grid grid-cols-1 gap-4">
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" checked class="form-checkbox text-green-500" />
+                    <span>Finished</span>
+                </label>
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" class="form-checkbox text-green-500" />
+                    <span>Cancelled</span>
+                </label>
+                <input type="date" class="p-2 border rounded w-full" />
+                <input type="date" class="p-2 border rounded w-full" />
+                <select class="p-2 border rounded w-full">
+                    <option>All available</option>
+                </select>
+                <select class="p-2 border rounded w-full">
+                    <option>All available</option>
+                </select>
+                <input type="text" class="p-2 border rounded w-full" placeholder="Order ID" />
+                <input type="text" class="p-2 border rounded w-full" placeholder="Topic Title" />
+            </div>
+            <button class="mt-4 p-2 bg-green-500 text-white rounded flex items-center justify-center w-full">
+                <span class="mr-2 hidden lg:inline">🔍</span> Search
+            </button>
+        </div>
     </div>
 
     <div class="bg-white shadow-md rounded-lg p-6 animate-slide-in">
-        <h3 class="text-lg font-semibold text-gray-700 mb-3">Writer Assigned Orders</h3>
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Finished Orders</h3>
         
-        <div class="font-semibold bg-gray-100 p-3 rounded-md grid-header">
-            <div>Order ID</div>
-            <div>Topic Title</div>
-            <div>Discipline</div>
-            <div>Deadline</div>
-            <div>Notes</div>
-            <div>Pages</div>
-            <div>Cost</div>
-        </div>
-        
-        <div class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
-            <div>
-                <div class="text-blue-600 font-semibold text-lg">#123456</div>
-                <div class="status-confirmed">CONFIRMED</div>
-            </div>
-            <div class="truncate-text">Research Paper on Climate Change</div>
-            <div class="truncate-text">Environmental Science</div>
-            <div class="text-gray-600 font-bold">12h 45m</div>
-            <div class="truncate-text">Include latest research</div>
-            <div>8</div>
-            <div class="text-gray-800 font-semibold text-lg">$75.00</div>
-        </div>
-    </div>
-
-    <div class="bg-white shadow-md rounded-lg p-6 mt-6 animate-slide-in">
-        <h3 class="text-lg font-semibold text-gray-700 mb-3">Done, Delivered Orders</h3>
-        
-        <div class="font-semibold bg-gray-100 p-3 rounded-md grid-header">
-            <div>Order ID</div>
-            <div>Topic Title</div>
-            <div>Discipline</div>
-            <div>Deadline</div>
-            <div>Notes</div>
-            <div>Pages</div>
-            <div>Cost</div>
-        </div>
-        
-        <div class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
-            <div>
-                <div class="text-blue-600 font-semibold text-lg">#654321</div>
-                <div class="status-delivered">DELIVERED</div>
-            </div>
-            <div class="truncate-text">Marketing Strategy Analysis</div>
-            <div class="truncate-text">Business</div>
-            <div class="text-gray-600 font-bold">Completed</div>
-            <div class="truncate-text">Case study format</div>
-            <div>12</div>
-            <div class="text-gray-800 font-semibold text-lg">$120.00</div>
-        </div>
-        
-        <div class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
-            <div>
-                <div class="text-blue-600 font-semibold text-lg">#789012</div>
-                <div class="status-done">DONE</div>
-            </div>
-            <div class="truncate-text">Essay on Modern Literature</div>
-            <div class="truncate-text">English</div>
-            <div class="text-gray-600 font-bold">Completed</div>
-            <div class="truncate-text">MLA format</div>
-            <div>10</div>
-            <div class="text-gray-800 font-semibold text-lg">$95.00</div>
-        </div>
+        <table class="min-w-full bg-white">
+            <thead>
+                <tr class="w-full bg-gray-100 p-3 rounded-md">
+                    <th class="py-2">Order ID</th>
+                    <th class="py-2 hidden lg:table-cell">Topic Title</th>
+                    <th class="py-2 hidden lg:table-cell">Discipline</th>
+                    <th class="py-2">Date</th>
+                    <th class="py-2 hidden lg:table-cell">Paid</th>
+                    <th class="py-2">Effect on Balance</th>
+                    <th class="py-2 hidden lg:table-cell">Customer Experience</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for ($i = 0; $i < 5; $i++)
+                <tr class="border-b">
+                    <td class="py-2">
+                        <div class="text-blue-600 font-semibold text-lg">#604116322</div>
+                        <div class="status-confirmed">FINISHED</div>
+                    </td>
+                    <td class="py-2 truncate-text hidden lg:table-cell">Programming - Python</td>
+                    <td class="py-2 truncate-text hidden lg:table-cell">Computer Science</td>
+                    <td class="py-2 text-gray-600 font-bold">2024-12-29</td>
+                    <td class="py-2 truncate-text text-sm hidden lg:table-cell">Paid $100.00</td>
+                    <td class="py-2 text-gray-800 font-semibold text-lg">$100.00</td>
+                    <td class="py-2 truncate-text text-green-600 hidden lg:table-cell">Below Expectation</td>
+                </tr>
+                @endfor
+            </tbody>
+        </table>
     </div>
 </main>
 
+<script>
+    function toggleFilter() {
+        document.getElementById('desktopFilter').classList.toggle('hidden');
+    }
+    function toggleMobileFilter() {
+        document.getElementById('mobileFilter').classList.toggle('hidden');
+    }
+</script>
 @endsection

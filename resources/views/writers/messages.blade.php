@@ -130,7 +130,12 @@
 
         <!-- Attach File Section -->
         <div id="attachments" class="mb-4 space-y-2">
-        
+            <!-- Attachment Row -->
+            <div class="flex items-center gap-4 p-2 bg-gray-50 rounded-md">
+               
+            </div>
+            <!-- End Attachment Row -->
+        </div>
 
         <div class="flex justify-between gap-2">
             <label class="cursor-pointer">

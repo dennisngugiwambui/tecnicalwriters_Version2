@@ -9,6 +9,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <link rel="icon" type="image/jpeg" href="writers/technicalwriters2.jpg">
     <style>
         @keyframes slideIn {
             from { transform: translateY(20px); opacity: 0; }
@@ -185,7 +186,7 @@
                     <!-- Dropdown Menu -->
                     <div class="dropdown-menu" id="userDropdown">
                         <div class="py-1">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                            <a href="{{ route('profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
                             <div class="border-t border-gray-200 my-1"></div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
@@ -260,7 +261,7 @@
                 </a>
             </li>
             <li>
-                <a href="#" class="menu-item">
+                <a href="{{ route('finance') }}" class="menu-item {{ request()->routeIs('finance') ? 'active' : '' }}">
                     <i class="fas fa-dollar-sign text-gray-400 menu-icon"></i>
                     <span>Finance</span>
                 </a>
