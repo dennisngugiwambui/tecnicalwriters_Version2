@@ -331,6 +331,34 @@
 
         // Menu Toggle
         document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
+
+        $(document).ready(function() {
+        // Initialize Select2
+        $('.select2-basic').select2({
+            theme: 'classic',
+            width: '100%'
+        });
+
+        // Filter toggle functionality
+        $('#filterToggle').click(function() {
+            $('#filterContent').slideToggle(300);
+            $(this).find('.fa-filter').toggleClass('rotate-180');
+        });
+
+        // Show filter content by default on desktop
+        if (window.innerWidth >= 768) {
+            $('#filterContent').show();
+        }
+
+        // Handle resize events
+        $(window).resize(function() {
+            if (window.innerWidth >= 768) {
+                $('#filterContent').show();
+            } else {
+                $('#filterContent').hide();
+            }
+        });
+    });
     </script>
 </body>
 </html>

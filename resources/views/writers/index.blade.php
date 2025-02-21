@@ -8,7 +8,7 @@
         background-color: #16a34a !important;
     }
     .select2-container--default .select2-selection--single {
-        height: 40px;
+        block-size: 40px;
         display: flex;
         align-items: center;
         border-color: #e5e7eb;
@@ -236,33 +236,9 @@
 </main>
 
 
-<script>
-    $(document).ready(function() {
-    // Initialize Select2
-    $('.select2-basic').select2({
-        theme: 'classic',
-        width: '100%'
-    });
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
-    // Filter toggle functionality
-    $('#filterToggle').click(function() {
-        $('#filterContent').slideToggle(300);
-        $(this).find('.fa-filter').toggleClass('rotate-180');
-    });
-
-    // Show filter content by default on desktop
-    if (window.innerWidth >= 768) {
-        $('#filterContent').show();
-    }
-
-    // Handle resize events
-    $(window).resize(function() {
-        if (window.innerWidth >= 768) {
-            $('#filterContent').show();
-        }
-    });
-});
-</script>
 
 @endsection
 

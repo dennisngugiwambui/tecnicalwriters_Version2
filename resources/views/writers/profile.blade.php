@@ -1,9 +1,9 @@
 @extends('writers.app')
 
 @section('content')
-<div class="flex flex-col md:flex-row min-h-screen">
+<div class="flex flex-col lg:flex-row min-h-screen pb-8"> <!-- Changed md:flex-row to lg:flex-row -->
     <!-- Profile Content -->
-    <div class="flex-1 p-8 md:ml-64" style="padding-top:5%;">
+    <div class="flex-1 p-8 lg:ml-64" style="padding-top:5%;"> <!-- Changed md:ml-64 to lg:ml-64 -->
         <div class="bg-white rounded-lg shadow-md p-6">
             <h1 class="text-2xl font-bold mb-6">Profile</h1>
             
@@ -278,4 +278,19 @@
         </div>
     </div>
 </div>
+
+<script>
+function confirmUpdate() {
+    document.getElementById('custom-alert').classList.remove('hidden');
+}
+
+function closeAlert() {
+    document.getElementById('custom-alert').classList.add('hidden');
+}
+
+function proceedWithUpdate() {
+    // Add your update logic here
+    closeAlert();
+}
+</script>
 @endsection
