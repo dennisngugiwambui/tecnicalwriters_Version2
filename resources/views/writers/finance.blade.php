@@ -57,9 +57,33 @@
                 </div>
             </div>
 
-            <!--History Part -->
+            <!-- History Section -->
             <div id="requested" class="tab-content mt-6 hidden">
                 <h4 class="text-lg font-semibold">Payment History</h4>
+
+                <!-- Search and Filter Section -->
+                <div class="p-4 rounded-md mt-4">
+                    <div class="flex justify-between items-center">
+                        <p class="font-semibold text-gray-700 flex items-center">
+                            <i class="fas fa-filter mr-2"></i> Period
+                        </p>
+                        <button id="toggleSearch" class="md:hidden bg-green-500 text-white px-4 py-2 rounded-md">Toggle Search</button>
+                    </div>
+                    <div id="searchFilters" class="mt-4 md:block hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" checked class="form-checkbox text-green-500">
+                                <span>All times</span>
+                            </label>
+                            <select class="border rounded-md p-2 w-full">
+                                <option>Select company</option>
+                            </select>
+                            <input type="date" class="border rounded-md p-2 w-full">
+                            <input type="date" class="border rounded-md p-2 w-full">
+                            <button class="bg-green-500 text-white px-4 py-2 rounded-md w-full"><i class="fas fa-search"></i></button>
+                        </div>
+                    </div>
+                </div>
                 <div class="block md:block">
                     <table class="w-full border-collapse border border-gray-200 mt-4">
                         <thead>
@@ -108,6 +132,10 @@
                 let toast = $('<div class="fixed bottom-5 right-5 bg-red-500 text-white px-4 py-2 rounded shadow-lg">Warning: Changing your MPesa number is a sensitive action and may require support verification. Please notify the support team before proceeding.</div>');
                 $('body').append(toast);
                 setTimeout(() => toast.fadeOut(400, function() { $(this).remove(); }), 5000);
+            });
+
+            $('#toggleSearch').click(function() {
+                $('#searchFilters').toggleClass('hidden');
             });
         });
     </script>
