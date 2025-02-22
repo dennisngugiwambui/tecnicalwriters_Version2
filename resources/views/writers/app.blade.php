@@ -255,7 +255,7 @@
                 </a>
             </li>
             <li>
-                <a href="#" class="menu-item">
+                <a href="{{ route('statistics') }}" class="menu-item {{ request()->routeIs('statistics') ? 'active' : '' }}">
                     <i class="fas fa-chart-bar text-gray-400 menu-icon"></i>
                     <span>Statistics</span>
                 </a>

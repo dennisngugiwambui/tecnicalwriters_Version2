@@ -65,6 +65,11 @@ class HomeController extends Controller
     {
         return view('writers.profile');
     }
+
+    public function statistics()
+    {
+        return view('writers.statistics');
+    }   
     
 }
 

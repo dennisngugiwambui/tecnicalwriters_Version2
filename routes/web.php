@@ -27,3 +27,5 @@ Route::get('/finance', [App\Http\Controllers\HomeController::class,'userFinance'
 
 
 Route::get('/profile', [App\Http\Controllers\HomeController::class,'profile'])->name('profile');
+
+Route::get('/statistics', [App\Http\Controllers\HomeController::class,'statistics'])->name('statistics');
