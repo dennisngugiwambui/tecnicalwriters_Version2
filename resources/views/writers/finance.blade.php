@@ -1,340 +1,82 @@
 @extends('writers.app')
 
 @section('content')
-<div class="flex flex-col md:flex-row min-h-screen">
+    <div class="flex h-screen">
+        <main class="flex-1 p-6">
+            <section class="mt-6 bg-white shadow p-4 rounded-md">
+                <h3 class="text-xl font-semibold">Finance</h3>
+                
+                <!-- Balance Section -->
+                <div class="flex justify-between items-center mt-4 bg-green-100 p-4 rounded-lg border border-green-300">
+                    <div>
+                        <p class="text-gray-700">Your balance: <span class="text-black font-semibold">$18</span></p>
+                    </div>
+                    <button class="bg-green-500 text-white px-4 py-2 rounded-md font-semibold">Request payment</button>
+                </div>
+                
+                <p class="text-gray-600 text-sm mt-2">
+                    You can request payment twice a month from the <span class="font-bold">30th/31st day to the 3rd</span> and from the 
+                    <span class="font-bold">14th to the 18th</span> day (start-end at 8 PM (GMT+0)).<br>
+                    Your payment request will be processed up to and including the 5th or the 20th day of the month accordingly.
+                </p>
+                <p class="text-green-600 text-sm"><a href="#" class="underline">Check our Payment Guide</a> for more details.</p>
+                
+                <!-- Tab Navigation -->
+                <div class="mt-4 border-b flex space-x-6">
+                    <button class="tab-button text-black font-semibold border-b-2 border-yellow-500" data-tab="unrequested">Unrequested</button>
+                    <button class="tab-button text-gray-400 font-semibold" data-tab="requested">History</button>
+                    <button class="tab-button text-gray-400 font-semibold" data-tab="accounts">Accounts</button>
+                </div>
+                
+                <!-- Unrequested Section (Default Open) -->
+                <div id="unrequested" class="tab-content mt-4 p-4 bg-gray-50">
+                    <h4 class="text-lg font-semibold mb-4">WRITERA LIMITED</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white shadow-md p-3 rounded-md">
+                            <p class="text-gray-700 text-sm"><strong>Date:</strong> 10 Feb 2025, 6:05 PM</p>
+                            <p class="text-gray-700 text-sm"><strong>Order:</strong> 608810240</p>
+                            <p class="text-gray-700 text-sm font-bold">Transaction Type: order approved (0 pages)</p>
+                            <p class="text-gray-700 text-sm">Comments: Web programming</p>
+                            <p class="text-green-600 font-bold text-lg">+ $16.00</p>
+                        </div>
+                        <div class="bg-white shadow-md p-3 rounded-md">
+                            <p class="text-gray-700 text-sm"><strong>Date:</strong> 7 Feb 2025, 8:04 AM</p>
+                            <p class="text-gray-700 text-sm"><strong>Order:</strong> 610952214</p>
+                            <p class="text-gray-700 text-sm font-bold">Transaction Type: price changed</p>
+                            <p class="text-green-600 font-bold text-lg">+ $2.00</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-4 bg-white shadow-md rounded-md flex justify-between">
+                        <p class="text-green-600 font-bold text-lg">$34.00 COMPLETED ORDERS</p>
+                        <p class="text-red-600 font-bold text-lg">- $16.00 FINES</p>
+                        <p class="text-black font-bold text-lg">= $18.00 TOTAL</p>
+                    </div>
+                </div>
+                
+                <!-- Accounts Section -->
+                <div id="accounts" class="tab-content mt-4 p-4 bg-gray-50 hidden">
+                    <h4 class="text-lg font-semibold">Account Details</h4>
+                    <p class="text-gray-600">Manage your payment details below.</p>
+                    <div class="mt-4 p-4 bg-white shadow-md rounded-md">
+                        <label class="block text-gray-700 font-semibold">MPesa Number</label>
+                        <input type="text" value="+254712345678" class="border rounded-md p-2 w-full">
+                        <button class="mt-4 px-4 py-2 bg-green-500 text-white rounded-md w-full">Update</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
     
-
-    <!-- Profile Content -->
-    <div class="flex-1 p-8 mt-16 md:mt-0 md:ml-64">
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h1 class="text-2xl font-bold mb-6">Profile</h1>
+    <script>
+        $(document).ready(function() {
+            $('.tab-button').click(function() {
+                $('.tab-button').removeClass('text-black border-b-2 border-yellow-500');
+                $(this).addClass('text-black border-b-2 border-yellow-500');
+                $('.tab-content').hide();
+                $('#' + $(this).data('tab')).show();
+            });
             
-            <!-- Warning Message -->
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-                <p class="text-yellow-700">
-                    We would like to warn everyone that buying or selling our accounts is a wrongful act and a severe violation of our Rules and Policies. Such accounts are closed upon disclosure and the payments to such corporate account owners are suspended.
-                </p>
-            </div>
-
-            <!-- Profile Details -->
-            <div class="mb-8">
-                <h2 class="text-xl font-semibold mb-4">Profile Details</h2>
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div class="flex flex-col">
-                        <span class="text-gray-600">Your ID:</span>
-                        <span class="font-medium">433552</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-gray-600">Writer category:</span>
-                        <span class="font-medium">Advanced</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-gray-600">Writer level:</span>
-                        <span class="font-medium">Expert</span>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-gray-600">Status:</span>
-                        <select class="border rounded px-2 py-1">
-                            <option selected>Looking for orders</option>
-                            <option>On vacation</option>
-                            <option>Not willing to work</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Basic Info -->
-            <div>
-                <h2 class="text-xl font-semibold mb-4">Basic Info</h2>
-                <form class="space-y-4">
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div>
-                            <label class="block text-gray-600 mb-1">First name <span class="text-red-500">*</span></label>
-                            <input type="text" class="w-full border rounded px-3 py-2" value="John">
-                        </div>
-                        <div>
-                            <label class="block text-gray-600 mb-1">Middle name</label>
-                            <input type="text" class="w-full border rounded px-3 py-2">
-                        </div>
-                        <div>
-                            <label class="block text-gray-600 mb-1">Last name <span class="text-red-500">*</span></label>
-                            <input type="text" class="w-full border rounded px-3 py-2" value="Doe">
-                        </div>
-                        <div>
-                            <label class="block text-gray-600 mb-1">Gender <span class="text-red-500">*</span></label>
-                            <div class="flex space-x-4 mt-2">
-                                <label class="flex items-center">
-                                    <input type="radio" name="gender" class="mr-2"> Female
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="gender" class="mr-2" checked> Male
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-span-1 md:col-span-2">
-                            <label class="block text-gray-600 mb-1">Email address</label>
-                            <input type="email" class="w-full border rounded px-3 py-2" value="john.doe@example.com">
-                        </div>
-                        <div class="col-span-1 md:col-span-2">
-                            <label class="block text-gray-600 mb-1">Phone number</label>
-                            <input type="text" class="w-full border rounded px-3 py-2" placeholder="Enter your phone number">
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Experience & Skills -->
-            <div class="mt-8">
-                <h2 class="text-xl font-semibold mb-4">Experience & Skills</h2>
-                <div class="space-y-6">
-                    <div>
-                        <label class="block text-gray-600 mb-2">What is your native language? <span class="text-red-500">*</span></label>
-                        <select class="w-full border rounded px-3 py-2">
-                            <option>English</option>
-                            <option>Spanish</option>
-                            <option>French</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-gray-600 mb-2">Did you ever work for any other online academic assistance companies? <span class="text-red-500">*</span></label>
-                        <div class="flex space-x-4 mb-3">
-                            <label class="flex items-center">
-                                <input type="radio" name="worked_before" class="mr-2"> Yes
-                            </label>
-                            <label class="flex items-center">
-                                <input type="radio" name="worked_before" class="mr-2"> No
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-gray-600 mb-2">List the companies:</label>
-                            <input type="text" class="w-full border rounded px-3 py-2" placeholder="Ex.: Company A, Company B">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-gray-600 mb-2">Disciplines you are proficient in:</label>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" class="form-checkbox" checked>
-                                <span>Computer science</span>
-                            </label>
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" class="form-checkbox" checked>
-                                <span>Web programming</span>
-                            </label>
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" class="form-checkbox" checked>
-                                <span>Desktop applications</span>
-                            </label>
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" class="form-checkbox" checked>
-                                <span>Mobile applications</span>
-                            </label>
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" class="form-checkbox" checked>
-                                <span>Database design</span>
-                            </label>
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" class="form-checkbox" checked>
-                                <span>Data analysis</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contact Info -->
-            <div class="mt-8">
-                <h2 class="text-xl font-semibold mb-4">Contact Info</h2>
-                <div class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-gray-600 mb-2">Time zone:</label>
-                            <select class="w-full border rounded px-3 py-2">
-                                <option>GMT -8:00</option>
-                                <option>GMT -7:00</option>
-                                <option>GMT -6:00</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-gray-600 mb-2">Phone <span class="text-red-500">*</span></label>
-                            <div class="grid grid-cols-3 gap-2">
-                                <input type="text" class="border rounded px-3 py-2" placeholder="Country">
-                                <input type="text" class="border rounded px-3 py-2" placeholder="Operator">
-                                <input type="text" class="border rounded px-3 py-2" placeholder="Number">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-gray-600 mb-2">Country <span class="text-red-500">*</span></label>
-                            <select class="w-full border rounded px-3 py-2">
-                                <option>United States</option>
-                                <option>Canada</option>
-                                <option>United Kingdom</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-600 mb-2">State <span class="text-red-500">*</span></label>
-                            <input type="text" class="w-full border rounded px-3 py-2">
-                        </div>
-                        <div>
-                            <label class="block text-gray-600 mb-2">City <span class="text-red-500">*</span></label>
-                            <input type="text" class="w-full border rounded px-3 py-2">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-gray-600 mb-2">Address <span class="text-red-500">*</span></label>
-                        <input type="text" class="w-full border rounded px-3 py-2" placeholder="House Number Street, Apt. number or PO Box">
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-gray-600 mb-2">Available for night calls <span class="text-red-500">*</span></label>
-                            <div class="flex space-x-4">
-                                <label class="flex items-center">
-                                    <input type="radio" name="night_calls" class="mr-2"> Yes
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="night_calls" class="mr-2"> No
-                                </label>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-gray-600 mb-2">Available for force-assign <span class="text-red-500">*</span></label>
-                            <div class="flex space-x-4">
-                                <label class="flex items-center">
-                                    <input type="radio" name="force_assign" class="mr-2"> Yes
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="force_assign" class="mr-2"> No
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Social Networks -->
-            <div class="mt-8">
-                <h2 class="text-xl font-semibold mb-4">Your Page in Social Networks</h2>
-                <p class="text-gray-600 mb-4">Insert at least one link to your social network profiles. We will not post content under your name, this information is used to verify your identity.</p>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-gray-600 mb-2">Facebook</label>
-                        <input type="url" class="w-full border rounded px-3 py-2" placeholder="https://facebook.com/username">
-                    </div>
-                    <div>
-                        <label class="block text-gray-600 mb-2">LinkedIn</label>
-                        <input type="url" class="w-full border rounded px-3 py-2" placeholder="https://linkedin.com/in/username">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Education -->
-            <div class="mt-8">
-                <h2 class="text-xl font-semibold mb-4">Education</h2>
-                <div class="bg-gray-50 p-4 rounded-lg border">
-                    <p class="text-gray-600">You already have 1 place of study inserted</p>
-                    <button class="mt-3 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
-                        Add another place of study
-                    </button>
-                </div>
-            </div>
-
-            <!-- Additional Information -->
-            <div class="mt-8">
-                <h2 class="text-xl font-semibold mb-4">Additional Information about You</h2>
-                <textarea class="w-full border rounded px-3 py-2 h-32" placeholder="Share any additional information that might be relevant..."></textarea>
-            </div>
-
-        </div>
-        <button class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors mt-8" onclick="confirmUpdate()">
-            Save Changes    
-            <span class="ml-2 text-gray-600" onclick="closeAlert()">Cancel</span>
-            <span class="ml-2 text-gray-600" onclick="proceedWithUpdate()">Proceed</span>
-            <div id="custom-alert" class="hidden fixed top-0 left-0 w-full h-screen z-50 bg-black opacity-50 transition-opacity">
-                <div class="p-4 text-center">
-                    <h2 class="text-white font-semibold">Changes Saved</h2>
-                    <p class="text-gray-400">You have successfully updated your profile information.</p>
-                    <button class="mt-4 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors" onclick="closeAlert()">
-                        Close
-                    </button>
-                </div>
-            </div>
-            <div id="cancel-alert" class="hidden fixed top-0 left-0 w-full h-screen z-50 bg-black opacity-50 transition-opacity">
-                <div class="p-4 text-center">
-                    <h2 class="text-white
-                    font-semibold">Cancel Update</h2>
-                    <p class="text-gray-400">Are you sure you want to cancel the update?</p>
-                    <div class="flex justify-between mt-4">
-                        <button class="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors" onclick="closeAlert()">
-                            No
-                        </button>
-                        <button class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors" onclick="proceedWithUpdate()">
-                            Yes
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </button>
-    </div>
-</div>
-
-            <
-
-<script>
-    function confirmUpdate() {
-        const alertBox = document.getElementById('custom-alert');
-        alertBox.classList.remove('hidden');
-    }
-
-    function closeAlert() {
-        const alertBox = document.getElementById('custom-alert');
-        alertBox.classList.add('hidden');
-    }
-
-    function proceedWithUpdate() {
-        closeAlert();
-        // Perform the actual update logic here
-        console.log("Information updated successfully!");
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('profileButton').addEventListener('click', function(e) {
-            e.stopPropagation();
-            document.getElementById('userDropdown').classList.toggle('show');
+            $('#unrequested').show();
         });
-
-        document.addEventListener('click', function() {
-            document.getElementById('userDropdown').classList.remove('show');
-        });
-    });
-</script>
-
-<!-- Custom Alert Box -->
-<div id="custom-alert" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" style="z-index: 1000;">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3 text-center">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Confirm Update</h3>
-            <div class="mt-2 px-7 py-3">
-                <p class="text-sm text-gray-500">
-                    Are you sure you want to update the information?
-                </p>
-            </div>
-            <div class="items-center px-4 py-3">
-                <button id="ok-btn" class="px-4 py-2 bg-orange-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300" onclick="proceedWithUpdate()">
-                    Yes, Update
-                </button>
-                <button class="mt-3 px-4 py-2 bg-white text-gray-700 text-base font-medium rounded-md w-full shadow-sm border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300" onclick="closeAlert()">
-                    Cancel
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+    </script>
 @endsection
