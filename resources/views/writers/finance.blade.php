@@ -28,25 +28,55 @@
             <!-- Unrequested Section (Default Open) -->
             <div id="unrequested" class="tab-content mt-6">
                 <h4 class="text-lg font-semibold">WRITERA LIMITED</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div class="bg-white shadow-md p-4 rounded-md">
-                        <p class="text-gray-700"><strong>Date:</strong> 10 Feb 2025, 6:05 PM</p>
-                        <p class="text-gray-700"><strong>Order:</strong> 608810240</p>
-                        <p class="text-gray-700 font-bold">Transaction Type: order approved (0 pages)</p>
-                        <p class="text-gray-700">Comments: Web programming</p>
-                        <p class="text-green-600 font-bold text-lg">+ $16.00</p>
-                    </div>
-                    <div class="bg-white shadow-md p-4 rounded-md">
-                        <p class="text-gray-700"><strong>Date:</strong> 7 Feb 2025, 8:04 AM</p>
-                        <p class="text-gray-700"><strong>Order:</strong> 610952214</p>
-                        <p class="text-gray-700 font-bold">Transaction Type: price changed</p>
-                        <p class="text-green-600 font-bold text-lg">+ $2.00</p>
-                    </div>
+                <div class="block md:block">
+                    <table class="w-full border-collapse border border-gray-200 mt-4">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-gray-200 p-2 text-left">Date</th>
+                                <th class="border border-gray-200 p-2 text-left">Order</th>
+                                <th class="border border-gray-200 p-2 text-left hidden md:table-cell">Transaction Type</th>
+                                <th class="border border-gray-200 p-2 text-left hidden md:table-cell">Comments</th>
+                                <th class="border border-gray-200 p-2 text-left">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border border-gray-200 p-2">18 Feb 2025, 4:24 PM</td>
+                                <td class="border border-gray-200 p-2">614312020</td>
+                                <td class="border border-gray-200 p-2 font-bold hidden md:table-cell">order approved (0 pages)</td>
+                                <td class="border border-gray-200 p-2 hidden md:table-cell">Data analysis and reports</td>
+                                <td class="border border-gray-200 p-2 text-green-600">+ $40.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="col-span-2 p-4 bg-white shadow-md rounded-md flex justify-between mt-4">
+                <div class="mt-4 p-4 bg-white shadow-md rounded-md flex justify-between">
                     <p class="text-green-600 font-bold text-lg">$34.00 COMPLETED ORDERS</p>
                     <p class="text-red-600 font-bold text-lg">- $16.00 FINES</p>
                     <p class="text-black font-bold text-lg">= $18.00 TOTAL</p>
+                </div>
+            </div>
+
+            <!--History Part -->
+            <div id="requested" class="tab-content mt-6 hidden">
+                <h4 class="text-lg font-semibold">Payment History</h4>
+                <div class="block md:block">
+                    <table class="w-full border-collapse border border-gray-200 mt-4">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-gray-200 p-2 text-left">Date</th>
+                                <th class="border border-gray-200 p-2 text-left">Request Number</th>
+                                <th class="border border-gray-200 p-2 text-left">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border border-gray-200 p-2">18 Feb 2025, 4:24 PM</td>
+                                <td class="border border-gray-200 p-2">614312020</td>
+                                <td class="border border-gray-200 p-2 text-green-600">$40.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
             
@@ -75,7 +105,9 @@
             $('#unrequested').show();
 
             $('#update-button').click(function() {
-                alert('Warning: Changing your MPesa number is a sensitive action and may require support verification. Please notify the support team before proceeding.');
+                let toast = $('<div class="fixed bottom-5 right-5 bg-red-500 text-white px-4 py-2 rounded shadow-lg">Warning: Changing your MPesa number is a sensitive action and may require support verification. Please notify the support team before proceeding.</div>');
+                $('body').append(toast);
+                setTimeout(() => toast.fadeOut(400, function() { $(this).remove(); }), 5000);
             });
         });
     </script>
