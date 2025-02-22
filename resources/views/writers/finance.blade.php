@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="flex h-full pt-20 px-6 lg:px-8">
-        <main class="flex-1 max-w-7xl mx-auto bg-white shadow p-6 rounded-md">
+        <main class="flex-1 px-4 lg:px-8 pb-8 lg:ml-72 transition-all duration-300 pt-16 bg-white">
             <h3 class="text-xl font-semibold">Finance</h3>
             
             <!-- Balance Section -->
