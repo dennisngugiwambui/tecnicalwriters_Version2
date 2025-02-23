@@ -191,7 +191,7 @@
             $('.tab-button').removeClass('text-black border-b-2 border-yellow-500');
             $(this).addClass('text-black border-b-2 border-yellow-500');
             $('.tab-content').hide();
-            $('#' + $(this).data('tab')).show()
+            $('#' + $(this).data('tab')).show();
         });
     });
      document.addEventListener("DOMContentLoaded", function () {
