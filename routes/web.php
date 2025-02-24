@@ -29,3 +29,9 @@ Route::get('/finance', [App\Http\Controllers\HomeController::class,'userFinance'
 Route::get('/profile', [App\Http\Controllers\HomeController::class,'profile'])->name('profile');
 
 Route::get('/statistics', [App\Http\Controllers\HomeController::class,'statistics'])->name('statistics');
+
+
+
+Route::get('/order/201394828', [App\Http\Controllers\HomeController::class,'AssignedOrder'])->name('assigned');
+
+

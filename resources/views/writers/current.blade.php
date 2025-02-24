@@ -111,7 +111,7 @@
             <div>Cost</div>
         </div>
         
-        <div class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
+        <a href="{{ route('assigned', ['id' => 123456]) }}" class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
             <div>
                 <div class="text-blue-600 font-semibold text-lg">#123456</div>
                 <div class="status-confirmed">CONFIRMED</div>
@@ -122,7 +122,7 @@
             <div class="truncate-text">Include latest research</div>
             <div>8</div>
             <div class="text-gray-800 font-semibold text-lg">$75.00</div>
-        </div>
+        </a>
     </div>
 
     <div class="bg-white shadow-md rounded-lg p-6 mt-6 animate-slide-in">
@@ -138,7 +138,7 @@
             <div>Cost</div>
         </div>
         
-        <div class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
+        <a href="{{ route('assigned', ['id' => 654321]) }}" class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
             <div>
                 <div class="text-blue-600 font-semibold text-lg">#654321</div>
                 <div class="status-delivered">DELIVERED</div>
@@ -149,9 +149,9 @@
             <div class="truncate-text">Case study format</div>
             <div>12</div>
             <div class="text-gray-800 font-semibold text-lg">$120.00</div>
-        </div>
+        </a>
         
-        <div class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
+        <a href="{{ route('assigned', ['id' => 789012]) }}" class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
             <div>
                 <div class="text-blue-600 font-semibold text-lg">#789012</div>
                 <div class="status-done">DONE</div>
@@ -162,7 +162,7 @@
             <div class="truncate-text">MLA format</div>
             <div>10</div>
             <div class="text-gray-800 font-semibold text-lg">$95.00</div>
-        </div>
+        </a>
     </div>
 </main>
 

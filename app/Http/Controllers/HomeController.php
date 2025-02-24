@@ -69,7 +69,12 @@ class HomeController extends Controller
     public function statistics()
     {
         return view('writers.statistics');
-    }   
+    }
+    
+    public function AssignedOrder()
+    {
+        return view('writers.AssignedOrder');
+    }
     
 }
 
