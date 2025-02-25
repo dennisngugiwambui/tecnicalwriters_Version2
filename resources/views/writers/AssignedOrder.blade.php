@@ -709,9 +709,101 @@
 </div>
 
 <script>
-    // Enhanced File Upload Workflow Functions
+// Global variables
+let uploadedFiles = new Map();
+let isDragging = false;
 
-// Show the upload modal (Step 1)
+// Tab Switching
+function switchTab(tabName) {
+    const tabs = document.querySelectorAll('[role="tab"]');
+    const panels = document.querySelectorAll('[role="tabpanel"]');
+    const slider = document.getElementById('tab-slider');
+
+    tabs.forEach(tab => {
+        const isSelected = tab.id === `${tabName}-tab`;
+        tab.setAttribute('aria-selected', isSelected);
+        tab.classList.toggle('text-green-600', isSelected);
+        tab.classList.toggle('text-gray-500', !isSelected);
+
+        if (isSelected) {
+            const width = tab.dataset.width;
+            slider.style.width = `${width}px`;
+            slider.style.left = `${tab.offsetLeft}px`;
+        }
+    });
+
+    panels.forEach(panel => {
+        panel.classList.toggle('hidden', panel.id !== `${tabName}-panel`);
+    });
+}
+
+// Extension Dialog Functions
+function showExtensionDialog() {
+    const dialog = document.getElementById('extensionDialog');
+    dialog.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function hideExtensionDialog() {
+    const dialog = document.getElementById('extensionDialog');
+    dialog.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+function submitExtension() {
+    const time = document.getElementById('extensionTime').value;
+    const reason = document.getElementById('extensionReason').value;
+
+    if (!time || !reason.trim()) {
+        alert('Please fill in all fields');
+        return;
+    }
+
+    // Here you would typically make an API call
+    console.log('Extension submitted:', { time, reason });
+    hideExtensionDialog();
+}
+
+// Copy Instructions Function
+async function copyInstructions() {
+    const instructions = document.querySelector('.prose p')?.textContent;
+    const customerComments = document.querySelector('.bg-cyan-50 p')?.textContent;
+    
+    if (!instructions) return;
+
+    const textToCopy = `Instructions:\n${instructions.trim()}\n\nCustomer Comments:\n${customerComments?.trim() || ''}`;
+
+    try {
+        await navigator.clipboard.writeText(textToCopy);
+        showCopyTooltip('Copied!');
+    } catch (err) {
+        console.error('Failed to copy:', err);
+        showCopyTooltip('Failed to copy');
+    }
+}
+
+function showCopyTooltip(message) {
+    const copyButton = document.querySelector('.fa-copy').parentElement;
+    const tooltip = document.createElement('div');
+    tooltip.className = 'copy-tooltip';
+    tooltip.textContent = message;
+    
+    copyButton.appendChild(tooltip);
+    setTimeout(() => tooltip.classList.add('show'), 10);
+    
+    setTimeout(() => {
+        tooltip.classList.remove('show');
+        setTimeout(() => tooltip.remove(), 200);
+    }, 2000);
+}
+
+// Expand Instructions Function (referenced but not implemented in your original code)
+function expandInstructions() {
+    // Implementation for expanding instructions in a full-screen modal could go here
+    console.log('Expand instructions');
+}
+
+// File Upload Functions
 function showUploadModal() {
     document.getElementById('uploadModal').classList.remove('hidden');
     document.getElementById('uploadStep1').classList.remove('hidden');
@@ -721,7 +813,6 @@ function showUploadModal() {
     document.body.style.overflow = 'hidden';
 }
 
-// Close all modals
 function closeUploadModal() {
     document.getElementById('uploadModal').classList.add('hidden');
     document.getElementById('processingModal').classList.add('hidden');
@@ -730,7 +821,6 @@ function closeUploadModal() {
     resetUpload();
 }
 
-// Reset the upload state
 function resetUpload() {
     uploadedFiles.clear();
     document.getElementById('uploadedFiles').innerHTML = '';
@@ -739,7 +829,130 @@ function resetUpload() {
     }
 }
 
-// Go to the verification step (Step 2)
+function handleFileSelect(event) {
+    const files = event.target.files;
+    addFiles(files);
+}
+
+function handleFileDrop(event) {
+    event.preventDefault();
+    const dropZone = document.getElementById('dropZone');
+    dropZone.classList.remove('drag-over');
+    dropZone.classList.remove('border-green-500');
+    const files = event.dataTransfer.files;
+    addFiles(files);
+}
+
+function handleDragOver(event) {
+    event.preventDefault();
+    const dropZone = document.getElementById('dropZone');
+    dropZone.classList.add('drag-over');
+    dropZone.classList.add('border-green-500');
+}
+
+function handleDragLeave(event) {
+    event.preventDefault();
+    const dropZone = document.getElementById('dropZone');
+    dropZone.classList.remove('drag-over');
+    dropZone.classList.remove('border-green-500');
+}
+
+function addFiles(files) {
+    const uploadedFilesContainer = document.getElementById('uploadedFiles');
+    
+    Array.from(files).forEach(file => {
+        const fileId = Math.random().toString(36).substr(2, 9);
+        uploadedFiles.set(fileId, { file, description: '' });
+        
+        const fileElement = createFileElement(file, fileId);
+        uploadedFilesContainer.appendChild(fileElement);
+    });
+}
+
+function createFileElement(file, fileId) {
+    const div = document.createElement('div');
+    div.className = 'flex items-center space-x-4 border rounded-lg p-4';
+    div.innerHTML = `
+        <input type="text" class="flex-grow text-gray-700 bg-transparent outline-none" 
+               value="${file.name}" readonly>
+        <div class="relative inline-block">
+            <input type="text" 
+                   class="px-3 py-2 border rounded-lg text-sm w-40"
+                   placeholder="Description"
+                   onclick="toggleDescriptionDropdown('${fileId}')"
+                   data-file-id="${fileId}">
+            <div id="dropdown-${fileId}" class="hidden absolute z-10 mt-1 w-full bg-white border rounded-lg shadow-lg">
+                <div class="py-1">
+                    <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                            onclick="selectDescription('${fileId}', 'completed')">completed</button>
+                    <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onclick="selectDescription('${fileId}', 'sources')">sources</button>
+                    <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onclick="selectDescription('${fileId}', 'file with corrections')">file with corrections</button>
+                    <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onclick="selectDescription('${fileId}', 'preview')">preview</button>
+                </div>
+            </div>
+        </div>
+        <button onclick="removeFile('${fileId}')" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    return div;
+}
+
+function toggleDescriptionDropdown(fileId) {
+    const dropdown = document.getElementById(`dropdown-${fileId}`);
+    const allDropdowns = document.querySelectorAll('[id^="dropdown-"]');
+    
+    // Close all other dropdowns
+    allDropdowns.forEach(d => {
+        if (d.id !== `dropdown-${fileId}`) {
+            d.classList.add('hidden');
+        }
+    });
+    
+    dropdown.classList.toggle('hidden');
+
+    // Close when clicking outside
+    document.addEventListener('click', function closeDropdown(e) {
+        const isDropdownClick = e.target.closest(`#dropdown-${fileId}`);
+        const isInputClick = e.target.dataset && e.target.dataset.fileId === fileId;
+        
+        if (!isDropdownClick && !isInputClick) {
+            dropdown.classList.add('hidden');
+            document.removeEventListener('click', closeDropdown);
+        }
+    });
+}
+
+function selectDescription(fileId, description) {
+    const input = document.querySelector(`input[data-file-id="${fileId}"]`);
+    input.value = description;
+    document.getElementById(`dropdown-${fileId}`).classList.add('hidden');
+    
+    const fileData = uploadedFiles.get(fileId);
+    if (fileData) {
+        fileData.description = description;
+        uploadedFiles.set(fileId, fileData);
+    }
+}
+
+function removeFile(fileId) {
+    uploadedFiles.delete(fileId);
+    const fileElement = document.querySelector(`input[data-file-id="${fileId}"]`).closest('.flex');
+    fileElement.remove();
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Enhanced Upload Workflow Functions
 function gotoVerificationStep() {
     if (uploadedFiles.size === 0) {
         alert('Please select at least one file to upload');
@@ -750,13 +963,11 @@ function gotoVerificationStep() {
     document.getElementById('uploadStep2').classList.remove('hidden');
 }
 
-// Cancel verification and go back to upload (Step 1)
 function cancelVerification() {
     document.getElementById('uploadStep2').classList.add('hidden');
     document.getElementById('uploadStep1').classList.remove('hidden');
 }
 
-// Start the upload process (Step 3 - Processing)
 function startUpload() {
     document.getElementById('uploadModal').classList.add('hidden');
     document.getElementById('processingModal').classList.remove('hidden');
@@ -769,7 +980,6 @@ function startUpload() {
     simulateUploadProgress();
 }
 
-// Simulates the progress of file upload
 function simulateUploadProgress() {
     const progressBar = document.getElementById('uploadProgressBar');
     let progress = 0;
@@ -791,7 +1001,6 @@ function simulateUploadProgress() {
     }, 300);
 }
 
-// Show upload success (Step 4)
 function showUploadSuccess() {
     document.getElementById('processingModal').classList.add('hidden');
     document.getElementById('successModal').classList.remove('hidden');
@@ -803,7 +1012,6 @@ function showUploadSuccess() {
     }, 1500);
 }
 
-// Show toaster notification
 function showToaster() {
     const toaster = document.getElementById('toaster');
     toaster.classList.remove('translate-x-full');
@@ -814,20 +1022,115 @@ function showToaster() {
     }, 5000);
 }
 
-// Hide toaster notification
 function hideToaster() {
     const toaster = document.getElementById('toaster');
     toaster.classList.add('translate-x-full');
 }
 
-// Override submitFiles to use the new workflow
-function submitFiles() {
-    gotoVerificationStep();
+// File download helpers
+async function downloadFile(fileId, fileName) {
+    try {
+        // Show loading state
+        const downloadBtn = document.querySelector(`button[data-file-id="${fileId}"]`);
+        const originalContent = downloadBtn.innerHTML;
+        downloadBtn.innerHTML = '<div class="spinner"></div>';
+        downloadBtn.disabled = true;
+
+        // Simulate file download (replace with your actual file download logic)
+        const response = await fetch(`/api/files/${fileId}`);
+        const blob = await response.blob();
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        // Restore button state
+        downloadBtn.innerHTML = originalContent;
+        downloadBtn.disabled = false;
+    } catch (error) {
+        console.error('Download failed:', error);
+        alert('Failed to download file. Please try again.');
+    }
 }
 
-// Initialize event listeners
+// Download multiple files as zip
+async function downloadSelectedFiles() {
+    const selectedFiles = document.querySelectorAll('input[type="checkbox"]:checked:not(#selectAllFiles)');
+    
+    if (selectedFiles.length === 0) {
+        alert('Please select at least one file to download');
+        return;
+    }
+
+    // Show loading state
+    const downloadBtn = document.querySelector('.bulk-download-btn');
+    const originalContent = downloadBtn.innerHTML;
+    downloadBtn.innerHTML = '<div class="spinner"></div>';
+    downloadBtn.disabled = true;
+
+    try {
+        const zip = new JSZip();
+
+        // Add files to zip
+        const filePromises = Array.from(selectedFiles).map(async checkbox => {
+            const fileId = checkbox.closest('.file-item').dataset.fileId;
+            const fileName = checkbox.closest('.file-item').dataset.fileName;
+            
+            // Replace with your actual file download logic
+            const response = await fetch(`/api/files/${fileId}`);
+            const blob = await response.blob();
+            
+            zip.file(fileName, blob);
+        });
+
+        await Promise.all(filePromises);
+
+        // Generate and download zip
+        const content = await zip.generateAsync({ type: 'blob' });
+        const url = window.URL.createObjectURL(content);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'files.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Failed to download files:', error);
+        alert('Failed to download files. Please try again.');
+    }
+
+    // Restore button state
+    downloadBtn.innerHTML = originalContent;
+    downloadBtn.disabled = false;
+}
+
+// Reassign order function (referenced but not implemented in your original code)
+function reassignOrder() {
+    // Implementation for reassigning order functionality could go here
+    console.log('Reassign order');
+}
+
+// Initialize when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Modal close on outside click for all modals
+    // Set initial tab
+    switchTab('instructions');
+    
+    // Initialize extension dialog close on outside click
+    const extensionDialog = document.getElementById('extensionDialog');
+    extensionDialog?.addEventListener('click', (e) => {
+        if (e.target === extensionDialog) {
+            hideExtensionDialog();
+        }
+    });
+
+    // Initialize all modals to close on outside click
     const modals = [
         document.getElementById('uploadModal'),
         document.getElementById('processingModal'),
@@ -844,11 +1147,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Handle escape key to close modals
+    // Handle escape key to close all modals
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
+            hideExtensionDialog();
             closeUploadModal();
         }
+    });
+
+    // Initialize file selection behaviors
+    const selectAllCheckbox = document.getElementById('selectAllFiles');
+    const fileCheckboxes = document.querySelectorAll('.form-checkbox:not(#selectAllFiles)');
+
+    selectAllCheckbox?.addEventListener('change', (e) => {
+        fileCheckboxes.forEach(checkbox => {
+            checkbox.checked = e.target.checked;
+        });
+    });
+
+    fileCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = 
+                    Array.from(fileCheckboxes).every(cb => cb.checked);
+            }
+        });
     });
 });
 </script>
