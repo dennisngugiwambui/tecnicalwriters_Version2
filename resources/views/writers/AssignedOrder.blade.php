@@ -455,58 +455,183 @@
 
                 <!-- Upload Modal -->
                 <!-- Upload Modal -->
-<div id="uploadModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center hidden">
-    <!-- Backdrop -->
-    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+                <!-- Upload Modal with Multi-step Workflow -->
+                <div id="uploadModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center hidden z-50 upload-modal">
+                    <!-- Backdrop -->
+                    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
 
-    <!-- Modal Container -->
-    <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
-        <!-- Modal Content -->
-        <div class="relative bg-white rounded-lg max-w-xl w-full mx-auto shadow-xl transform transition-all">
-            <!-- Modal Header -->
-            <div class="flex justify-between items-center p-6 border-b">
-                <h3 class="text-lg font-medium text-gray-900">Upload files</h3>
-                <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
+                    <!-- Modal Container -->
+                    <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+                        <!-- Modal Content -->
+                        <div id="uploadModalContent" class="relative bg-white rounded-lg max-w-xl w-full mx-auto shadow-xl transform transition-all">
+                            <!-- Step 1: File Selection -->
+                            <div id="uploadStep1" class="block">
+                                <!-- Modal Header -->
+                                <div class="flex justify-between items-center p-6 border-b">
+                                    <h3 class="text-lg font-medium text-gray-900">Upload files</h3>
+                                    <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
 
-            <!-- Modal Body -->
-            <div class="p-6">
-                <p class="text-sm text-gray-600 mb-6">
-                    Please make sure to upload a video preview together with the completed order. Select description "Preview" to your video file. Maximum file size allowed: 99 MB.
-                </p>
+                                <!-- Modal Body -->
+                                <div class="p-6">
+                                    <p class="text-sm text-gray-600 mb-6">
+                                        Please make sure to upload a video preview together with the completed order. Select description "Preview" to your video file. Maximum file size allowed: 99 MB.
+                                    </p>
 
-                <!-- File List -->
-                <div id="uploadedFiles" class="space-y-3 mb-4"></div>
+                                    <!-- File List -->
+                                    <div id="uploadedFiles" class="space-y-3 mb-4"></div>
 
-                <!-- Upload Zone -->
-                <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-green-500 transition-colors duration-200"
-                     id="dropZone"
-                     ondrop="handleFileDrop(event)"
-                     ondragover="handleDragOver(event)"
-                     ondragleave="handleDragLeave(event)"
-                     onclick="document.getElementById('fileInput').click()">
-                    <input type="file" id="fileInput" class="hidden" multiple onchange="handleFileSelect(event)">
-                    <button type="button" class="text-green-500 font-medium">Choose file</button>
-                    <span class="text-gray-500 ml-2">or drag file</span>
+                                    <!-- Upload Zone -->
+                                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-green-500 transition-colors duration-200"
+                                        id="dropZone"
+                                        ondrop="handleFileDrop(event)"
+                                        ondragover="handleDragOver(event)"
+                                        ondragleave="handleDragLeave(event)"
+                                        onclick="document.getElementById('fileInput').click()">
+                                        <input type="file" id="fileInput" class="hidden" multiple onchange="handleFileSelect(event)">
+                                        <button type="button" class="text-green-500 font-medium">Choose file</button>
+                                        <span class="text-gray-500 ml-2">or drag file</span>
+                                    </div>
+
+                                    <!-- Modal Footer -->
+                                    <div class="mt-6 flex justify-end space-x-3">
+                                        <button onclick="closeUploadModal()" 
+                                                class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 rounded-md">
+                                            Cancel
+                                        </button>
+                                        <button onclick="gotoVerificationStep()" 
+                                                class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200">
+                                            Continue
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Verification Checklist -->
+                            <div id="uploadStep2" class="hidden">
+                                <!-- Modal Header -->
+                                <div class="flex justify-between items-center p-6 border-b">
+                                    <h3 class="text-lg font-medium text-gray-900">Upload files</h3>
+                                    <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Modal Body -->
+                                <div class="p-6">
+                                    <h4 class="text-base font-medium text-gray-700 mb-3">Paper details</h4>
+                                    
+                                    <div class="space-y-4">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600">Paper format</span>
+                                            <span class="text-gray-800">Not applicable</span>
+                                        </div>
+                                        
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600">Pages</span>
+                                            <div>
+                                                <span class="text-gray-800">0 pages</span>
+                                                <span class="text-gray-500 text-sm ml-1">(~0 words)</span>
+                                                <div class="text-xs text-gray-500">Double spaced</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600">Sources to be cited</span>
+                                            <span class="text-gray-800">0</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-6">
+                                        <h4 class="text-base font-medium text-gray-700 mb-3">To be on the safe side, please, double-check whether:</h4>
+                                        <div class="space-y-3">
+                                            <label class="flex items-start">
+                                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5">
+                                                <span class="ml-2 text-gray-700">All order files are checked</span>
+                                            </label>
+                                            <label class="flex items-start">
+                                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5">
+                                                <span class="ml-2 text-gray-700">All order messages are thoroughly read</span>
+                                            </label>
+                                            <label class="flex items-start">
+                                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5">
+                                                <span class="ml-2 text-gray-700">All paper instructions are followed</span>
+                                            </label>
+                                            <label class="flex items-start">
+                                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5">
+                                                <span class="ml-2 text-gray-700">Number of sources is as requested</span>
+                                            </label>
+                                            <label class="flex items-start">
+                                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5">
+                                                <span class="ml-2 text-gray-700">Required formatting style is applied</span>
+                                            </label>
+                                        </div>
+                                        
+                                        <div class="mt-4 p-3 bg-gray-50 text-sm text-gray-600 rounded-lg">
+                                            Plagiarism report will be available within 5-10 minutes in the Files section.
+                                        </div>
+                                    </div>
+
+                                    <!-- Modal Footer -->
+                                    <div class="mt-6 flex justify-end space-x-3">
+                                        <button onclick="cancelVerification()" 
+                                                class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 rounded-md">
+                                            Cancel
+                                        </button>
+                                        <button onclick="startUpload()" 
+                                                class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200">
+                                            Submit
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Modal Footer -->
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button onclick="closeUploadModal()" 
-                            class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 rounded-md">
-                        Cancel
-                    </button>
-                    <button onclick="submitFiles()" 
-                            class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200">
-                        Continue
-                    </button>
+                <!-- Processing Modal (Step 3) -->
+                <div id="processingModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
+                    <div class="bg-white rounded-lg p-8 max-w-md w-full">
+                        <h3 class="text-lg font-medium text-gray-700 text-center mb-6">Processing...</h3>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                            <div id="uploadProgressBar" class="bg-green-500 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
+
+                <!-- Success Modal (Step 4) -->
+                <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
+                    <div class="bg-white rounded-lg p-8 max-w-md w-full text-center">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-green-50 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-medium text-gray-700">Success</h3>
+                    </div>
+                </div>
+
+                <!-- Toaster Notification -->
+                <div id="toaster" class="fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
+                    <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded shadow-lg flex items-start max-w-sm">
+                        <div class="text-green-500 mr-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-medium text-green-800">Success!</p>
+                            <p class="text-sm text-green-700 mt-1">Your files have been uploaded successfully.</p>
+                        </div>
+                        <button onclick="hideToaster()" class="ml-auto text-green-500 hover:text-green-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
                 <!-- Messages Panel -->
                 <!-- Messages Panel -->
                 <div id="messages-panel" class="hidden" role="tabpanel">
