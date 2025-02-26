@@ -157,79 +157,79 @@
 
         <!-- First Order Item -->
         <div class="bg-white rounded-xl shadow-lg hover-scale p-6 transition-all duration-300">
-            <a href="#" class="block">
-                <!-- Mobile View -->
-                <div class="md:hidden space-y-3">
-                    <div class="text-sm text-green-600 font-medium">Available</div>
-                    <div class="text-lg font-semibold text-gray-800">Programming - SPSS</div>
-                    <div class="grid grid-cols-3 gap-4 text-sm mt-2">
-                        <div>
-                            <div class="font-medium">0</div>
-                        </div>
-                        <div>
-                            <div class="font-medium">2d 22h 1m</div>
-                        </div>
-                        <div>
-                            <div class="font-bold text-black">$45.00</div>
-                        </div>
-                    </div>
+            <a href="{{ route('availableOrderDetails', ['id' => 605375174]) }}" class="block">
+            <!-- Mobile View -->
+            <div class="md:hidden space-y-3">
+                <div class="text-sm text-green-600 font-medium">Available</div>
+                <div class="text-lg font-semibold text-gray-800">Programming - SPSS</div>
+                <div class="grid grid-cols-3 gap-4 text-sm mt-2">
+                <div>
+                    <div class="font-medium">0</div>
                 </div>
-
-                <!-- Desktop View -->
-                <div class="hidden md:grid grid-cols-7 gap-4 items-center">
-                    <div>
-                        <div class="text-sm text-green-600 font-medium mb-1">Available</div>
-                        <div class="text-gray-600">#605375174</div>
-                    </div>
-                    <div class="text-gray-800 font-medium">Data Analysis</div>
-                    <div class="space-y-1">
-                        <div>Programming</div>
-                        <div class="text-sm text-gray-500">Medium</div>
-                    </div>
-                    <div>0</div>
-                    <div>2d 22h 1m</div>
-                    <div>Medium</div>
+                <div>
+                    <div class="font-medium">2d 22h 1m</div>
+                </div>
+                <div>
                     <div class="font-bold text-black">$45.00</div>
                 </div>
+                </div>
+            </div>
+
+            <!-- Desktop View -->
+            <div class="hidden md:grid grid-cols-7 gap-4 items-center">
+                <div>
+                <div class="text-sm text-green-600 font-medium mb-1">Available</div>
+                <div class="text-gray-600">#605375174</div>
+                </div>
+                <div class="text-gray-800 font-medium">Data Analysis</div>
+                <div class="space-y-1">
+                <div>Programming</div>
+                <div class="text-sm text-gray-500">Medium</div>
+                </div>
+                <div>0</div>
+                <div>2d 22h 1m</div>
+                <div>Medium</div>
+                <div class="font-bold text-black">$45.00</div>
+            </div>
             </a>
         </div>
 
         <!-- Second Order Item -->
         <div class="bg-white rounded-xl shadow-lg hover-scale p-6 transition-all duration-300">
-            <a href="#" class="block">
-                <!-- Mobile View -->
-                <div class="md:hidden space-y-3">
-                    <div class="text-sm text-green-600 font-medium">Available</div>
-                    <div class="text-lg font-semibold text-gray-800">Programming - Java</div>
-                    <div class="grid grid-cols-3 gap-4 text-sm mt-2">
-                        <div>
-                            <div class="font-medium">3</div>
-                        </div>
-                        <div>
-                            <div class="font-medium">5d 12h 30m</div>
-                        </div>
-                        <div>
-                            <div class="text-black">$32.00</div>
-                        </div>
-                    </div>
+            <a href="{{ route('availableOrderDetails', ['id' => 605375175]) }}" class="block">
+            <!-- Mobile View -->
+            <div class="md:hidden space-y-3">
+                <div class="text-sm text-green-600 font-medium">Available</div>
+                <div class="text-lg font-semibold text-gray-800">Programming - Java</div>
+                <div class="grid grid-cols-3 gap-4 text-sm mt-2">
+                <div>
+                    <div class="font-medium">3</div>
                 </div>
-
-                <!-- Desktop View -->
-                <div class="hidden md:grid grid-cols-7 gap-4 items-center">
-                    <div>
-                        <div class="text-sm text-green-600 font-medium mb-1">Available</div>
-                        <div class="text-gray-600">#605375175</div>
-                    </div>
-                    <div class="text-gray-800 font-medium">Software Development</div>
-                    <div class="space-y-1">
-                        <div>Programming</div>
-                        <div class="text-sm text-gray-500">High</div>
-                    </div>
-                    <div>3</div>
-                    <div>5d 12h 30m</div>
-                    <div>High</div>
+                <div>
+                    <div class="font-medium">5d 12h 30m</div>
+                </div>
+                <div>
                     <div class="text-black">$32.00</div>
                 </div>
+                </div>
+            </div>
+
+            <!-- Desktop View -->
+            <div class="hidden md:grid grid-cols-7 gap-4 items-center">
+                <div>
+                <div class="text-sm text-green-600 font-medium mb-1">Available</div>
+                <div class="text-gray-600">#605375175</div>
+                </div>
+                <div class="text-gray-800 font-medium">Software Development</div>
+                <div class="space-y-1">
+                <div>Programming</div>
+                <div class="text-sm text-gray-500">High</div>
+                </div>
+                <div>3</div>
+                <div>5d 12h 30m</div>
+                <div>High</div>
+                <div class="text-black">$32.00</div>
+            </div>
             </a>
         </div>
     </div>

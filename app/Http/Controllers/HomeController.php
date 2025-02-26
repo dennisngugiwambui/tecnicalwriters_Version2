@@ -75,7 +75,12 @@ class HomeController extends Controller
     {
         return view('writers.AssignedOrder');
     }
-    
+
+    public function availableOrderDetails()
+    {
+        return view('writers.availableOrderDetails');
+    }
+
 }
 
 
