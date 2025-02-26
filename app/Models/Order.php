@@ -3,8 +3,79 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
 {
-    //
+    protected $fillable = [
+        'title', 'instructions', 'price', 'deadline', 'task_size',
+        'type_of_service', 'discipline', 'software', 'status',
+        'client_id', 'writer_id', 'customer_comments'
+    ];
+
+    protected $casts = [
+        'deadline' => 'datetime',
+        'price' => 'decimal:2',
+    ];
+
+    // Order status constants
+    const STATUS_AVAILABLE = 'available';
+    const STATUS_CONFIRMED = 'confirmed';
+    const STATUS_UNCONFIRMED = 'unconfirmed';
+    const STATUS_IN_PROGRESS = 'in_progress';
+    const STATUS_DONE = 'done';
+    const STATUS_DELIVERED = 'delivered';
+    const STATUS_REVISION = 'revision';
+    const STATUS_DISPUTE = 'dispute';
+    const STATUS_COMPLETED = 'completed';
+    const STATUS_CANCELLED = 'cancelled';
+
+    // Relationships
+    public function client()
+    {
+        return $this->belongsTo(User::class, 'client_id');
+    }
+    
+    public function writer()
+    {
+        return $this->belongsTo(User::class, 'writer_id');
+    }
+    
+    public function bids()
+    {
+        return $this->hasMany(Bid::class);
+    }
+    
+    public function files()
+    {
+        return $this->morphMany(File::class, 'fileable');
+    }
+    
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
+    
+    // Scopes for different order statuses
+    public function scopeAvailable($query)
+    {
+        return $query->where('status', self::STATUS_AVAILABLE);
+    }
+    
+    public function scopeAssigned($query)
+    {
+        return $query->whereIn('status', [
+            self::STATUS_CONFIRMED, 
+            self::STATUS_UNCONFIRMED,
+            self::STATUS_IN_PROGRESS,
+            self::STATUS_DONE,
+            self::STATUS_DELIVERED,
+            self::STATUS_REVISION
+        ]);
+    }
+    
+    public function scopeCompleted($query)
+    {
+        return $query->where('status', self::STATUS_COMPLETED);
+    }
 }
