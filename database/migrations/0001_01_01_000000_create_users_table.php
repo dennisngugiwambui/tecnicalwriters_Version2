@@ -22,6 +22,10 @@ return new class extends Migration
             $table->string('is_suspended')->default('no');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->text('bio')->nullable();
+            $table->decimal('rating', 3, 1)->nullable();
+            $table->string('specialization')->nullable();
+            $table->timestamp('last_active_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

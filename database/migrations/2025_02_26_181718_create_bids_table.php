@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('bids', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('order_id')->constrained();
+            $table->foreignId('user_id')->constrained();
+            $table->decimal('amount', 10, 2);
+            $table->datetime('delivery_time');
+            $table->text('cover_letter')->nullable();
             $table->timestamps();
         });
     }
