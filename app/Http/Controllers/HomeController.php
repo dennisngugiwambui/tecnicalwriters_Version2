@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
+use App\Models\Bid;
+use App\Models\Message;
+use App\Models\File;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -23,12 +28,31 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('writers.index');
+        $availableOrders = Order::where('status', Order::STATUS_AVAILABLE)
+        ->latest()
+        ->with(['files', 'client'])
+        ->get();
+
+
+        //dd($availableOrders);
+        
+        return view('writers.index', compact('availableOrders'));
+    
+    
     }
 
     public function currentOrders()
     {
-        return view('writers.current');
+        $currentOrders = Order::where('writer_id', Auth::id())
+        ->whereIn('status', [
+            Order::STATUS_CONFIRMED, 
+            Order::STATUS_UNCONFIRMED,
+            Order::STATUS_IN_PROGRESS,
+            Order::STATUS_DONE,
+            Order::STATUS_DELIVERED
+        ])->latest()->get();
+        
+        return view('writers.current', compact('currentOrders'));
     }
 
     public function currentBidOrders()
@@ -76,9 +100,15 @@ class HomeController extends Controller
         return view('writers.AssignedOrder');
     }
 
-    public function availableOrderDetails()
+    public function availableOrderDetails($id)
     {
-        return view('writers.availableOrderDetails');
+        $order = Order::where('status', Order::STATUS_AVAILABLE)
+            ->with(['files', 'client', 'bids'])
+            ->findOrFail($id);
+            
+        $userHasBid = $order->bids()->where('user_id', Auth::id())->exists();
+            
+        return view('writers.availableOrderDetails', compact('order', 'userHasBid'));
     }
 
 }

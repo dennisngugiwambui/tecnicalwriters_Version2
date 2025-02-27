@@ -13,14 +13,14 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
-                        <h1 class="text-lg md:text-xl font-semibold text-gray-800">Order #614973494</h1>
+                        <h1 class="text-lg md:text-xl font-semibold text-gray-800">Order #{{ $order->id }}</h1>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <span class="text-lg md:text-xl font-semibold text-gray-800">$65</span>
+                        <span class="text-lg md:text-xl font-semibold text-gray-800">${{ number_format($order->price, 2) }}</span>
                         <div class="hidden md:flex items-center border-l pl-4">
                             <div class="flex flex-col items-end">
                                 <span class="text-sm font-medium text-gray-600">Customer</span>
-                                <span class="text-sm text-gray-500">09:00 PM</span>
+                                <span class="text-sm text-gray-500">{{ $order->created_at->format('h:i A') }}</span>
                             </div>
                         </div>
                     </div>
@@ -32,14 +32,19 @@
         <div class="bg-green-50 border border-green-100 rounded-lg mb-6">
             <div class="p-4 md:p-6">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
-                    <p class="text-gray-700 mb-3 md:mb-0">Place your bid, if you are ready to execute this order for <span class="font-semibold">$65</span>.</p>
-                    <button id="placeBidBtn" 
-                            class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200">
+                    <p class="text-gray-700 mb-3 md:mb-0">Place your bid, if you are ready to execute this order for <span class="font-semibold">${{ number_format($order->price, 2) }}</span>.</p>
+                    @if(!$userHasBid)
+                    <button id="placeBidBtn" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200">
                         Place Bid
                     </button>
+                    @else
+                    <button disabled class="px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed">
+                        Bid Placed
+                    </button>
+                    @endif
                 </div>
                 <div class="mt-3 text-sm text-gray-500">
-                    Number of bids placed for this order is 18 • Take Order option is disabled by Support Team.
+                    Number of bids placed for this order is {{ $bidCount }} • Take Order option is disabled by Support Team.
                 </div>
             </div>
         </div>
@@ -63,7 +68,7 @@
                             role="tab"
                             data-width="100">
                         All files
-                        <span class="ml-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">11</span>
+                        <span class="ml-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $order->files->count() }}</span>
                     </button>
                     <button id="messages-tab" 
                             class="relative px-4 py-4 md:px-6 text-gray-500 hover:text-gray-700 focus:outline-none" 
@@ -86,7 +91,7 @@
                             <div class="p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-100">
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-600">Price</span>
-                                    <span class="text-gray-800 font-medium">$65</span>
+                                    <span class="text-gray-800 font-medium">${{ number_format($order->price, 2) }}</span>
                                 </div>
                             </div>
 
@@ -95,8 +100,8 @@
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-600">Deadline</span>
                                     <div>
-                                        <span class="text-gray-800">2 Mar, 05:17 AM</span>
-                                        <span class="text-green-500 ml-2">(4d 19h)</span>
+                                        <span class="text-gray-800">{{ $deadline->format('j M, h:i A') }}</span>
+                                        <span class="text-green-500 ml-2">({{ $timeRemaining }})</span>
                                     </div>
                                 </div>
                             </div>
@@ -106,7 +111,7 @@
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-600">Task size</span>
                                     <div class="flex items-center">
-                                        <span class="text-gray-800">Large</span>
+                                        <span class="text-gray-800">{{ $order->task_size ?: 'N/A' }}</span>
                                         <div class="ml-2 text-gray-400 cursor-help">
                                             <i class="fas fa-info-circle"></i>
                                         </div>
@@ -118,7 +123,7 @@
                             <div class="p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-100">
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-600">Type of service</span>
-                                    <span class="text-gray-800">Calculations</span>
+                                    <span class="text-gray-800">{{ $order->type_of_service }}</span>
                                 </div>
                             </div>
 
@@ -126,7 +131,7 @@
                             <div class="p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-100">
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-600">Discipline</span>
-                                    <span class="text-gray-800">Project Planning and Control</span>
+                                    <span class="text-gray-800">{{ $order->discipline }}</span>
                                 </div>
                             </div>
 
@@ -134,7 +139,7 @@
                             <div class="p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-100">
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-600">Software</span>
-                                    <span class="text-gray-800">AstaPowerProject</span>
+                                    <span class="text-gray-800">{{ $order->software ?: 'N/A' }}</span>
                                 </div>
                             </div>
                         </div>
@@ -156,29 +161,16 @@
                             </div>
 
                             <div class="prose max-w-none text-gray-700">
-                                <p>
-                                    The site layout plan should be in diagrammatic/drawn format utilising methods shown in tutorials (PowerPoint), and also the word count is 2000 words excluding the references and charts and the software and the powerpoint, it should be structured professionally with a cover page and a summary and an Introduction to both task1 and task2 with conclusion and references, please do not repeat the same reference twice and also make sure they are reliable please. 7 to 10 references or as much as needed.
-                                </p>
-                                <p>Thank you.</p><!-- Customer Comments -->
+                                <p>{{ $order->instructions }}</p>
+                                
+                                @if($order->customer_comments)
                                 <div class="mt-6">
                                     <div class="bg-cyan-50 rounded-lg p-4 border border-cyan-100">
                                         <h4 class="font-medium text-gray-800 mb-2">Comments from Customer</h4>
-                                        <p class="text-gray-700">
-                                            This task should be completed with the original code/solutions. Please make sure you do not use any open source solutions.
-                                        </p>
+                                        <p class="text-gray-700">{{ $order->customer_comments }}</p>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <!-- Customer Files -->
-                            <!-- Customer Comments -->
-                            <div class="mt-6">
-                                <div class="bg-cyan-50 rounded-lg p-4 border border-cyan-100">
-                                    <h4 class="font-medium text-gray-800 mb-2">Comments from Customer</h4>
-                                    <p class="text-gray-700">
-                                        This task should be completed with the original code/solutions. Please make sure you do not use any open source solutions.
-                                    </p>
-                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -202,8 +194,10 @@
 
                         <!-- Files List -->
                         <div class="space-y-4">
-                            <!-- File 1 -->
-                            <div class="flex items-start sm:items-center border-b border-gray-100 pb-4 file-item" data-file-id="file1" data-file-name="614973494_5511BEQR_R_652202189608277.xlsx">
+                            @forelse($order->files as $index => $file)
+                            <div class="flex items-start sm:items-center border-b border-gray-100 pb-4 file-item" 
+                                 data-file-id="{{ $file->id }}" 
+                                 data-file-name="{{ $file->name }}">
                                 <div class="flex-shrink-0 mt-1 sm:mt-0">
                                     <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 file-checkbox">
                                 </div>
@@ -213,54 +207,19 @@
                                     </svg>
                                 </div>
                                 <div class="ml-4 flex-grow">
-                                    <p class="text-sm font-medium text-gray-700 truncate">11. 614973494_5511BEQR_R...652202189608277.xlsx</p>
+                                    <p class="text-sm font-medium text-gray-700 truncate">{{ $index + 1 }}. {{ $file->name }}</p>
                                     <p class="text-xs text-gray-500">Instructions / Guidelines</p>
                                 </div>
                                 <div class="ml-4 flex-shrink-0 text-right">
                                     <p class="text-sm text-gray-600">Customer</p>
-                                    <p class="text-xs text-gray-500">17 Feb, 04:40 AM • 133 KB</p>
+                                    <p class="text-xs text-gray-500">{{ $file->created_at->format('j M, h:i A') }} • {{ round($file->size / 1024) }} KB</p>
                                 </div>
                             </div>
-
-                            <!-- File 2 -->
-                            <div class="flex items-start sm:items-center border-b border-gray-100 pb-4 file-item" data-file-id="file2" data-file-name="614973494_5511BEQR_H_431511081503133.docx">
-                                <div class="flex-shrink-0 mt-1 sm:mt-0">
-                                    <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 file-checkbox">
-                                </div>
-                                <div class="ml-4 flex-shrink-0">
-                                    <svg class="w-6 h-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
-                                </div>
-                                <div class="ml-4 flex-grow">
-                                    <p class="text-sm font-medium text-gray-700 truncate">10. 614973494_5511BEQR_H...431511081503133.docx</p>
-                                    <p class="text-xs text-gray-500">Instructions / Guidelines</p>
-                                </div>
-                                <div class="ml-4 flex-shrink-0 text-right">
-                                    <p class="text-sm text-gray-600">Customer</p>
-                                    <p class="text-xs text-gray-500">17 Feb, 04:40 AM • 14 KB</p>
-                                </div>
+                            @empty
+                            <div class="text-center py-4 text-gray-500">
+                                No files attached to this order.
                             </div>
-
-                            <!-- File 3 -->
-                            <div class="flex items-start sm:items-center border-b border-gray-100 pb-4 file-item" data-file-id="file3" data-file-name="614973494_5511BEBEQR_970454992330531.docx">
-                                <div class="flex-shrink-0 mt-1 sm:mt-0">
-                                    <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 file-checkbox">
-                                </div>
-                                <div class="ml-4 flex-shrink-0">
-                                    <svg class="w-6 h-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
-                                </div>
-                                <div class="ml-4 flex-grow">
-                                    <p class="text-sm font-medium text-gray-700 truncate">9. 614973494_5511BEBEQR...970454992330531.docx</p>
-                                    <p class="text-xs text-gray-500">Instructions / Guidelines</p>
-                                </div>
-                                <div class="ml-4 flex-shrink-0 text-right">
-                                    <p class="text-sm text-gray-600">Customer</p>
-                                    <p class="text-xs text-gray-500">17 Feb, 04:40 AM • 2 MB</p>
-                                </div>
-                            </div>
+                            @endforelse
                         </div>
                         
                         <!-- File Conversion Notice -->
@@ -305,135 +264,97 @@
                         </div>
                     </div>
 
-                   
                     <!-- Messages Content -->
                     <div class="flex flex-col h-[400px] sm:h-[500px]">
                         <!-- Client Messages Panel -->
                         <div id="client-messages" class="flex-1 overflow-y-auto mb-4 space-y-6">
-                            <!-- Writer Message 1 -->
+                            @forelse($clientMessages as $message)
                             <div class="flex">
-                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-4 flex-shrink-0 mt-1">
-                                    <span class="font-medium text-blue-500">W</span>
+                                <div class="w-8 h-8 rounded-full {{ $message->user_id == Auth::id() ? 'bg-blue-100' : 'bg-gray-100' }} flex items-center justify-center mr-4 flex-shrink-0 mt-1">
+                                    <span class="font-medium {{ $message->user_id == Auth::id() ? 'text-blue-500' : 'text-gray-500' }}">
+                                        {{ $message->user_id == Auth::id() ? 'W' : 'C' }}
+                                    </span>
                                 </div>
-                                <div class="max-w-lg rounded-lg p-4 bg-blue-50">
+                                <div class="max-w-lg rounded-lg p-4 {{ $message->user_id == Auth::id() ? 'bg-blue-50' : 'bg-gray-100' }}">
                                     <p class="text-gray-700 mb-3 text-sm sm:text-base">
-                                        I have reviewed the order instructions and attached files, and everything is clear. Therefore, I have started working on your paper. It will be ready on time. Nonetheless, I will not hesitate to get in touch if I need your input or clarification.
-                                    </p>
-                                    <p class="text-gray-700 mb-3 text-sm sm:text-base">
-                                        Please let me know whether you would like to receive an outline/first paragraph/plan/list of key ideas/sources in advance via the messages section.
-                                    </p>
-                                    <p class="text-gray-700 text-sm sm:text-base">
-                                        Sincere Regards
+                                        {{ $message->message }}
                                     </p>
                                     <div class="mt-2 flex justify-between items-center">
-                                        <span class="text-xs text-gray-500">Today at 2:15 AM</span>
+                                        <span class="text-xs text-gray-500">{{ $message->created_at->format('j M, h:i A') }}</span>
+                                        @if($message->read_at)
                                         <span class="text-xs text-green-500 flex items-center">
                                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                             </svg>
                                             Seen
                                         </span>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Client Message 1 -->
-                            <div class="flex">
-                                <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center mr-4 flex-shrink-0 mt-1">
-                                    <span class="font-medium text-gray-500">C</span>
-                                </div>
-                                <div class="max-w-lg rounded-lg p-4 bg-gray-100">
-                                    <p class="text-gray-700 text-sm sm:text-base">
-                                        Hello I will respond with details as soon as I reach home. Thank you.
-                                    </p>
-                                    <div class="mt-2 flex justify-between items-center">
-                                        <span class="text-xs text-gray-500">Today at 2:47 AM</span>
-                                        <span class="text-xs text-green-500 flex items-center">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                            </svg>
-                                            Seen
-                                        </span>
-                                    </div>
-                                </div>
+                            @empty
+                            <div class="text-center py-4 text-gray-500">
+                                No client messages yet. You can start the conversation.
                             </div>
+                            @endforelse
                         </div>
 
                         <!-- Support Messages Panel -->
                         <div id="support-messages" class="hidden flex-1 overflow-y-auto mb-4 space-y-6">
-                            <!-- Writer to Support -->
+                            @forelse($supportMessages as $message)
                             <div class="flex">
-                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-4 flex-shrink-0 mt-1">
-                                    <span class="font-medium text-blue-500">W</span>
+                                <div class="w-8 h-8 rounded-full 
+                                    {{ $message->user_id == Auth::id() ? 'bg-blue-100' : 'bg-green-100' }} 
+                                    flex items-center justify-center mr-4 flex-shrink-0 mt-1">
+                                    <span class="font-medium {{ $message->user_id == Auth::id() ? 'text-blue-500' : 'text-green-500' }}">
+                                        {{ $message->user_id == Auth::id() ? 'W' : 'S' }}
+                                    </span>
                                 </div>
-                                <div class="max-w-lg rounded-lg p-4 bg-blue-50">
+                                <div class="max-w-lg rounded-lg p-4 {{ $message->user_id == Auth::id() ? 'bg-blue-50' : 'bg-green-50' }}">
                                     <p class="text-gray-700 mb-3 text-sm sm:text-base">
-                                        Hello Support Team,
-                                    </p>
-                                    <p class="text-gray-700 mb-3 text-sm sm:text-base">
-                                        I have a question about the deadline for this order. Is it possible to get a 24-hour extension? The requirements are quite extensive.
-                                    </p>
-                                    <p class="text-gray-700 text-sm sm:text-base">
-                                        Thank you!
+                                        {{ $message->message }}
                                     </p>
                                     <div class="mt-2 flex justify-between items-center">
-                                        <span class="text-xs text-gray-500">Today at 1:45 AM</span>
+                                        <span class="text-xs text-gray-500">{{ $message->created_at->format('j M, h:i A') }}</span>
+                                        @if($message->read_at)
                                         <span class="text-xs text-green-500 flex items-center">
                                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                             </svg>
                                             Seen
                                         </span>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Support Response -->
-                            <div class="flex">
-                                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-4 flex-shrink-0 mt-1">
-                                    <span class="font-medium text-green-500">S</span>
-                                </div>
-                                <div class="max-w-lg rounded-lg p-4 bg-green-50">
-                                    <p class="text-gray-700 mb-3 text-sm sm:text-base">
-                                        Hello Writer,
-                                    </p>
-                                    <p class="text-gray-700 mb-3 text-sm sm:text-base">
-                                        I've checked this order. The deadline is firm as the client needs this by the specified time. However, I recommend communicating with the client directly about your progress and any challenges.
-                                    </p>
-                                    <p class="text-gray-700 text-sm sm:text-base">
-                                        Let me know if you need any other assistance.
-                                    </p>
-                                    <div class="mt-2 flex justify-between items-center">
-                                        <span class="text-xs text-gray-500">Today at 2:05 AM</span>
-                                        <span class="text-xs text-green-500 flex items-center">
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                            </svg>
-                                            Seen
-                                        </span>
-                                    </div>
-                                </div>
+                            @empty
+                            <div class="text-center py-4 text-gray-500">
+                                No support messages yet. You can reach out for help.
                             </div>
+                            @endforelse
                         </div>
 
                         <!-- Message Input Section -->
                         <div class="border-t pt-4">
-                            <div class="flex items-center space-x-4">
+                            <form action="{{ route('writer.message.send', $order->id) }}" method="POST" class="flex items-center space-x-4">
+                                @csrf
+                                <input type="hidden" name="message_type" id="messageType" value="client">
                                 <div class="flex-1 relative">
-                                    <input type="text" 
+                                    <input type="text" name="message" 
                                         class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-200"
-                                        placeholder="Type your message...">
-                                    <button class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                                        placeholder="Type your message..." required>
+                                    <button type="button" onclick="document.getElementById('fileAttachment').click()" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
                                         <i class="fas fa-paperclip"></i>
                                     </button>
+                                    <input type="file" id="fileAttachment" name="attachment" class="hidden">
                                 </div>
-                                <button class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center space-x-2">
+                                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center space-x-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                                     </svg>
                                     <span class="hidden sm:inline">Send</span>
                                 </button>
-                            </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -450,7 +371,7 @@
                 </div>
                 <div>
                     <p class="font-medium text-green-800">Success!</p>
-                    <p class="text-sm text-green-700 mt-1">Bid clicked successfully.</p>
+                    <p class="text-sm text-green-700 mt-1">Bid placed successfully.</p>
                 </div>
                 <button onclick="hideBidToaster()" class="ml-auto text-green-500 hover:text-green-700">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -494,6 +415,9 @@ function switchMessageTab(tabName) {
     const messagePanels = document.querySelectorAll('[id$="-messages"]');
     const slider = document.getElementById('message-tab-slider');
     
+    // Update message type for form submission
+    document.getElementById('messageType').value = tabName;
+    
     tabs.forEach(tab => {
         if (tab.id === 'client-tab' || tab.id === 'support-tab') {
             const isSelected = tab.id === `${tabName}-tab`;
@@ -513,13 +437,8 @@ function switchMessageTab(tabName) {
     }
 
     // Toggle message panels
-    if (tabName === 'client') {
-        document.getElementById('client-messages').classList.remove('hidden');
-        document.getElementById('support-messages').classList.add('hidden');
-    } else if (tabName === 'support') {
-        document.getElementById('client-messages').classList.add('hidden');
-        document.getElementById('support-messages').classList.remove('hidden');
-    }
+    document.getElementById('client-messages').classList.toggle('hidden', tabName !== 'client');
+    document.getElementById('support-messages').classList.toggle('hidden', tabName !== 'support');
 }
 
 // Copy Instructions Function
@@ -556,7 +475,6 @@ function showCopyTooltip(message) {
 
 // Expand Instructions Function
 function expandInstructions() {
-    // Create a full-screen modal for expanded instructions view
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
     
@@ -585,34 +503,58 @@ function expandInstructions() {
     });
 }
 
-// Bid Toaster Functions
-function showBidToaster() {
-    // Create toaster if it doesn't exist
-    let toaster = document.getElementById('bidToaster');
-    if (!toaster) {
-        toaster = document.createElement('div');
-        toaster.id = 'bidToaster';
-        toaster.className = 'fixed bottom-4 left-4 z-50 transform translate-y-full transition-transform duration-300 ease-in-out';
-        toaster.innerHTML = `
-            <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded shadow-lg flex items-start max-w-sm">
-                <div class="text-green-500 mr-3">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                </div>
-                <div>
-                    <p class="font-medium text-green-800">Success!</p>
-                    <p class="text-sm text-green-700 mt-1">Bid clicked successfully.</p>
-                </div>
-                <button onclick="hideBidToaster()" class="ml-auto text-green-500 hover:text-green-700">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        `;
-        document.body.appendChild(toaster);
+// Bid Handling
+document.addEventListener('DOMContentLoaded', function() {
+    const placeBidBtn = document.getElementById('placeBidBtn');
+    if (placeBidBtn) {
+        placeBidBtn.addEventListener('click', function() {
+            // Send AJAX request to place bid
+            fetch('{{ route("writer.bid.submit", $order->id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    order_id: '{{ $order->id }}',
+                    amount: '{{ $order->price }}'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showBidToaster();
+                    // Disable bid button
+                    placeBidBtn.disabled = true;
+                    placeBidBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+                    placeBidBtn.classList.add('bg-gray-300', 'text-gray-600', 'cursor-not-allowed');
+                    placeBidBtn.textContent = 'Bid Placed';
+                } else {
+                    alert(data.message || 'Failed to place bid');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error placing bid');
+            });
+        });
     }
+
+    // Initialize file selection handling
+    handleFileSelection();
+    
+    // Set initial tab - always start with instructions
+    switchTab('instructions');
+    
+    // Initialize message tabs (default to client)
+    if (document.getElementById('client-tab')) {
+        switchMessageTab('client');
+    }
+});
+
+function showBidToaster() {
+    let toaster = document.getElementById('bidToaster');
+    if (!toaster) return;
 
     // Show the toaster
     setTimeout(() => {
@@ -682,16 +624,31 @@ function handleFileSelection() {
 }
 
 function downloadFile(fileId, fileName) {
-    // In a real implementation, you would fetch the file from the server
-    console.log(`Downloading file: ${fileName} (ID: ${fileId})`);
+    // Create a form to download the file
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ route("writer.file.download") }}';
+    
+    const csrfToken = document.createElement('input');
+    csrfToken.type = 'hidden';
+    csrfToken.name = '_token';
+    csrfToken.value = '{{ csrf_token() }}';
+    
+    const fileIdInput = document.createElement('input');
+    fileIdInput.type = 'hidden';
+    fileIdInput.name = 'file_id';
+    fileIdInput.value = fileId;
+    
+    form.appendChild(csrfToken);
+    form.appendChild(fileIdInput);
+    document.body.appendChild(form);
     
     // Show download toast
     showDownloadToast(1, fileName);
     
-    // Simulate file download (in a real implementation, you would create a download link)
-    setTimeout(() => {
-        console.log(`Downloaded ${fileName}`);
-    }, 1000);
+    // Submit the form to download
+    form.submit();
+    document.body.removeChild(form);
 }
 
 function downloadSelectedFiles() {
@@ -701,16 +658,37 @@ function downloadSelectedFiles() {
         return;
     }
 
-    // Get file names of selected files
-    const selectedFileNames = Array.from(selectedFiles).map(checkbox => {
+    // Create form to download multiple files
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ route("writer.file.downloadMultiple") }}';
+    
+    const csrfToken = document.createElement('input');
+    csrfToken.type = 'hidden';
+    csrfToken.name = '_token';
+    csrfToken.value = '{{ csrf_token() }}';
+    form.appendChild(csrfToken);
+    
+    // Add all selected file IDs
+    Array.from(selectedFiles).forEach(checkbox => {
         const fileItem = checkbox.closest('.file-item');
-        return fileItem.dataset.fileName;
+        const fileId = fileItem.dataset.fileId;
+        
+        const fileIdInput = document.createElement('input');
+        fileIdInput.type = 'hidden';
+        fileIdInput.name = 'file_ids[]';
+        fileIdInput.value = fileId;
+        form.appendChild(fileIdInput);
     });
-
-    console.log(`Downloading ${selectedFiles.length} file(s):`, selectedFileNames);
+    
+    document.body.appendChild(form);
     
     // Show download toast
     showDownloadToast(selectedFiles.length);
+    
+    // Submit the form to download
+    form.submit();
+    document.body.removeChild(form);
 }
 
 function showDownloadToast(fileCount, singleFileName = null) {
@@ -748,104 +726,51 @@ function showDownloadToast(fileCount, singleFileName = null) {
     }, 3000);
 }
 
-// Add responsive text sizing based on viewport
-function setupResponsiveText() {
-    function adjustTextSize() {
-        const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-        
-        // Set base size classes based on viewport width
-        const contentArea = document.body;
-        
-        if (vw < 640) { // Mobile
-            contentArea.classList.add('text-sm');
-            contentArea.classList.remove('text-base', 'text-lg');
-        } else if (vw < 1024) { // Tablet
-            contentArea.classList.add('text-base');
-            contentArea.classList.remove('text-sm', 'text-lg');
-        } else { // Desktop
-            contentArea.classList.add('text-base');
-            contentArea.classList.remove('text-sm', 'text-lg');
+// Add stylesheet for tab slider
+if (!document.querySelector('style#tab-slider-styles')) {
+    const style = document.createElement('style');
+    style.id = 'tab-slider-styles';
+    style.textContent = `
+        .tab-slider {
+            position: absolute;
+            bottom: -1px;
+            height: 2px;
+            background-color: #22C55E;
+            transition: all 0.3s ease;
         }
-    }
-    
-    // Run on page load
-    adjustTextSize();
-    
-    // Run on window resize
-    window.addEventListener('resize', adjustTextSize);
+        
+        .copy-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.25rem 0.5rem;
+            background-color: #1F2937;
+            color: white;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+            margin-bottom: 0.5rem;
+            z-index: 50;
+        }
+        
+        @media (max-width: 640px) {
+            .prose p {
+                font-size: 0.875rem;
+                line-height: 1.5;
+            }
+        }
+        
+        @media (min-width: 1536px) {
+            .prose p {
+                font-size: 1.05rem;
+                line-height: 1.7;
+            }
+        }
+    `;
+    document.head.appendChild(style);
 }
-
-// Initialize when the DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Set initial tab - always start with instructions
-    switchTab('instructions');
-    
-    // Initialize message tabs (default to client)
-    if (document.getElementById('client-tab')) {
-        switchMessageTab('client');
-    }
-    
-    // Initialize Place Bid button
-    const placeBidBtn = document.getElementById('placeBidBtn');
-    if (placeBidBtn) {
-        placeBidBtn.addEventListener('click', () => {
-            console.log('Bid placed for $65');
-            showBidToaster();
-        });
-    }
-    
-    // Initialize file selection handling
-    handleFileSelection();
-    
-    // Setup responsive text sizing
-    setupResponsiveText();
-    
-    // Add styles for tab slider if not already in stylesheet
-    if (!document.querySelector('style#tab-slider-styles')) {
-        const style = document.createElement('style');
-        style.id = 'tab-slider-styles';
-        style.textContent = `
-            .tab-slider {
-                position: absolute;
-                bottom: -1px;
-                height: 2px;
-                background-color: #22C55E;
-                transition: all 0.3s ease;
-            }
-            
-            .copy-tooltip {
-                position: absolute;
-                bottom: 100%;
-                left: 50%;
-                transform: translateX(-50%);
-                padding: 0.25rem 0.5rem;
-                background-color: #1F2937;
-                color: white;
-                border-radius: 0.25rem;
-                font-size: 0.75rem;
-                opacity: 0;
-                transition: opacity 0.2s ease;
-                pointer-events: none;
-                margin-bottom: 0.5rem;
-                z-index: 50;
-            }
-            
-            @media (max-width: 640px) {
-                .prose p {
-                    font-size: 0.875rem;
-                    line-height: 1.5;
-                }
-            }
-            
-            @media (min-width: 1536px) {
-                .prose p {
-                    font-size: 1.05rem;
-                    line-height: 1.7;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-});
 </script>
 @endsection

@@ -1,7 +1,6 @@
 @extends('writers.app')
 @section('content')
 
-
 <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
 <style>
     .select2-container--default .select2-results__option--highlighted[aria-selected] {
@@ -24,9 +23,7 @@
     <!-- Header with New Order button -->
     <div class="flex justify-between items-center mb-8">
         <h1 class="text-2xl font-bold text-gray-800">Available Orders</h1>
-       
     </div>
-
 
     <!-- Filter Toggle Section -->
     <div class="bg-white rounded-xl shadow-lg p-6">
@@ -35,7 +32,6 @@
             <i class="fas fa-filter text-green-500 transition-transform duration-300"></i>
         </div>
 
-        <!-- Filter Content -->
         <!-- Filter Content -->
         <div id="filterContent" class="space-y-4 md:space-y-0">
             <!-- Desktop View: Single Line -->
@@ -59,9 +55,9 @@
                 <div class="w-48">
                     <select class="select2-basic w-full" id="disciplineSelect">
                         <option value="">All Disciplines</option>
-                        <option value="programming">Programming</option>
-                        <option value="writing">Writing</option>
-                        <option value="math">Mathematics</option>
+                        @foreach($availableOrders->pluck('discipline')->unique() as $discipline)
+                            <option value="{{ $discipline }}">{{ $discipline }}</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -90,8 +86,6 @@
                     <input type="text" placeholder="Search orders..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" id="searchOrdersMobile">
                 </div>
 
-               
-
                 <!-- Level Select -->
                 <div class="w-full">
                     <select class="select2-basic w-full" id="levelSelectMobile">
@@ -106,9 +100,9 @@
                 <div class="w-full">
                     <select class="select2-basic w-full" id="disciplineSelectMobile">
                         <option value="">All Disciplines</option>
-                        <option value="programming">Programming</option>
-                        <option value="writing">Writing</option>
-                        <option value="math">Mathematics</option>
+                        @foreach($availableOrders->pluck('discipline')->unique() as $discipline)
+                            <option value="{{ $discipline }}">{{ $discipline }}</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -132,7 +126,6 @@
         </div>
     </div>
 
-
     <!-- Orders Grid -->
     <div class="space-y-6">
         <!-- Mobile Headers -->
@@ -155,90 +148,81 @@
             <div>Cost</div>
         </div>
 
-        <!-- First Order Item -->
-        <div class="bg-white rounded-xl shadow-lg hover-scale p-6 transition-all duration-300">
-            <a href="{{ route('availableOrderDetails', ['id' => 605375174]) }}" class="block">
-            <!-- Mobile View -->
-            <div class="md:hidden space-y-3">
-                <div class="text-sm text-green-600 font-medium">Available</div>
-                <div class="text-lg font-semibold text-gray-800">Programming - SPSS</div>
-                <div class="grid grid-cols-3 gap-4 text-sm mt-2">
-                <div>
-                    <div class="font-medium">0</div>
-                </div>
-                <div>
-                    <div class="font-medium">2d 22h 1m</div>
-                </div>
-                <div>
-                    <div class="font-bold text-black">$45.00</div>
-                </div>
-                </div>
-            </div>
+        @if(count($availableOrders) > 0)
+            @foreach($availableOrders as $order)
+                @php
+                    $deadlineDate = \Carbon\Carbon::parse($order->deadline);
+                    $now = \Carbon\Carbon::now();
+                    $diff = $now->diff($deadlineDate);
+                    $timeLeft = '';
+                    
+                    if ($diff->days > 0) {
+                        $timeLeft .= $diff->days . 'd ';
+                    }
+                    if ($diff->h > 0) {
+                        $timeLeft .= $diff->h . 'h ';
+                    }
+                    $timeLeft .= $diff->i . 'm';
+                @endphp
+                <!-- Order Item -->
+                <div class="bg-white rounded-xl shadow-lg hover-scale p-6 transition-all duration-300">
+                    <a href="{{ route('availableOrderDetails', ['id' => $order->id]) }}" class="block">
+                        <!-- Mobile View -->
+                        <div class="md:hidden space-y-3">
+                            <div class="text-sm text-green-600 font-medium">Available</div>
+                            <div class="text-lg font-semibold text-gray-800">{{ $order->type_of_service }} - {{ $order->discipline }}</div>
+                            <div class="grid grid-cols-3 gap-4 text-sm mt-2">
+                                <div>
+                                    <div class="font-medium">{{ $order->task_size ?? '0' }}</div>
+                                </div>
+                                <div>
+                                    <div class="font-medium">{{ $timeLeft }}</div>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-black">${{ number_format($order->price, 2) }}</div>
+                                </div>
+                            </div>
+                        </div>
 
-            <!-- Desktop View -->
-            <div class="hidden md:grid grid-cols-7 gap-4 items-center">
-                <div>
-                <div class="text-sm text-green-600 font-medium mb-1">Available</div>
-                <div class="text-gray-600">#605375174</div>
+                        <!-- Desktop View -->
+                        <div class="hidden md:grid grid-cols-7 gap-4 items-center">
+                            <div>
+                                <div class="text-sm text-green-600 font-medium mb-1">Available</div>
+                                <div class="text-gray-600">#{{ $order->id }}</div>
+                            </div>
+                            <div class="text-gray-800 font-medium">{{ $order->title }}</div>
+                            <div class="space-y-1">
+                                <div>{{ $order->discipline }}</div>
+                                <div class="text-sm text-gray-500">{{ $order->task_size ?? 'Medium' }}</div>
+                            </div>
+                            <div>{{ $order->task_size ?? '0' }}</div>
+                            <div>{{ $timeLeft }}</div>
+                            <div>{{ $order->software ?? 'N/A' }}</div>
+                            <div class="font-bold text-black">${{ number_format($order->price, 2) }}</div>
+                        </div>
+                    </a>
                 </div>
-                <div class="text-gray-800 font-medium">Data Analysis</div>
-                <div class="space-y-1">
-                <div>Programming</div>
-                <div class="text-sm text-gray-500">Medium</div>
-                </div>
-                <div>0</div>
-                <div>2d 22h 1m</div>
-                <div>Medium</div>
-                <div class="font-bold text-black">$45.00</div>
+            @endforeach
+        @else
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                <p class="text-gray-600">No available orders at the moment. Check back later.</p>
             </div>
-            </a>
-        </div>
-
-        <!-- Second Order Item -->
-        <div class="bg-white rounded-xl shadow-lg hover-scale p-6 transition-all duration-300">
-            <a href="{{ route('availableOrderDetails', ['id' => 605375175]) }}" class="block">
-            <!-- Mobile View -->
-            <div class="md:hidden space-y-3">
-                <div class="text-sm text-green-600 font-medium">Available</div>
-                <div class="text-lg font-semibold text-gray-800">Programming - Java</div>
-                <div class="grid grid-cols-3 gap-4 text-sm mt-2">
-                <div>
-                    <div class="font-medium">3</div>
-                </div>
-                <div>
-                    <div class="font-medium">5d 12h 30m</div>
-                </div>
-                <div>
-                    <div class="text-black">$32.00</div>
-                </div>
-                </div>
-            </div>
-
-            <!-- Desktop View -->
-            <div class="hidden md:grid grid-cols-7 gap-4 items-center">
-                <div>
-                <div class="text-sm text-green-600 font-medium mb-1">Available</div>
-                <div class="text-gray-600">#605375175</div>
-                </div>
-                <div class="text-gray-800 font-medium">Software Development</div>
-                <div class="space-y-1">
-                <div>Programming</div>
-                <div class="text-sm text-gray-500">High</div>
-                </div>
-                <div>3</div>
-                <div>5d 12h 30m</div>
-                <div>High</div>
-                <div class="text-black">$32.00</div>
-            </div>
-            </a>
-        </div>
+        @endif
     </div>
 </main>
 
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-
+<script>
+    $(document).ready(function() {
+        $('.select2-basic').select2();
+        
+        // Toggle filter content
+        $('#filterToggle').click(function() {
+            $('#filterContent').toggleClass('hidden');
+            $(this).find('i').toggleClass('rotate-180');
+        });
+    });
+</script>
 
 @endsection
-
