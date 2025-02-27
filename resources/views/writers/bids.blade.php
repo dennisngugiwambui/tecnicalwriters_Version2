@@ -29,6 +29,14 @@
     /* Base order card styles */
     .order-card { 
         padding: 8px; 
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .order-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
     
     /* Default desktop styles - all columns visible */
@@ -90,39 +98,93 @@
             display: none;
         }
     }
+    
+    /* Empty state styles */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        background-color: #f9fafb;
+        border-radius: 8px;
+        border: 1px dashed #d1d5db;
+    }
+    
+    .empty-state svg {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 16px;
+        color: #9ca3af;
+    }
 </style>
 
 <!-- Main Content -->
 <main class="flex-1 px-4 lg:px-8 pb-8 lg:ml-72 transition-all duration-300 pt-16">
     <div class="flex justify-between items-center mb-8">
-        <h1 class="text-2xl font-bold text-gray-800">TechnicalWriters</h1>
+        <h1 class="text-2xl font-bold text-gray-800">My Bids</h1>
     </div>
 
     <div class="bg-white shadow-md rounded-lg p-6 animate-slide-in">
-        <h3 class="text-lg font-semibold text-gray-700 mb-3">Order Bids</h3>
+        <h3 class="text-lg font-semibold text-gray-700 mb-3">Orders You've Bid On</h3>
         
-        <div class="font-semibold bg-gray-100 p-3 rounded-md grid-header">
-            <div>Order ID</div>
-            <div>Topic Title</div>
-            <div>Discipline</div>
-            <div>Deadline</div>
-            <div>Notes</div>
-            <div>Pages</div>
-            <div>Cost</div>
-        </div>
-        
-        <div class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
-            <div>
-                <div class="text-sm text-green-600 font-medium mb-1">Available</div>
-                <div class="text-gray-600">#605375174</div>
+        @if(isset($bidOrders) && $bidOrders->count() > 0)
+            <div class="font-semibold bg-gray-100 p-3 rounded-md grid-header">
+                <div>Order ID</div>
+                <div>Topic Title</div>
+                <div>Discipline</div>
+                <div>Deadline</div>
+                <div>Notes</div>
+                <div>Pages</div>
+                <div>Cost</div>
             </div>
-            <div class="truncate-text">Research Paper on Climate Change</div>
-            <div class="truncate-text">Environmental Science</div>
-            <div class="text-gray-600 font-bold">12h 45m</div>
-            <div class="truncate-text">Include latest research</div>
-            <div>8</div>
-            <div class="text-gray-800 font-semibold text-lg">$75.00</div>
-        </div>
+            
+            @foreach($bidOrders as $order)
+                @php
+                    // Calculate time remaining until deadline
+                    $deadline = \Carbon\Carbon::parse($order->deadline);
+                    $now = \Carbon\Carbon::now();
+                    $diff = $now->diff($deadline);
+                    
+                    $timeRemaining = '';
+                    if ($diff->days > 0) {
+                        $timeRemaining .= $diff->days . 'd ';
+                    }
+                    if ($diff->h > 0) {
+                        $timeRemaining .= $diff->h . 'h ';
+                    }
+                    $timeRemaining .= $diff->i . 'm';
+                    
+                    // Get the first bid for this user
+                    $userBid = $order->bids->first();
+                @endphp
+                <a href="{{ route('availableOrderDetails', $order->id) }}" class="block">
+                    <div class="border rounded-lg p-4 pt-2 bg-gray-50 hover-scale order-card">
+                        <div>
+                            <div class="text-sm text-blue-600 font-medium mb-1">Bid Placed</div>
+                            <div class="text-gray-600">#{{ $order->id }}</div>
+                        </div>
+                        <div class="truncate-text" title="{{ $order->title }}">{{ $order->title }}</div>
+                        <div class="truncate-text" title="{{ $order->discipline }}">{{ $order->discipline }}</div>
+                        <div class="text-gray-600 font-bold">{{ $timeRemaining }}</div>
+                        <div class="truncate-text" title="{{ $order->customer_comments }}">
+                            {{ Str::limit($order->customer_comments, 30) ?? 'No notes' }}
+                        </div>
+                        <div>{{ $order->task_size ?? 'N/A' }}</div>
+                        <div class="text-gray-800 font-semibold text-lg">${{ number_format($order->price, 2) }}</div>
+                    </div>
+                </a>
+            @endforeach
+            
+        @else
+            <div class="empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h4 class="text-lg font-medium text-gray-700 mb-2">No Bids Yet</h4>
+                <p class="text-gray-500 mb-4">You haven't placed any bids on available orders.</p>
+                <a href="{{ route('home') }}" class="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200">
+                    Browse Available Orders
+                </a>
+            </div>
+        @endif
     </div>
 </main>
 

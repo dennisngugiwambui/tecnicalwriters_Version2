@@ -82,12 +82,7 @@
             </label>
             <input type="date" class="p-2 border rounded w-full" />
             <input type="date" class="p-2 border rounded w-full" />
-            <select class="p-2 border rounded w-full">
-                <option>All available</option>
-            </select>
-            <select class="p-2 border rounded w-full">
-                <option>All available</option>
-            </select>
+            
             <input type="text" class="p-2 border rounded w-full" placeholder="Order ID" />
             <input type="text" class="p-2 border rounded w-full" placeholder="Topic Title" />
         </div>
@@ -114,12 +109,7 @@
                 </label>
                 <input type="date" class="p-2 border rounded w-full" />
                 <input type="date" class="p-2 border rounded w-full" />
-                <select class="p-2 border rounded w-full">
-                    <option>All available</option>
-                </select>
-                <select class="p-2 border rounded w-full">
-                    <option>All available</option>
-                </select>
+              
                 <input type="text" class="p-2 border rounded w-full" placeholder="Order ID" />
                 <input type="text" class="p-2 border rounded w-full" placeholder="Topic Title" />
             </div>

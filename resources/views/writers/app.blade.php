@@ -133,6 +133,14 @@
         padding: 0.125rem 0.375rem;
         margin-left: auto;
     }
+    .orders-counter {
+        background-color: #f3f4f6;
+        color: #4b5563;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        padding: 0.125rem 0.375rem;
+        margin-left: auto;
+    }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
@@ -220,19 +228,27 @@
                 <a href="{{ route('curret') }}" class="menu-item {{ request()->routeIs('curret') ? 'active' : '' }}">
                     <i class="fas fa-circle text-gray-400 menu-icon"></i>
                     <span>Current</span>
-                    <span class="orders-counter bg-red-500 text-white">1</span>
+                    @if(isset($currentCount) && $currentCount > 0)
+                        <span class="orders-counter bg-red-500 text-white">{{ $currentCount }}</span>
+                    @endif
                 </a>
             </li>
             <li>
                 <a href="{{ route('revision') }}" class="menu-item {{ request()->routeIs('revision') ? 'active' : '' }}">
                     <i class="fas fa-sync text-gray-400 menu-icon"></i>
                     <span>Revision</span>
+                    @if(isset($revisionCount) && $revisionCount > 0)
+                        <span class="orders-counter bg-red-500 text-white">{{ $revisionCount }}</span>
+                    @endif
                 </a>
             </li>
             <li>
                 <a href="{{ route('dispute') }}" class="menu-item {{ request()->routeIs('dispute') ? 'active' : '' }}">
                     <i class="fas fa-exclamation-circle text-gray-400 menu-icon"></i>
                     <span>Dispute</span>
+                    @if(isset($disputeCount) && $disputeCount > 0)
+                        <span class="orders-counter bg-red-500 text-white">{{ $disputeCount }}</span>
+                    @endif
                 </a>
             </li>
             <li>
@@ -245,13 +261,18 @@
                 <a href="{{ route('bids') }}" class="menu-item {{ request()->routeIs('bids') ? 'active' : '' }}">
                     <i class="fas fa-gavel text-gray-400 menu-icon"></i>
                     <span>Bids</span>
+                    @if(isset($bidsCount) && $bidsCount > 0)
+                        <span class="orders-counter bg-yellow-500 text-white">{{ $bidsCount }}</span>
+                    @endif
                 </a>
             </li>
             <li>
                 <a href="{{ route('messages') }}" class="menu-item {{ request()->routeIs('messages') ? 'active' : '' }}">
                     <i class="fas fa-comment text-gray-400 menu-icon"></i>
                     <span>Messages</span>
-                    <span class="orders-counter bg-red-500 text-white">1</span>
+                    @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)
+                        <span class="orders-counter bg-red-500 text-white">{{ $unreadMessagesCount }}</span>
+                    @endif
                 </a>
             </li>
             <li>
@@ -269,7 +290,6 @@
         </ul>
     </div>
 </aside>
-
         @yield('content')
     </div>
 

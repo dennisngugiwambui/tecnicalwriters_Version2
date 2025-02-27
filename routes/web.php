@@ -40,5 +40,8 @@ Route::get('/orders/{id}', [App\Http\Controllers\HomeController::class, 'availab
 
 Route::post('/bid/submit/{id}', [App\Http\Controllers\HomeController::class, 'submitBid'])->name('writer.bid.submit');
 
-Route::post('/file/download', [FileController::class, 'download'])->name('writer.file.download');
-Route::post('/file/download-multiple', [FileController::class, 'downloadMultiple'])->name('writer.file.downloadMultiple');
+Route::post('/file/download', [App\Http\Controllers\HomeController::class, 'download'])->name('writer.file.download');
+Route::post('/file/download-multiple', [App\Http\Controllers\HomeController::class, 'downloadMultiple'])->name('writer.file.downloadMultiple');
+
+Route::post('/writer/messages/send', [App\Http\Controllers\HomeController::class, 'sendNewMessage'])->name('writer.message.send');
+Route::get('/writer/messages/thread/{orderId}', [App\Http\Controllers\HomeController::class, 'viewMessageThread'])->name('writer.message.thread');

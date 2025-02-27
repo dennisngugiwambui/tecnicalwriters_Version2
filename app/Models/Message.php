@@ -1,26 +1,36 @@
 <?php
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class Message extends Model
 {
     protected $fillable = [
-        'order_id', 'user_id', 'message', 'read_at', 'message_type'
+        'order_id', 'user_id', 'receiver_id', 'title', 'message', 
+        'message_type', 'read_at', 'is_general'
     ];
     
     protected $casts = [
         'read_at' => 'datetime',
+        'is_general' => 'boolean',
     ];
     
     public function order()
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Order::class)->withDefault([
+            'title' => 'General Inquiry'
+        ]);
     }
     
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
+    }
+    
+    public function receiver()
+    {
+        return $this->belongsTo(User::class, 'receiver_id');
     }
     
     public function files()
@@ -31,22 +41,27 @@ class Message extends Model
     // Helper methods to determine message direction
     public function isFromWriter()
     {
-        return $this->user->usertype === 'writer';
+        return $this->user && $this->user->usertype === 'writer';
     }
     
     public function isFromClient()
     {
-        return $this->user->usertype === 'client';
+        return $this->user && $this->user->usertype === 'client';
     }
     
     public function isFromSupport()
     {
-        return in_array($this->user->usertype, ['admin', 'support']);
+        return $this->user && in_array($this->user->usertype, ['admin', 'support']);
     }
     
     public function isSentByCurrentUser()
     {
         return $this->user_id == Auth::id();
+    }
+    
+    public function isForCurrentUser()
+    {
+        return $this->receiver_id == Auth::id();
     }
     
     // Get the appropriate CSS classes based on message sender
@@ -55,6 +70,17 @@ class Message extends Model
         if ($this->isFromWriter()) return 'W';
         if ($this->isFromClient()) return 'C';
         if ($this->isFromSupport()) return 'S';
+        return '?';
+    }
+    
+    public function getReceiverInitial()
+    {
+        $receiver = $this->receiver;
+        if (!$receiver) return '?';
+        
+        if ($receiver->usertype === 'writer') return 'W';
+        if ($receiver->usertype === 'client') return 'C';
+        if (in_array($receiver->usertype, ['admin', 'support'])) return 'S';
         return '?';
     }
     
@@ -71,21 +97,6 @@ class Message extends Model
         }
         
         return $baseClasses . ' bg-gray-100';
-    }
-    
-    public function getAvatarTextClasses()
-    {
-        $baseClasses = 'font-medium';
-        
-        if ($this->isSentByCurrentUser()) {
-            return $baseClasses . ' text-blue-500';
-        } else if ($this->isFromClient()) {
-            return $baseClasses . ' text-gray-500';
-        } else if ($this->isFromSupport()) {
-            return $baseClasses . ' text-green-500';
-        }
-        
-        return $baseClasses . ' text-gray-500';
     }
     
     public function getMessageBubbleClasses()

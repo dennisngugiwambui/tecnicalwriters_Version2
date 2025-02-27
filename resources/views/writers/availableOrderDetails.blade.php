@@ -319,18 +319,18 @@
                         </div>
                     </div>
 
-                    <!-- Messages Content -->
+                   <!-- Messages Content -->
                     <div class="flex flex-col h-[400px] sm:h-[500px]">
                         <!-- Client Messages Panel -->
                         <div id="client-messages" class="flex-1 overflow-y-auto mb-4 space-y-6">
                             @forelse($clientMessages as $message)
                             <div class="flex">
-                                <div class="w-8 h-8 rounded-full {{ $message->user_id == Auth::id() ? 'bg-blue-100' : 'bg-gray-100' }} flex items-center justify-center mr-4 flex-shrink-0 mt-1">
-                                    <span class="font-medium {{ $message->user_id == Auth::id() ? 'text-blue-500' : 'text-gray-500' }}">
-                                        {{ $message->user_id == Auth::id() ? 'W' : 'C' }}
+                                <div class="{{ $message->getAvatarClasses() }}">
+                                    <span class="{{ $message->getAvatarTextClasses() }}">
+                                        {{ $message->getSenderInitial() }}
                                     </span>
                                 </div>
-                                <div class="max-w-lg rounded-lg p-4 {{ $message->user_id == Auth::id() ? 'bg-blue-50' : 'bg-gray-100' }}">
+                                <div class="{{ $message->getMessageBubbleClasses() }}">
                                     <p class="text-gray-700 mb-3 text-sm sm:text-base">
                                         {{ $message->message }}
                                     </p>
@@ -345,8 +345,8 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
                                                 </svg>
                                                 <a href="#" 
-                                                   class="text-xs text-blue-600 hover:underline" 
-                                                   onclick="downloadFile('{{ $file->id }}', '{{ $file->name }}'); return false;">
+                                                class="text-xs text-blue-600 hover:underline" 
+                                                onclick="downloadFile('{{ $file->id }}', '{{ $file->name }}'); return false;">
                                                     {{ $file->name }}
                                                 </a>
                                             </div>
@@ -370,7 +370,8 @@
                             </div>
                             @empty
                             <div class="text-center py-4 text-gray-500">
-                                No client messages yet. You can start the conversation.
+                                <p>No client messages yet. You can start the conversation.</p>
+                                <p class="text-xs mt-2 text-gray-400">Messages between you and the client will appear here.</p>
                             </div>
                             @endforelse
                         </div>
@@ -379,14 +380,12 @@
                         <div id="support-messages" class="hidden flex-1 overflow-y-auto mb-4 space-y-6">
                             @forelse($supportMessages as $message)
                             <div class="flex">
-                                <div class="w-8 h-8 rounded-full 
-                                    {{ $message->user_id == Auth::id() ? 'bg-blue-100' : 'bg-green-100' }} 
-                                    flex items-center justify-center mr-4 flex-shrink-0 mt-1">
-                                    <span class="font-medium {{ $message->user_id == Auth::id() ? 'text-blue-500' : 'text-green-500' }}">
-                                        {{ $message->user_id == Auth::id() ? 'W' : 'S' }}
+                                <div class="{{ $message->getAvatarClasses() }}">
+                                    <span class="{{ $message->getAvatarTextClasses() }}">
+                                        {{ $message->getSenderInitial() }}
                                     </span>
                                 </div>
-                                <div class="max-w-lg rounded-lg p-4 {{ $message->user_id == Auth::id() ? 'bg-blue-50' : 'bg-green-50' }}">
+                                <div class="{{ $message->getMessageBubbleClasses() }}">
                                     <p class="text-gray-700 mb-3 text-sm sm:text-base">
                                         {{ $message->message }}
                                     </p>
@@ -401,8 +400,8 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
                                                 </svg>
                                                 <a href="#" 
-                                                   class="text-xs text-blue-600 hover:underline" 
-                                                   onclick="downloadFile('{{ $file->id }}', '{{ $file->name }}'); return false;">
+                                                class="text-xs text-blue-600 hover:underline" 
+                                                onclick="downloadFile('{{ $file->id }}', '{{ $file->name }}'); return false;">
                                                     {{ $file->name }}
                                                 </a>
                                             </div>
@@ -426,7 +425,8 @@
                             </div>
                             @empty
                             <div class="text-center py-4 text-gray-500">
-                                No support messages yet. You can reach out for help.
+                                <p>No support messages yet. You can reach out for help.</p>
+                                <p class="text-xs mt-2 text-gray-400">Messages between you and the support team will appear here.</p>
                             </div>
                             @endforelse
                         </div>
@@ -444,12 +444,15 @@
                                     <button type="button" onclick="document.getElementById('fileAttachment').click()" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
                                         <i class="fas fa-paperclip"></i>
                                     </button>
-                                    <input type="file" id="fileAttachment" name="attachment" class="hidden">
+                                    <input type="file" id="fileAttachment" name="attachment" class="hidden" onchange="updateAttachmentLabel()">
+                                    <div id="attachmentLabel" class="hidden absolute -top-8 left-0 p-1.5 bg-blue-50 text-blue-700 text-xs rounded border border-blue-100 max-w-full truncate">
+                                        No file selected
+                                    </div>
                                     <div id="forbiddenWordsWarning" class="hidden absolute left-0 bottom-full mb-2 p-2 bg-yellow-100 text-yellow-800 text-xs rounded-lg border border-yellow-200 w-full">
                                         Warning: Your message contains prohibited keywords. Please avoid payment-related discussions.
                                     </div>
                                 </div>
-                                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center space-x-2">
+                                <button type="submit" id="sendMessageBtn" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center space-x-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                                     </svg>
@@ -458,9 +461,8 @@
                             </form>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
+
+
 
         <!-- Bid Success Toaster -->
         <div id="bidToaster" class="fixed bottom-4 left-4 z-50 transform translate-y-full transition-transform duration-300 ease-in-out">
@@ -921,5 +923,63 @@ if (!document.querySelector('style#tab-slider-styles')) {
     `;
     document.head.appendChild(style);
 }
+// Add this to your existing JavaScript
+function checkForbiddenWords(inputElement) {
+    const forbiddenKeywords = ['dollar', 'money', 'pay', 'shillings', 'cash', 'price', 'payment'];
+    const messageText = inputElement.value.toLowerCase();
+    const warningElement = document.getElementById('forbiddenWordsWarning');
+    const sendButton = document.getElementById('sendMessageBtn');
+    
+    let containsForbiddenWord = false;
+    
+    forbiddenKeywords.forEach(keyword => {
+        if (messageText.includes(keyword)) {
+            containsForbiddenWord = true;
+        }
+    });
+    
+    warningElement.classList.toggle('hidden', !containsForbiddenWord);
+    
+    // Optionally disable the send button if forbidden words are found
+    if (sendButton) {
+        sendButton.disabled = containsForbiddenWord;
+        if (containsForbiddenWord) {
+            sendButton.classList.add('bg-gray-400');
+            sendButton.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+        } else {
+            sendButton.classList.remove('bg-gray-400');
+            sendButton.classList.add('bg-blue-500', 'hover:bg-blue-600');
+        }
+    }
+}
+
+function updateAttachmentLabel() {
+    const fileInput = document.getElementById('fileAttachment');
+    const attachmentLabel = document.getElementById('attachmentLabel');
+    
+    if (fileInput && attachmentLabel) {
+        if (fileInput.files && fileInput.files.length > 0) {
+            attachmentLabel.textContent = `Selected: ${fileInput.files[0].name}`;
+            attachmentLabel.classList.remove('hidden');
+        } else {
+            attachmentLabel.textContent = 'No file selected';
+            attachmentLabel.classList.add('hidden');
+        }
+    }
+}
+
+// Auto-scroll to the bottom of the message container when it loads
+document.addEventListener('DOMContentLoaded', function() {
+    const clientMessages = document.getElementById('client-messages');
+    const supportMessages = document.getElementById('support-messages');
+    
+    if (clientMessages) {
+        clientMessages.scrollTop = clientMessages.scrollHeight;
+    }
+    
+    if (supportMessages) {
+        supportMessages.scrollTop = supportMessages.scrollHeight;
+    }
+});
 </script>
 @endsection
