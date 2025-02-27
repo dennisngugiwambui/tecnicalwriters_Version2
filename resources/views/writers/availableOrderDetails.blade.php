@@ -28,6 +28,52 @@
             </div>
         </div>
 
+        <!-- Messages for keyword warnings -->
+        @if(session('warning'))
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">{{ session('warning') }}</p>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if(session('error'))
+        <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-red-700">{{ session('error') }}</p>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if(session('success'))
+        <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-green-700">{{ session('success') }}</p>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <!-- Bid Section -->
         <div class="bg-green-50 border border-green-100 rounded-lg mb-6">
             <div class="p-4 md:p-6">
@@ -179,6 +225,7 @@
                 <!-- Files Panel -->
                 <div id="files-panel" class="hidden" role="tabpanel">
                     <div>
+                        @if($order->files->count() > 0)
                         <!-- Select All Checkbox -->
                         <div class="mb-4 flex items-center">
                             <label class="inline-flex items-center">
@@ -194,7 +241,7 @@
 
                         <!-- Files List -->
                         <div class="space-y-4">
-                            @forelse($order->files as $index => $file)
+                            @foreach($order->files as $index => $file)
                             <div class="flex items-start sm:items-center border-b border-gray-100 pb-4 file-item" 
                                  data-file-id="{{ $file->id }}" 
                                  data-file-name="{{ $file->name }}">
@@ -202,24 +249,23 @@
                                     <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 file-checkbox">
                                 </div>
                                 <div class="ml-4 flex-shrink-0">
-                                    <svg class="w-6 h-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="w-6 h-6 {{ $file->exists ? 'text-gray-400' : 'text-red-400' }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                     </svg>
                                 </div>
                                 <div class="ml-4 flex-grow">
                                     <p class="text-sm font-medium text-gray-700 truncate">{{ $index + 1 }}. {{ $file->name }}</p>
                                     <p class="text-xs text-gray-500">Instructions / Guidelines</p>
+                                    @if(!$file->exists)
+                                    <p class="text-xs text-red-500">File not found in storage</p>
+                                    @endif
                                 </div>
                                 <div class="ml-4 flex-shrink-0 text-right">
                                     <p class="text-sm text-gray-600">Customer</p>
                                     <p class="text-xs text-gray-500">{{ $file->created_at->format('j M, h:i A') }} • {{ round($file->size / 1024) }} KB</p>
                                 </div>
                             </div>
-                            @empty
-                            <div class="text-center py-4 text-gray-500">
-                                No files attached to this order.
-                            </div>
-                            @endforelse
+                            @endforeach
                         </div>
                         
                         <!-- File Conversion Notice -->
@@ -228,6 +274,15 @@
                             <a href="https://cloudconvert.com" class="text-blue-600 hover:underline" target="_blank">cloudconvert.com</a> and 
                             <a href="https://online-convert.com" class="text-blue-600 hover:underline" target="_blank">online-convert.com</a>
                         </div>
+                        @else
+                        <div class="text-center py-8 text-gray-500">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p class="text-lg font-medium">No files attached to this order</p>
+                            <p class="mt-2">The client has not uploaded any files for this order yet.</p>
+                        </div>
+                        @endif
                     </div>
                 </div>
 
@@ -279,6 +334,27 @@
                                     <p class="text-gray-700 mb-3 text-sm sm:text-base">
                                         {{ $message->message }}
                                     </p>
+                                    
+                                    @if($message->files->count() > 0)
+                                    <div class="border-t border-gray-200 pt-3 mt-3">
+                                        <p class="text-xs text-gray-500 mb-2">Attachments:</p>
+                                        <div class="space-y-2">
+                                            @foreach($message->files as $file)
+                                            <div class="flex items-center">
+                                                <svg class="w-4 h-4 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                                </svg>
+                                                <a href="#" 
+                                                   class="text-xs text-blue-600 hover:underline" 
+                                                   onclick="downloadFile('{{ $file->id }}', '{{ $file->name }}'); return false;">
+                                                    {{ $file->name }}
+                                                </a>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    @endif
+                                    
                                     <div class="mt-2 flex justify-between items-center">
                                         <span class="text-xs text-gray-500">{{ $message->created_at->format('j M, h:i A') }}</span>
                                         @if($message->read_at)
@@ -314,6 +390,27 @@
                                     <p class="text-gray-700 mb-3 text-sm sm:text-base">
                                         {{ $message->message }}
                                     </p>
+                                    
+                                    @if($message->files->count() > 0)
+                                    <div class="border-t border-gray-200 pt-3 mt-3">
+                                        <p class="text-xs text-gray-500 mb-2">Attachments:</p>
+                                        <div class="space-y-2">
+                                            @foreach($message->files as $file)
+                                            <div class="flex items-center">
+                                                <svg class="w-4 h-4 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                                </svg>
+                                                <a href="#" 
+                                                   class="text-xs text-blue-600 hover:underline" 
+                                                   onclick="downloadFile('{{ $file->id }}', '{{ $file->name }}'); return false;">
+                                                    {{ $file->name }}
+                                                </a>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    @endif
+                                    
                                     <div class="mt-2 flex justify-between items-center">
                                         <span class="text-xs text-gray-500">{{ $message->created_at->format('j M, h:i A') }}</span>
                                         @if($message->read_at)
@@ -336,17 +433,21 @@
 
                         <!-- Message Input Section -->
                         <div class="border-t pt-4">
-                            <form action="{{ route('writer.message.send', $order->id) }}" method="POST" class="flex items-center space-x-4">
+                            <form action="{{ route('writer.message.send', $order->id) }}" method="POST" class="flex items-center space-x-4" enctype="multipart/form-data">
                                 @csrf
                                 <input type="hidden" name="message_type" id="messageType" value="client">
                                 <div class="flex-1 relative">
                                     <input type="text" name="message" 
                                         class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-200"
-                                        placeholder="Type your message..." required>
+                                        placeholder="Type your message..." required
+                                        onkeyup="checkForbiddenWords(this)">
                                     <button type="button" onclick="document.getElementById('fileAttachment').click()" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
                                         <i class="fas fa-paperclip"></i>
                                     </button>
                                     <input type="file" id="fileAttachment" name="attachment" class="hidden">
+                                    <div id="forbiddenWordsWarning" class="hidden absolute left-0 bottom-full mb-2 p-2 bg-yellow-100 text-yellow-800 text-xs rounded-lg border border-yellow-200 w-full">
+                                        Warning: Your message contains prohibited keywords. Please avoid payment-related discussions.
+                                    </div>
                                 </div>
                                 <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center space-x-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -371,7 +472,7 @@
                 </div>
                 <div>
                     <p class="font-medium text-green-800">Success!</p>
-                    <p class="text-sm text-green-700 mt-1">Bid placed successfully.</p>
+                    <p class="text-sm text-green-700 mt-1">Bid placed successfully. Check the "My Bids" section to track this order.</p>
                 </div>
                 <button onclick="hideBidToaster()" class="ml-auto text-green-500 hover:text-green-700">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -439,6 +540,23 @@ function switchMessageTab(tabName) {
     // Toggle message panels
     document.getElementById('client-messages').classList.toggle('hidden', tabName !== 'client');
     document.getElementById('support-messages').classList.toggle('hidden', tabName !== 'support');
+}
+
+// Check message for forbidden words
+function checkForbiddenWords(inputElement) {
+    const forbiddenKeywords = ['dollar', 'money', 'pay', 'shillings', 'cash', 'price', 'payment'];
+    const messageText = inputElement.value.toLowerCase();
+    const warningElement = document.getElementById('forbiddenWordsWarning');
+    
+    let containsForbiddenWord = false;
+    
+    forbiddenKeywords.forEach(keyword => {
+        if (messageText.includes(keyword)) {
+            containsForbiddenWord = true;
+        }
+    });
+    
+    warningElement.classList.toggle('hidden', !containsForbiddenWord);
 }
 
 // Copy Instructions Function
@@ -529,6 +647,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     placeBidBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
                     placeBidBtn.classList.add('bg-gray-300', 'text-gray-600', 'cursor-not-allowed');
                     placeBidBtn.textContent = 'Bid Placed';
+                    
+                    // After 3 seconds, redirect to the bids page
+                    setTimeout(() => {
+                        window.location.href = '{{ route("writer.bids") }}';
+                    }, 3000);
                 } else {
                     alert(data.message || 'Failed to place bid');
                 }
@@ -543,12 +666,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize file selection handling
     handleFileSelection();
     
+    // Display upload file name
+    const fileInput = document.getElementById('fileAttachment');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            if (fileName) {
+                const inputField = document.querySelector('input[name="message"]');
+                if (inputField && !inputField.value) {
+                    inputField.value = `Attached file: ${fileName}`;
+                }
+            }
+        });
+    }
+    
     // Set initial tab - always start with instructions
     switchTab('instructions');
     
     // Initialize message tabs (default to client)
     if (document.getElementById('client-tab')) {
         switchMessageTab('client');
+    }
+    
+    // Auto-scroll messages to bottom
+    const clientMessages = document.getElementById('client-messages');
+    const supportMessages = document.getElementById('support-messages');
+    
+    if (clientMessages) {
+        clientMessages.scrollTop = clientMessages.scrollHeight;
+    }
+    
+    if (supportMessages) {
+        supportMessages.scrollTop = supportMessages.scrollHeight;
     }
 });
 

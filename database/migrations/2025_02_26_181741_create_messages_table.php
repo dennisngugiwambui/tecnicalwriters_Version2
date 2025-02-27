@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained();
             $table->foreignId('user_id')->constrained();
+            $table->string('message_type')->default('client')->after('message');
             $table->text('message');
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
@@ -26,6 +27,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('messages');
+        Schema::table('messages', function (Blueprint $table) {
+            $table->dropColumn('message_type');
+        });
     }
 };

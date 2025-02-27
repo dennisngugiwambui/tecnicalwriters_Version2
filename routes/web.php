@@ -36,3 +36,9 @@ Route::get('/order/201394828', [App\Http\Controllers\HomeController::class,'Assi
 
 // routes/web.php
 Route::get('/orders/{id}', [App\Http\Controllers\HomeController::class, 'availableOrderDetails'])->name('availableOrderDetails');
+
+
+Route::post('/bid/submit/{id}', [App\Http\Controllers\HomeController::class, 'submitBid'])->name('writer.bid.submit');
+
+Route::post('/file/download', [FileController::class, 'download'])->name('writer.file.download');
+Route::post('/file/download-multiple', [FileController::class, 'downloadMultiple'])->name('writer.file.downloadMultiple');
