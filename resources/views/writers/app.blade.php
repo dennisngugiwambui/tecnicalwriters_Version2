@@ -267,7 +267,7 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('messages') }}" class="menu-item {{ request()->routeIs('messages') ? 'active' : '' }}">
+                <a href="{{ route('writer.messages') }}" class="menu-item {{ request()->routeIs('writer.messages') ? 'active' : '' }}">
                     <i class="fas fa-comment text-gray-400 menu-icon"></i>
                     <span>Messages</span>
                     @if(isset($unreadMessagesCount) && $unreadMessagesCount > 0)

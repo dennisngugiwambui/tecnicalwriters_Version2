@@ -72,37 +72,37 @@
             @foreach($messageThreads as $thread)
             <div class="border-b border-gray-100 last:border-b-0 message-thread" 
                 data-order-id="{{ $thread->order_id }}" 
-                data-message-type="{{ $thread->latestMessage->message_type }}">
+                data-message-type="{{ $thread->message_type }}">
                 <a href="{{ route('writer.message.thread', $thread->order_id) }}" 
                     class="flex items-start gap-4 py-2 px-4 cursor-pointer hover:bg-gray-50 transition-colors duration-200">
                     <div>
                         <!-- FontAwesome Message Icon -->
-                        <i class="fas fa-envelope {{ $thread->latestMessage->read_at ? 'text-gray-400' : 'text-green-500' }}"></i>
+                        <i class="fas fa-envelope {{ $thread->read_at ? 'text-gray-400' : 'text-green-500' }}"></i>
                     </div>
 
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 text-sm">
-                            <span class="font-semibold {{ $thread->latestMessage->read_at ? 'text-normal' : 'text-bold' }}">
-                                {{ $thread->latestMessage->user_id == Auth::id() ? 'Me' : ($thread->latestMessage->message_type == 'client' ? 'Client' : 'Support') }}
+                            <span class="font-semibold {{ $thread->read_at ? 'text-normal' : 'text-bold' }}">
+                                {{ $thread->user_id == Auth::id() ? 'Me' : ($thread->message_type == 'client' ? 'Client' : 'Support') }}
                             </span>
                             <span class="text-gray-400">▸</span>
-                            <span>{{ $thread->latestMessage->user_id == Auth::id() ? ($thread->latestMessage->message_type == 'client' ? 'Client' : 'Support') : 'Me' }}</span>
+                            <span>{{ $thread->user_id == Auth::id() ? ($thread->message_type == 'client' ? 'Client' : 'Support') : 'Me' }}</span>
                         </div>
                         <div class="text-sm text-gray-600 font-semibold">
                             Order #{{ $thread->order_id }}: {{ $thread->order->title ?? 'Order' }}
                         </div>
                         <div class="text-sm text-gray-400 truncate">
-                            {{ Str::limit($thread->latestMessage->message, 70) }}
+                            {{ Str::limit($thread->message, 70) }}
                         </div>
                     </div>
 
                     <div class="flex flex-col items-end text-sm text-gray-400 whitespace-nowrap">
                         <div class="font-semibold">#{{ $thread->order_id }}</div>
-                        <div class="font-semibold">{{ $thread->latestMessage->created_at->format('d M, h:i A') }}</div>
-                        @if($thread->latestMessage->files->count() > 0)
+                        <div class="font-semibold">{{ $thread->created_at->format('d M, h:i A') }}</div>
+                        @if($thread->files->count() > 0)
                         <div class="flex items-center mt-1">
                             <i class="fas fa-paperclip text-gray-400 mr-1"></i>
-                            <span>{{ $thread->latestMessage->files->count() }}</span>
+                            <span>{{ $thread->files->count() }}</span>
                         </div>
                         @endif
                     </div>

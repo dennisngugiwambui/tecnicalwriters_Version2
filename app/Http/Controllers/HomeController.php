@@ -6,11 +6,13 @@ use App\Models\Order;
 use App\Models\Bid;
 use App\Models\Message;
 use App\Models\File;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use ZipArchive;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
 {
@@ -165,63 +167,79 @@ class HomeController extends Controller
     // Add this method to HomeController.php
     public function messages()
     {
-        $user = Auth::user();
+
+        if (Auth::check()) {
+            $user = Auth::user();
         
-        // Get all messages related to orders the writer is involved with
-        $messageThreads = Message::select('order_id')
-            ->where(function($query) use ($user) {
-                $query->where('user_id', $user->id) // Messages sent by user
-                    ->orWhereIn('order_id', function($subquery) use ($user) {
-                        $subquery->select('id')
-                            ->from('orders')
-                            ->where(function($orderQuery) use ($user) {
-                                $orderQuery->where('writer_id', $user->id) // Assigned orders
-                                    ->orWhereIn('id', function($bidQuery) use ($user) {
-                                        $bidQuery->select('order_id')
-                                            ->from('bids')
-                                            ->where('user_id', $user->id); // Orders bid on
-                                    });
-                            });
-                    });
-            })
-            ->with(['order'])
-            ->groupBy('order_id')
-            ->orderByDesc(function($query) {
-                $query->select('created_at')
-                    ->from('messages')
-                    ->whereColumn('order_id', 'messages.order_id')
-                    ->latest()
-                    ->limit(1);
-            })
-            ->get();
         
-        // For each thread, get the latest message
-        foreach ($messageThreads as $thread) {
-            $thread->latestMessage = Message::where('order_id', $thread->order_id)
-                ->with(['user', 'files'])
+            // Get all message threads related to this user (sent or received)
+            $messageThreads = Message::where(function($query) use ($user) {
+                    $query->where('user_id', $user->id)
+                        ->orWhere('receiver_id', $user->id);
+                })
+                ->with(['user', 'receiver', 'order', 'files'])
                 ->latest()
-                ->first();
-        }
-        
-        // Get orders for new message dropdown
-        $userOrders = Order::where('writer_id', $user->id)
-            ->orWhereIn('id', function($query) use ($user) {
-                $query->select('order_id')
-                    ->from('bids')
-                    ->where('user_id', $user->id);
-            })
-            ->select('id', 'title')
-            ->get();
+                ->get()
+                ->groupBy(function($message) {
+                    // Group by conversation
+                    if ($message->is_general) {
+                        // If it's a general message, group by title and the other user
+                        return 'general_' . $message->title . '_' . 
+                            ($message->user_id == Auth::id() ? $message->receiver_id : $message->user_id);
+                    } else {
+                        // If it's order related, group by order
+                        return 'order_' . ($message->order_id ?? 0);
+                    }
+                })
+                ->map(function($messages) {
+                    // For each thread, get the latest message
+                    $latest = $messages->first();
+                    $latest->thread_messages_count = $messages->count();
+                    $latest->unread_count = $messages
+                        ->where('receiver_id', Auth::id())
+                        ->whereNull('read_at')
+                        ->count();
+                        
+                    return $latest;
+                });
             
-        return view('writers.messages', compact('messageThreads', 'userOrders'));
+            // Get users for new message dropdown (clients, support staff)
+            $users = User::whereIn('usertype', ['client', 'admin', 'support'])
+                ->select('id', 'name', 'usertype', 'email')
+                ->orderBy('usertype')
+                ->orderBy('name')
+                ->get()
+                ->map(function($user) {
+                    $user->display_name = $user->name . ' (' . ucfirst($user->usertype) . ')';
+                    return $user;
+                });
+                
+            // Get orders for new message dropdown
+            $userOrders = Order::where('writer_id', $user->id)
+                ->orWhereIn('id', function($query) use ($user) {
+                    $query->select('order_id')
+                        ->from('bids')
+                        ->where('user_id', $user->id);
+                })
+                ->select('id', 'title')
+                ->get();
+                
+            return view('writers.messages', compact('messageThreads', 'userOrders', 'users'));
+
+        } else {
+            // Handle unauthenticated user - perhaps redirect to login
+            $messageThreads = collect(); // Empty collection
+            return redirect()->route('login')->with('error', 'Please login to view messages');
+        }
     }
 
     public function sendNewMessage(Request $request)
     {
         $request->validate([
-            'order_id' => 'required|exists:orders,id',
+            'receiver_id' => 'required|exists:users,id',
+            'title' => 'required|string|max:255',
             'message' => 'required|string',
-            'message_type' => 'required|in:client,support',
+            'order_id' => 'nullable|exists:orders,id',
             'attachments.*' => 'nullable|file|max:10240', // 10MB max
         ]);
         
@@ -242,17 +260,20 @@ class HomeController extends Controller
         
         // Create new message
         $message = new Message();
-        $message->order_id = $request->order_id;
         $message->user_id = Auth::id();
+        $message->receiver_id = $request->receiver_id;
+        $message->title = $request->title;
         $message->message = $request->message;
-        $message->message_type = $request->message_type;
+        $message->order_id = $request->order_id;
+        $message->is_general = empty($request->order_id);
+        $message->message_type = User::find($request->receiver_id)->usertype === 'client' ? 'client' : 'support';
         $message->save();
         
         // Handle file attachments
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $index => $file) {
                 $fileName = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('order_messages/' . $request->order_id, $fileName);
+                $filePath = $file->storeAs('message_attachments/' . $message->id, $fileName);
                 $fileSize = $file->getSize();
                 
                 $fileModel = new File([
@@ -270,36 +291,177 @@ class HomeController extends Controller
         return redirect()->route('writer.messages')->with('success', 'Message sent successfully!');
     }
 
-    public function viewMessageThread($orderId)
+    public function viewMessageThread($threadId)
     {
         $user = Auth::user();
         
-        // Get the order
-        $order = Order::findOrFail($orderId);
+        // Parse the thread ID to determine if it's general or order-related
+        $parts = explode('_', $threadId);
+        $type = $parts[0];
         
-        // Check if user has access to this order
-        $hasAccess = $order->writer_id == $user->id || 
-                    $order->bids()->where('user_id', $user->id)->exists();
-                    
-        if (!$hasAccess && $user->usertype !== 'admin' && $user->usertype !== 'support') {
-            return redirect()->route('writer.messages')->with('error', 'You don\'t have access to view these messages.');
+        if ($type === 'order') {
+            $orderId = $parts[1];
+            $order = Order::findOrFail($orderId);
+            
+            // Get all messages for this order
+            $messages = Message::where('order_id', $orderId)
+                ->with(['user', 'receiver', 'files'])
+                ->orderBy('created_at')
+                ->get();
+            
+            // Mark unread messages as read
+            Message::where('order_id', $orderId)
+                ->where('receiver_id', $user->id)
+                ->whereNull('read_at')
+                ->update(['read_at' => now()]);
+                
+            $otherUser = $messages->first()->user_id == $user->id 
+                ? User::find($messages->first()->receiver_id)
+                : User::find($messages->first()->user_id);
+                
+            return view('writers.message-thread', compact('order', 'messages', 'otherUser', 'type'));
+        } else {
+            // This is a general message thread
+            $title = $parts[1];
+            $otherUserId = $parts[2];
+            $otherUser = User::findOrFail($otherUserId);
+            
+            // Get all messages between these users with this title
+            $messages = Message::where(function($query) use ($user, $otherUser) {
+                    $query->where(function($q) use ($user, $otherUser) {
+                        $q->where('user_id', $user->id)
+                        ->where('receiver_id', $otherUser->id);
+                    })->orWhere(function($q) use ($user, $otherUser) {
+                        $q->where('user_id', $otherUser->id)
+                        ->where('receiver_id', $user->id);
+                    });
+                })
+                ->where('is_general', true)
+                ->where('title', $title)
+                ->with(['user', 'receiver', 'files'])
+                ->orderBy('created_at')
+                ->get();
+            
+            // Mark unread messages as read
+            Message::where(function($query) use ($user, $otherUser) {
+                    $query->where('user_id', $otherUser->id)
+                        ->where('receiver_id', $user->id);
+                })
+                ->where('is_general', true)
+                ->where('title', $title)
+                ->whereNull('read_at')
+                ->update(['read_at' => now()]);
+                
+            return view('writers.message-thread', compact('messages', 'otherUser', 'title', 'type'));
         }
-        
-        // Get all messages for this order
-        $messages = Message::where('order_id', $orderId)
-            ->with(['user', 'files'])
-            ->orderBy('created_at')
-            ->get();
-        
-        // Mark unread messages as read
-        Message::where('order_id', $orderId)
-            ->whereNotIn('user_id', [$user->id])
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
-        
-        return view('writers.message-thread', compact('order', 'messages'));
     }
 
+    public function replyToMessage(Request $request)
+    {
+        $request->validate([
+            'thread_id' => 'required|string',
+            'message' => 'required|string',
+            'attachments.*' => 'nullable|file|max:10240',
+        ]);
+        
+        $user = Auth::user();
+        $threadId = $request->thread_id;
+        $parts = explode('_', $threadId);
+        $type = $parts[0];
+        
+        // Check for forbidden words
+        $forbiddenKeywords = ['dollar', 'money', 'pay', 'shillings', 'cash', 'price', 'payment'];
+        $messageText = strtolower($request->message);
+        $foundKeywords = [];
+        
+        foreach ($forbiddenKeywords as $keyword) {
+            if (strpos($messageText, $keyword) !== false) {
+                $foundKeywords[] = $keyword;
+            }
+        }
+        
+        if (!empty($foundKeywords)) {
+            return back()->with('error', 'Your message contains prohibited keywords: ' . implode(', ', $foundKeywords) . '. Please revise your message to avoid payment discussions.');
+        }
+        
+        if ($type === 'order') {
+            $orderId = $parts[1];
+            $order = Order::findOrFail($orderId);
+            
+            // Get the previous message to determine the receiver
+            $previousMessage = Message::where('order_id', $orderId)
+                ->orderBy('created_at', 'desc')
+                ->first();
+                
+            $receiverId = $previousMessage->user_id == $user->id 
+                ? $previousMessage->receiver_id 
+                : $previousMessage->user_id;
+                
+            // Create the reply
+            $message = new Message();
+            $message->user_id = $user->id;
+            $message->receiver_id = $receiverId;
+            $message->order_id = $orderId;
+            $message->is_general = false;
+            $message->message = $request->message;
+            $message->message_type = User::find($receiverId)->usertype === 'client' ? 'client' : 'support';
+            $message->save();
+        } else {
+            // This is a general message
+            $title = $parts[1];
+            $otherUserId = $parts[2];
+            
+            // Create the reply
+            $message = new Message();
+            $message->user_id = $user->id;
+            $message->receiver_id = $otherUserId;
+            $message->title = $title;
+            $message->is_general = true;
+            $message->message = $request->message;
+            $message->message_type = User::find($otherUserId)->usertype === 'client' ? 'client' : 'support';
+            $message->save();
+        }
+        
+        // Handle file attachments
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $index => $file) {
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('message_attachments/' . $message->id, $fileName);
+                $fileSize = $file->getSize();
+                
+                $fileModel = new File([
+                    'name' => $file->getClientOriginalName(),
+                    'path' => $filePath,
+                    'size' => $fileSize,
+                    'uploaded_by' => Auth::id(),
+                    'description' => $request->input('attachment_descriptions.' . $index, null)
+                ]);
+                
+                $message->files()->save($fileModel);
+            }
+        }
+        
+        return back()->with('success', 'Reply sent successfully!');
+    }
+
+    public function checkNewMessages(Request $request, $orderId)
+    {
+        $messageType = $request->query('message_type', 'client');
+        $lastMessageId = $request->query('last_id', 0);
+        
+        // Only get messages newer than the last one the client has
+        $messages = Message::where('order_id', $orderId)
+            ->where('message_type', $messageType)
+            ->where('id', '>', $lastMessageId)  // This is important!
+            ->with(['user', 'files'])
+            ->orderBy('created_at', 'asc')
+            ->get();
+        
+        return response()->json([
+            'hasNewMessages' => $messages->count() > 0,
+            'messages' => $messages
+        ]);
+    }
     public function userFinance()
     {
         return view('writers.finance');
@@ -400,6 +562,12 @@ class HomeController extends Controller
             $isAssigned = $order->writer_id == Auth::id();
             
             if (!$userHasBid && !$isAssigned && Auth::user()->usertype !== 'admin' && Auth::user()->usertype !== 'support') {
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You must place a bid first to message about this order'
+                    ], 403);
+                }
                 return back()->with('error', 'You must place a bid first to message about this order');
             }
             
@@ -415,6 +583,12 @@ class HomeController extends Controller
             }
             
             if (!empty($foundKeywords)) {
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Your message contains prohibited keywords: ' . implode(', ', $foundKeywords) . '. Please revise your message to avoid payment discussions in the messaging system.'
+                    ], 400);
+                }
                 return back()->with('warning', 'Your message contains prohibited keywords: ' . implode(', ', $foundKeywords) . '. Please revise your message to avoid payment discussions in the messaging system.');
             }
             
@@ -424,6 +598,30 @@ class HomeController extends Controller
             $message->user_id = Auth::id();
             $message->message = $request->message;
             $message->message_type = $request->message_type;
+            
+            // Set title field - this is what was missing
+            $message->title = $request->title ?? "Order #" . $orderId . " Message";
+            
+            // Set receiver_id based on message type
+            if ($request->message_type === 'client') {
+                // For client messages, set receiver to the client
+                $message->receiver_id = $order->client_id;
+            } else {
+                // For support messages, find an admin or support user
+                $supportUser = User::where('usertype', 'admin')
+                    ->orWhere('usertype', 'support')
+                    ->first();
+                    
+                if ($supportUser) {
+                    $message->receiver_id = $supportUser->id;
+                } else {
+                    throw new \Exception("No support staff available to receive the message");
+                }
+            }
+            
+            // Set is_general to false since this is order-related
+            $message->is_general = false;
+            
             $message->save();
             
             // Handle file attachment if present
@@ -459,9 +657,22 @@ class HomeController extends Controller
                     ->whereNull('read_at')
                     ->update(['read_at' => now()]);
             }
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message
+                ]);
+            }
             
             return back()->with('success', 'Message sent successfully');
         } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to send message: ' . $e->getMessage()
+                ], 500);
+            }
             return back()->with('error', 'Failed to send message: ' . $e->getMessage());
         }
     }

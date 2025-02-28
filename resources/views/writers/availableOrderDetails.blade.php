@@ -44,6 +44,9 @@
         </div>
         @endif
 
+        <!-- Alert Messages Container for AJAX Messages -->
+        <div id="alertMessages" class="mb-6"></div>
+
         @if(session('error'))
         <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
             <div class="flex">
@@ -147,7 +150,7 @@
                                     <span class="text-gray-600">Deadline</span>
                                     <div>
                                         <span class="text-gray-800">{{ $deadline->format('j M, h:i A') }}</span>
-                                        <span class="text-green-500 ml-2">({{ $timeRemaining }})</span>
+                                        <span id="timeRemaining" class="text-green-500 ml-2">({{ $timeRemaining }})</span>
                                     </div>
                                 </div>
                             </div>
@@ -299,17 +302,17 @@
                     <div class="mb-6">
                         <div class="border-b border-gray-100 relative">
                             <nav class="flex" role="tablist">
-                                <div id="message-tab-slider" class="tab-slider"></div>
+                                <div id="message-tab-slider" class="message-tab-slider"></div>
                                 
                                 <button id="client-tab" 
-                                        class="relative px-4 py-3 md:px-6 md:py-4 text-green-600 font-medium hover:text-gray-700 focus:outline-none" 
+                                        class="message-tab-btn relative px-4 py-3 md:px-6 md:py-4 text-green-600 font-medium hover:text-gray-700 focus:outline-none" 
                                         onclick="switchMessageTab('client')" 
                                         role="tab"
                                         data-width="80">
                                     Client
                                 </button>
                                 <button id="support-tab" 
-                                        class="relative px-4 py-3 md:px-6 md:py-4 text-gray-500 hover:text-gray-700 focus:outline-none" 
+                                        class="message-tab-btn relative px-4 py-3 md:px-6 md:py-4 text-gray-500 hover:text-gray-700 focus:outline-none" 
                                         onclick="switchMessageTab('support')" 
                                         role="tab"
                                         data-width="90">
@@ -319,19 +322,19 @@
                         </div>
                     </div>
 
-                   <!-- Messages Content -->
-                    <div class="flex flex-col h-[400px] sm:h-[500px]">
+                    <!-- Messages Content -->
+                    <div class="flex flex-col message-container bg-white rounded-lg border border-gray-100">
                         <!-- Client Messages Panel -->
-                        <div id="client-messages" class="flex-1 overflow-y-auto mb-4 space-y-6">
+                        <div id="client-messages" class="flex-1 overflow-y-auto message-list">
                             @forelse($clientMessages as $message)
-                            <div class="flex">
+                            <div class="message-item flex p-4 border-b border-gray-100 last:border-b-0" data-message-id="{{ $message->id }}">
                                 <div class="{{ $message->getAvatarClasses() }}">
-                                    <span class="{{ $message->getAvatarTextClasses() }}">
+                                    <span class="text-gray-600">
                                         {{ $message->getSenderInitial() }}
                                     </span>
                                 </div>
                                 <div class="{{ $message->getMessageBubbleClasses() }}">
-                                    <p class="text-gray-700 mb-3 text-sm sm:text-base">
+                                    <p class="message-text text-gray-700 mb-3">
                                         {{ $message->message }}
                                     </p>
                                     
@@ -369,7 +372,7 @@
                                 </div>
                             </div>
                             @empty
-                            <div class="text-center py-4 text-gray-500">
+                            <div class="text-center py-4 text-gray-500" id="client-no-messages">
                                 <p>No client messages yet. You can start the conversation.</p>
                                 <p class="text-xs mt-2 text-gray-400">Messages between you and the client will appear here.</p>
                             </div>
@@ -377,16 +380,16 @@
                         </div>
 
                         <!-- Support Messages Panel -->
-                        <div id="support-messages" class="hidden flex-1 overflow-y-auto mb-4 space-y-6">
+                        <div id="support-messages" class="hidden flex-1 overflow-y-auto message-list">
                             @forelse($supportMessages as $message)
-                            <div class="flex">
+                            <div class="message-item flex p-4 border-b border-gray-100 last:border-b-0" data-message-id="{{ $message->id }}">
                                 <div class="{{ $message->getAvatarClasses() }}">
-                                    <span class="{{ $message->getAvatarTextClasses() }}">
+                                    <span class="text-gray-600">
                                         {{ $message->getSenderInitial() }}
                                     </span>
                                 </div>
                                 <div class="{{ $message->getMessageBubbleClasses() }}">
-                                    <p class="text-gray-700 mb-3 text-sm sm:text-base">
+                                    <p class="message-text text-gray-700 mb-3">
                                         {{ $message->message }}
                                     </p>
                                     
@@ -424,7 +427,7 @@
                                 </div>
                             </div>
                             @empty
-                            <div class="text-center py-4 text-gray-500">
+                            <div class="text-center py-4 text-gray-500" id="support-no-messages">
                                 <p>No support messages yet. You can reach out for help.</p>
                                 <p class="text-xs mt-2 text-gray-400">Messages between you and the support team will appear here.</p>
                             </div>
@@ -432,12 +435,14 @@
                         </div>
 
                         <!-- Message Input Section -->
-                        <div class="border-t pt-4">
-                            <form action="{{ route('writer.message.send', $order->id) }}" method="POST" class="flex items-center space-x-4" enctype="multipart/form-data">
+                        <div class="border-t pt-4 p-4 bg-gray-50">
+                            <form id="messageForm" class="flex items-center space-x-4" enctype="multipart/form-data">
                                 @csrf
                                 <input type="hidden" name="message_type" id="messageType" value="client">
+                                <input type="hidden" name="receiver_id" id="receiverId" value="{{ $order->client_id ?? '' }}">
+                                <input type="hidden" name="title" id="messageTitle" value="Order #{{ $order->id }} Message">
                                 <div class="flex-1 relative">
-                                    <input type="text" name="message" 
+                                    <input type="text" name="message" id="messageInput"
                                         class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-200"
                                         placeholder="Type your message..." required
                                         onkeyup="checkForbiddenWords(this)">
@@ -452,7 +457,7 @@
                                         Warning: Your message contains prohibited keywords. Please avoid payment-related discussions.
                                     </div>
                                 </div>
-                                <button type="submit" id="sendMessageBtn" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center space-x-2">
+                                <button type="button" id="sendMessageBtn" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center space-x-2">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                                     </svg>
@@ -461,8 +466,9 @@
                             </form>
                         </div>
                     </div>
-
-
+                </div>
+            </div>
+        </div>
 
         <!-- Bid Success Toaster -->
         <div id="bidToaster" class="fixed bottom-4 left-4 z-50 transform translate-y-full transition-transform duration-300 ease-in-out">
@@ -487,6 +493,9 @@
 </div>
 
 <script>
+// Store deadline timestamp for real-time updates
+const deadlineTimestamp = {{ $deadline->timestamp * 1000 }}; // Convert to milliseconds for JS
+
 // Main Tab Switching (Instructions, Files, Messages)
 function switchTab(tabName) {
     const tabs = document.querySelectorAll('[role="tab"]');
@@ -514,12 +523,20 @@ function switchTab(tabName) {
 
 // Message Tab Switching (Client/Support)
 function switchMessageTab(tabName) {
-    const tabs = document.querySelectorAll('[id$="-tab"]');
-    const messagePanels = document.querySelectorAll('[id$="-messages"]');
+    const tabs = document.querySelectorAll('.message-tab-btn');
+    const messagePanels = document.querySelectorAll('.message-list');
     const slider = document.getElementById('message-tab-slider');
     
     // Update message type for form submission
     document.getElementById('messageType').value = tabName;
+    
+    // Update receiver_id based on message type
+    if (tabName === 'client') {
+        document.getElementById('receiverId').value = '{{ $order->client_id ?? '' }}';
+    } else if (tabName === 'support') {
+        // Set to ID of a support user - use an existing admin or support user ID
+        document.getElementById('receiverId').value = '{{ App\Models\User::where("usertype", "admin")->first()->id ?? 1 }}';
+    }
     
     tabs.forEach(tab => {
         if (tab.id === 'client-tab' || tab.id === 'support-tab') {
@@ -544,11 +561,42 @@ function switchMessageTab(tabName) {
     document.getElementById('support-messages').classList.toggle('hidden', tabName !== 'support');
 }
 
+// Function to update the time remaining dynamically
+function updateTimeRemaining() {
+    const now = new Date().getTime();
+    const timeDiff = deadlineTimestamp - now;
+    
+    if (timeDiff <= 0) {
+        document.getElementById('timeRemaining').textContent = '(Time expired)';
+        document.getElementById('timeRemaining').classList.remove('text-green-500');
+        document.getElementById('timeRemaining').classList.add('text-red-500');
+        return;
+    }
+    
+    // Calculate days, hours, minutes, seconds
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+    
+    let timeRemainingText = '(';
+    if (days > 0) {
+        timeRemainingText += `${days}d `;
+    }
+    if (hours > 0 || days > 0) {
+        timeRemainingText += `${hours}h `;
+    }
+    timeRemainingText += `${minutes}m ${seconds}s)`;
+    
+    document.getElementById('timeRemaining').textContent = timeRemainingText;
+}
+
 // Check message for forbidden words
 function checkForbiddenWords(inputElement) {
     const forbiddenKeywords = ['dollar', 'money', 'pay', 'shillings', 'cash', 'price', 'payment'];
     const messageText = inputElement.value.toLowerCase();
     const warningElement = document.getElementById('forbiddenWordsWarning');
+    const sendButton = document.getElementById('sendMessageBtn');
     
     let containsForbiddenWord = false;
     
@@ -559,6 +607,18 @@ function checkForbiddenWords(inputElement) {
     });
     
     warningElement.classList.toggle('hidden', !containsForbiddenWord);
+    
+    // Optionally disable the send button if forbidden words are found
+    if (sendButton) {
+        sendButton.disabled = containsForbiddenWord;
+        if (containsForbiddenWord) {
+            sendButton.classList.add('bg-gray-400');
+            sendButton.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+        } else {
+            sendButton.classList.remove('bg-gray-400');
+            sendButton.classList.add('bg-blue-500', 'hover:bg-blue-600');
+        }
+    }
 }
 
 // Copy Instructions Function
@@ -623,85 +683,329 @@ function expandInstructions() {
     });
 }
 
-// Bid Handling
-document.addEventListener('DOMContentLoaded', function() {
-    const placeBidBtn = document.getElementById('placeBidBtn');
-    if (placeBidBtn) {
-        placeBidBtn.addEventListener('click', function() {
-            // Send AJAX request to place bid
-            fetch('{{ route("writer.bid.submit", $order->id) }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    order_id: '{{ $order->id }}',
-                    amount: '{{ $order->price }}'
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showBidToaster();
-                    // Disable bid button
-                    placeBidBtn.disabled = true;
-                    placeBidBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
-                    placeBidBtn.classList.add('bg-gray-300', 'text-gray-600', 'cursor-not-allowed');
-                    placeBidBtn.textContent = 'Bid Placed';
-                    
-                    // After 3 seconds, redirect to the bids page
-                    setTimeout(() => {
-                        window.location.href = '{{ route("writer.bids") }}';
-                    }, 3000);
-                } else {
-                    alert(data.message || 'Failed to place bid');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error placing bid');
-            });
-        });
-    }
+// Store a Set of displayed message IDs to prevent duplicates
+const displayedMessageIds = new Set();
 
-    // Initialize file selection handling
-    handleFileSelection();
-    
-    // Display upload file name
-    const fileInput = document.getElementById('fileAttachment');
-    if (fileInput) {
-        fileInput.addEventListener('change', function(e) {
-            const fileName = e.target.files[0]?.name;
-            if (fileName) {
-                const inputField = document.querySelector('input[name="message"]');
-                if (inputField && !inputField.value) {
-                    inputField.value = `Attached file: ${fileName}`;
-                }
-            }
-        });
-    }
-    
-    // Set initial tab - always start with instructions
-    switchTab('instructions');
-    
-    // Initialize message tabs (default to client)
-    if (document.getElementById('client-tab')) {
-        switchMessageTab('client');
-    }
-    
-    // Auto-scroll messages to bottom
-    const clientMessages = document.getElementById('client-messages');
-    const supportMessages = document.getElementById('support-messages');
-    
-    if (clientMessages) {
-        clientMessages.scrollTop = clientMessages.scrollHeight;
-    }
-    
-    if (supportMessages) {
-        supportMessages.scrollTop = supportMessages.scrollHeight;
-    }
+// Initialize displayed message IDs from existing messages
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.message-item').forEach(message => {
+        if (message.dataset.messageId) {
+            displayedMessageIds.add(parseInt(message.dataset.messageId));
+        }
+    });
 });
+
+// Function to create the message element
+function createMessageElement(message) {
+    const isClient = message.message_type === 'client';
+    const isSentByCurrentUser = message.user_id == {{ Auth::id() }};
+    
+    // Determine avatar classes and message bubble classes
+    let avatarClasses = 'w-8 h-8 rounded-full flex items-center justify-center mr-4 flex-shrink-0 mt-1';
+    
+    if (isSentByCurrentUser) {
+        avatarClasses += ' bg-blue-100';
+    } else if (isClient) {
+        avatarClasses += ' bg-gray-100';
+    } else {
+        avatarClasses += ' bg-green-100';
+    }
+    
+    let messageBubbleClasses = 'max-w-lg rounded-lg p-4';
+    
+    if (isSentByCurrentUser) {
+        messageBubbleClasses += ' bg-blue-50';
+    } else if (isClient) {
+        messageBubbleClasses += ' bg-gray-100';
+    } else {
+        messageBubbleClasses += ' bg-green-50';
+    }
+    
+    // Get sender initial
+    let senderInitial = 'U'; // Default
+    if (isSentByCurrentUser) {
+        senderInitial = 'W'; // Writer
+    } else if (isClient) {
+        senderInitial = 'C'; // Client
+    } else {
+        senderInitial = 'S'; // Support
+    }
+    
+    // Format date for display
+    const createdAt = new Date(message.created_at);
+    const formattedDate = `${createdAt.getDate()} ${new Intl.DateTimeFormat('en-US', { month: 'short' }).format(createdAt)}, ${createdAt.getHours()}:${String(createdAt.getMinutes()).padStart(2, '0')} ${createdAt.getHours() >= 12 ? 'PM' : 'AM'}`;
+    
+    // Create a new message element
+    const messageElement = document.createElement('div');
+    messageElement.className = 'message-item flex p-4 border-b border-gray-100 last:border-b-0';
+    messageElement.dataset.messageId = message.id;
+    
+    // Create the HTML structure
+    messageElement.innerHTML = `
+        <div class="${avatarClasses}">
+            <span class="text-gray-600">
+                ${senderInitial}
+            </span>
+        </div>
+        <div class="${messageBubbleClasses}">
+            <p class="message-text text-gray-700 mb-3">
+                ${message.message}
+            </p>
+            
+            <div class="mt-2 flex justify-between items-center">
+                <span class="text-xs text-gray-500">${formattedDate}</span>
+                ${message.read_at ? `
+                <span class="text-xs text-green-500 flex items-center">
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Seen
+                </span>
+                ` : ''}
+            </div>
+        </div>
+    `;
+    
+    return messageElement;
+}
+
+// Send message via AJAX
+function sendMessage(event) {
+    event.preventDefault();
+    
+    const form = document.getElementById('messageForm');
+    const messageInput = document.getElementById('messageInput');
+    const messageType = document.getElementById('messageType').value;
+    const fileInput = document.getElementById('fileAttachment');
+    
+    // Check if message is empty
+    if (!messageInput.value.trim()) {
+        return;
+    }
+    
+    // Check for forbidden words
+    const forbiddenKeywords = ['dollar', 'money', 'pay', 'shillings', 'cash', 'price', 'payment'];
+    const messageText = messageInput.value.toLowerCase();
+    let containsForbiddenWord = false;
+    
+    forbiddenKeywords.forEach(keyword => {
+        if (messageText.includes(keyword)) {
+            containsForbiddenWord = true;
+        }
+    });
+    
+    if (containsForbiddenWord) {
+        showAlert('Your message contains prohibited keywords. Please avoid payment-related discussions.', 'warning');
+        return;
+    }
+    
+    // Create FormData object to handle file uploads
+    const formData = new FormData();
+    formData.append('_token', '{{ csrf_token() }}');
+    formData.append('message', messageInput.value);
+    formData.append('message_type', messageType);
+    formData.append('receiver_id', document.getElementById('receiverId').value);
+    formData.append('title', document.getElementById('messageTitle').value);
+    
+    if (fileInput.files.length > 0) {
+        formData.append('attachment', fileInput.files[0]);
+    }
+    
+    // Disable send button while processing
+    const sendButton = document.getElementById('sendMessageBtn');
+    sendButton.disabled = true;
+    sendButton.innerHTML = '<svg class="animate-spin w-5 h-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+    
+    // Send AJAX request
+    fetch('{{ route("writer.message.send", $order->id) }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add the new message to the UI
+            const messageContainer = document.getElementById(`${messageType}-messages`);
+            const noMessagesElement = document.getElementById(`${messageType}-no-messages`);
+            
+            // Hide the "no messages" element if it exists
+            if (noMessagesElement) {
+                noMessagesElement.classList.add('hidden');
+            }
+            
+            // Add the new message to the UI
+            if (!displayedMessageIds.has(data.message.id)) {
+                displayedMessageIds.add(data.message.id);
+                const messageElement = createMessageElement(data.message);
+                messageContainer.appendChild(messageElement);
+            }
+            
+            // Scroll to the bottom of the message container
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+            
+            // Clear the input field and file attachment
+            messageInput.value = '';
+            fileInput.value = '';
+            document.getElementById('attachmentLabel').classList.add('hidden');
+            
+            // Reset the send button
+            sendButton.disabled = false;
+            sendButton.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                </svg>
+                <span class="hidden sm:inline">Send</span>
+            `;
+        } else {
+            // Show error message
+            showAlert(data.message || 'Failed to send message. Please try again.', 'error');
+            
+            // Reset the send button
+            sendButton.disabled = false;
+            sendButton.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                </svg>
+                <span class="hidden sm:inline">Send</span>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('An error occurred while sending the message. Please try again.', 'error');
+        
+        // Reset the send button
+        sendButton.disabled = false;
+        sendButton.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+            </svg>
+            <span class="hidden sm:inline">Send</span>
+        `;
+    });
+}
+
+// Show alert message
+function showAlert(message, type = 'success') {
+    const alertContainer = document.getElementById('alertMessages');
+    
+    const alertColors = {
+        success: 'green',
+        error: 'red',
+        warning: 'yellow'
+    };
+    
+    const color = alertColors[type] || 'green';
+    
+    const alertHTML = `
+        <div class="bg-${color}-50 border-l-4 border-${color}-400 p-4 mb-6 alert-message">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    ${type === 'success' ? `
+                        <svg class="h-5 w-5 text-${color}-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                    ` : type === 'warning' ? `
+                        <svg class="h-5 w-5 text-${color}-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    ` : `
+                        <svg class="h-5 w-5 text-${color}-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                    `}
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-${color}-700">${message}</p>
+                </div>
+                <button class="ml-auto text-${color}-400 hover:text-${color}-600" onclick="this.parentNode.parentNode.remove()">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    alertContainer.innerHTML += alertHTML;
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert-message');
+        if (alerts.length > 0) {
+            alerts[0].remove();
+        }
+    }, 5000);
+}
+
+// Function to check for new messages
+function checkForNewMessages() {
+    const messageType = document.getElementById('messageType').value;
+    const orderId = {{ $order->id }};
+    
+    // Get the highest message ID we've seen so far
+    let highestMessageId = 0;
+    displayedMessageIds.forEach(id => {
+        highestMessageId = Math.max(highestMessageId, id);
+    });
+    
+    fetch(`/writer/order/${orderId}/check-messages?message_type=${messageType}&last_id=${highestMessageId}`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.hasNewMessages) {
+            // Update the message container with new messages
+            const messageContainer = document.getElementById(`${messageType}-messages`);
+            const noMessagesElement = document.getElementById(`${messageType}-no-messages`);
+            
+            // Hide the "no messages" element if it exists
+            if (noMessagesElement) {
+                noMessagesElement.classList.add('hidden');
+            }
+            
+            // Add new messages to the UI (only ones we haven't displayed yet)
+            data.messages.forEach(message => {
+                if (!displayedMessageIds.has(message.id)) {
+                    displayedMessageIds.add(message.id);
+                    const messageElement = createMessageElement(message);
+                    messageContainer.appendChild(messageElement);
+                }
+            });
+            
+            // Scroll to bottom if there are new messages
+            if (data.messages.length > 0) {
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error checking for new messages:', error);
+    });
+}
+
+function updateAttachmentLabel() {
+    const fileInput = document.getElementById('fileAttachment');
+    const attachmentLabel = document.getElementById('attachmentLabel');
+    
+    if (fileInput && attachmentLabel) {
+        if (fileInput.files && fileInput.files.length > 0) {
+            attachmentLabel.textContent = `Selected: ${fileInput.files[0].name}`;
+            attachmentLabel.classList.remove('hidden');
+        } else {
+            attachmentLabel.textContent = 'No file selected';
+            attachmentLabel.classList.add('hidden');
+        }
+    }
+}
 
 function showBidToaster() {
     let toaster = document.getElementById('bidToaster');
@@ -877,19 +1181,183 @@ function showDownloadToast(fileCount, singleFileName = null) {
     }, 3000);
 }
 
-// Add stylesheet for tab slider
-if (!document.querySelector('style#tab-slider-styles')) {
+// Bid Handling
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the displayed message IDs set
+    document.querySelectorAll('.message-item').forEach(message => {
+        if (message.dataset.messageId) {
+            displayedMessageIds.add(parseInt(message.dataset.messageId));
+        }
+    });
+    
+    // Set up the real-time deadline counter
+    updateTimeRemaining();
+    setInterval(updateTimeRemaining, 1000);
+    
+    const placeBidBtn = document.getElementById('placeBidBtn');
+    if (placeBidBtn) {
+        placeBidBtn.addEventListener('click', function() {
+            // Send AJAX request to place bid
+            fetch('{{ route("writer.bid.submit", $order->id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    order_id: '{{ $order->id }}',
+                    amount: '{{ $order->price }}'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showBidToaster();
+                    // Disable bid button
+                    placeBidBtn.disabled = true;
+                    placeBidBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+                    placeBidBtn.classList.add('bg-gray-300', 'text-gray-600', 'cursor-not-allowed');
+                    placeBidBtn.textContent = 'Bid Placed';
+                    
+                    // After 3 seconds, redirect to the bids page
+                    setTimeout(() => {
+                        window.location.href = '{{ route("home") }}';
+                    }, 3000);
+                } else {
+                    alert(data.message || 'Failed to place bid');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error placing bid');
+            });
+        });
+    }
+
+    // Initialize file selection handling
+    handleFileSelection();
+    
+    // Add event listener to the message form
+    const messageForm = document.getElementById('messageForm');
+    if (messageForm) {
+        messageForm.addEventListener('submit', sendMessage);
+        
+        // Also add listener to the send button
+        const sendButton = document.getElementById('sendMessageBtn');
+        if (sendButton) {
+            sendButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                sendMessage(e);
+            });
+        }
+    }
+    
+    // Set initial tab - always start with instructions
+    switchTab('instructions');
+    
+    // Initialize message tabs (default to client)
+    if (document.getElementById('client-tab')) {
+        switchMessageTab('client');
+    }
+    
+    // Auto-scroll messages to bottom
+    const clientMessages = document.getElementById('client-messages');
+    const supportMessages = document.getElementById('support-messages');
+    
+    if (clientMessages) {
+        clientMessages.scrollTop = clientMessages.scrollHeight;
+    }
+    
+    if (supportMessages) {
+        supportMessages.scrollTop = supportMessages.scrollHeight;
+    }
+    
+    // Start polling for new messages (every 3 seconds)
+    setInterval(checkForNewMessages, 3000);
+});
+
+// Add stylesheet for responsive text and tab slider
+if (!document.querySelector('style#custom-styles')) {
     const style = document.createElement('style');
-    style.id = 'tab-slider-styles';
+    style.id = 'custom-styles';
     style.textContent = `
+        /* Tab Slider Styles */
         .tab-slider {
             position: absolute;
-            bottom: -1px;
-            height: 2px;
+            bottom: 0;
+            height: 3px;
             background-color: #22C55E;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 3px 3px 0 0;
         }
         
+        /* Message Tab Slider Styles */
+        .message-tab-slider {
+            position: absolute;
+            bottom: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #22C55E, #10B981);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 3px 3px 0 0;
+            box-shadow: 0 1px 2px rgba(34, 197, 94, 0.3);
+        }
+        
+        .message-tab-btn {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .message-tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background-color: transparent;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .message-tab-btn[aria-selected="true"]::after {
+            width: 100%;
+        }
+        
+        /* Message Container Styles */
+        .message-container {
+            height: 400px;
+            max-height: 60vh;
+        }
+        
+        .message-list {
+            height: calc(100% - 60px);
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            padding: 0;
+            margin: 0;
+        }
+        
+        /* Message Text Responsive Styles */
+        .message-text {
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 640px) {
+            .message-text {
+                font-size: 0.813rem;
+                line-height: 1.4;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .message-text {
+                font-size: 0.938rem;
+                line-height: 1.6;
+            }
+        }
+        
+        /* Tooltip Styles */
         .copy-tooltip {
             position: absolute;
             bottom: 100%;
@@ -906,80 +1374,8 @@ if (!document.querySelector('style#tab-slider-styles')) {
             margin-bottom: 0.5rem;
             z-index: 50;
         }
-        
-        @media (max-width: 640px) {
-            .prose p {
-                font-size: 0.875rem;
-                line-height: 1.5;
-            }
-        }
-        
-        @media (min-width: 1536px) {
-            .prose p {
-                font-size: 1.05rem;
-                line-height: 1.7;
-            }
-        }
     `;
     document.head.appendChild(style);
 }
-// Add this to your existing JavaScript
-function checkForbiddenWords(inputElement) {
-    const forbiddenKeywords = ['dollar', 'money', 'pay', 'shillings', 'cash', 'price', 'payment'];
-    const messageText = inputElement.value.toLowerCase();
-    const warningElement = document.getElementById('forbiddenWordsWarning');
-    const sendButton = document.getElementById('sendMessageBtn');
-    
-    let containsForbiddenWord = false;
-    
-    forbiddenKeywords.forEach(keyword => {
-        if (messageText.includes(keyword)) {
-            containsForbiddenWord = true;
-        }
-    });
-    
-    warningElement.classList.toggle('hidden', !containsForbiddenWord);
-    
-    // Optionally disable the send button if forbidden words are found
-    if (sendButton) {
-        sendButton.disabled = containsForbiddenWord;
-        if (containsForbiddenWord) {
-            sendButton.classList.add('bg-gray-400');
-            sendButton.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-        } else {
-            sendButton.classList.remove('bg-gray-400');
-            sendButton.classList.add('bg-blue-500', 'hover:bg-blue-600');
-        }
-    }
-}
-
-function updateAttachmentLabel() {
-    const fileInput = document.getElementById('fileAttachment');
-    const attachmentLabel = document.getElementById('attachmentLabel');
-    
-    if (fileInput && attachmentLabel) {
-        if (fileInput.files && fileInput.files.length > 0) {
-            attachmentLabel.textContent = `Selected: ${fileInput.files[0].name}`;
-            attachmentLabel.classList.remove('hidden');
-        } else {
-            attachmentLabel.textContent = 'No file selected';
-            attachmentLabel.classList.add('hidden');
-        }
-    }
-}
-
-// Auto-scroll to the bottom of the message container when it loads
-document.addEventListener('DOMContentLoaded', function() {
-    const clientMessages = document.getElementById('client-messages');
-    const supportMessages = document.getElementById('support-messages');
-    
-    if (clientMessages) {
-        clientMessages.scrollTop = clientMessages.scrollHeight;
-    }
-    
-    if (supportMessages) {
-        supportMessages.scrollTop = supportMessages.scrollHeight;
-    }
-});
 </script>
 @endsection
