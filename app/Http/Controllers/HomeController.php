@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Writer;
 
+use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Bid;
 use App\Models\Message;
@@ -13,567 +14,161 @@ use ZipArchive;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
-class HomeController extends Controller
+class WriterOrderController extends Controller
 {
     /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    
-    // Add this to your BaseController or a middleware
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            if (Auth::check()) {
-                $user = Auth::user();
-                
-                // Current orders count
-                $currentCount = Order::where('writer_id', $user->id)
-                    ->whereIn('status', [
-                        Order::STATUS_CONFIRMED,
-                        Order::STATUS_UNCONFIRMED,
-                        Order::STATUS_IN_PROGRESS,
-                        Order::STATUS_DONE,
-                        Order::STATUS_DELIVERED
-                    ])
-                    ->count();
-
-                // Revision orders count
-                $revisionCount = Order::where('writer_id', $user->id)
-                    ->where('status', Order::STATUS_REVISION)
-                    ->count();
-
-                // Dispute orders count 
-                $disputeCount = Order::where('writer_id', $user->id)
-                    ->where('status', Order::STATUS_DISPUTE)
-                    ->count();
-
-                // Bids count
-                $bidsCount = Bid::where('user_id', $user->id)
-                    ->whereHas('order', function($query) {
-                        $query->where('status', Order::STATUS_AVAILABLE);
-                    })
-                    ->count();
-
-                // Unread messages count
-                $unreadMessagesCount = Message::whereIn('order_id', function($query) use ($user) {
-                    $query->select('id')
-                        ->from('orders')
-                        ->where(function($orderQuery) use ($user) {
-                            $orderQuery->where('writer_id', $user->id)
-                                ->orWhereIn('id', function($bidQuery) use ($user) {
-                                    $bidQuery->select('order_id')
-                                        ->from('bids')
-                                        ->where('user_id', $user->id);
-                                });
-                        });
-                })
-                ->where('user_id', '!=', $user->id)
-                ->whereNull('read_at')
-                ->count();
-
-                // Share variables with all views
-                view()->share(compact(
-                    'currentCount',
-                    'revisionCount',
-                    'disputeCount',
-                    'bidsCount',
-                    'unreadMessagesCount'
-                ));
-            }
-            
-            return $next($request);
-        });
-    }
-
-    /**
-     * Show the application dashboard.
+     * Display the writer's active and completed orders
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-    public function index()
-    {
-        // Check if user is active
-        //$user = Auth::user();
-        //if ($user->status !== 'active') {
-         //   return redirect()->route('writer.pending')->with('error', 'Your account is not active yet.');
-        //}
-    
-        // Get IDs of orders the user has already bid on
-        $biddedOrderIds = Bid::where('user_id', Auth::id())->pluck('order_id');
-        
-        // Get available orders excluding those the user has already bid on
-        $availableOrders = Order::where('status', Order::STATUS_AVAILABLE)
-            ->whereNotIn('id', $biddedOrderIds)
-            ->with(['files', 'client', 'bids'])
-            ->latest()
-            ->get();
-        
-        return view('writers.index', compact('availableOrders'));
-    }
-
     public function currentOrders()
     {
-        $currentOrders = Order::where('writer_id', Auth::id())
-        ->whereIn('status', [
-            Order::STATUS_CONFIRMED, 
-            Order::STATUS_UNCONFIRMED,
-            Order::STATUS_IN_PROGRESS,
-            Order::STATUS_DONE,
-            Order::STATUS_DELIVERED
-        ])->latest()->get();
+        $writer = Auth::guard('writer')->user();
         
-        return view('writers.current', compact('currentOrders'));
-    }
-
-    public function currentBidOrders()
-    {
-        // Check if user is active
-        //$user = Auth::user();
-        //if ($user->status !== 'active') {
-        //    return redirect()->route('writer.pending')->with('error', 'Your account is not active yet.');
-        //}
-
-        // Get orders the user has bid on
-        $biddedOrderIds = Bid::where('user_id', Auth::id())->pluck('order_id');
-        
-        // Get those orders with user's bid information
-        $bidOrders = Order::whereIn('id', $biddedOrderIds)
-            ->with(['files', 'client', 'bids' => function($query) {
-                $query->where('user_id', Auth::id());
-            }])
+        // Get active orders (CONFIRMED, UNCONFIRMED)
+        $activeOrders = Order::where('writer_id', $writer->id)
+            ->whereIn('status', ['CONFIRMED', 'UNCONFIRMED'])
+            ->with('customer')
             ->latest()
             ->get();
             
-        return view('writers.bids', compact('bidOrders'));
-    }
-
-    public function currentOrdersOnRevision()
-    {
-        return view('writers.revision');
-    }
-
-    public function completedOrders()
-    {
-        return view('writers.finished');
-    }
-
-    public function orderOnDispute()
-    {
-        return view('writers.dispute');
-    }
-    // Add this method to HomeController.php
-    public function messages()
-    {
-
-        if (Auth::check()) {
-            $user = Auth::user();
-        
-        
-            // Get all message threads related to this user (sent or received)
-            $messageThreads = Message::where(function($query) use ($user) {
-                    $query->where('user_id', $user->id)
-                        ->orWhere('receiver_id', $user->id);
-                })
-                ->with(['user', 'receiver', 'order', 'files'])
-                ->latest()
-                ->get()
-                ->groupBy(function($message) {
-                    // Group by conversation
-                    if ($message->is_general) {
-                        // If it's a general message, group by title and the other user
-                        return 'general_' . $message->title . '_' . 
-                            ($message->user_id == Auth::id() ? $message->receiver_id : $message->user_id);
-                    } else {
-                        // If it's order related, group by order
-                        return 'order_' . ($message->order_id ?? 0);
-                    }
-                })
-                ->map(function($messages) {
-                    // For each thread, get the latest message
-                    $latest = $messages->first();
-                    $latest->thread_messages_count = $messages->count();
-                    $latest->unread_count = $messages
-                        ->where('receiver_id', Auth::id())
-                        ->whereNull('read_at')
-                        ->count();
-                        
-                    return $latest;
-                });
-            
-            // Get users for new message dropdown (clients, support staff)
-            $users = User::whereIn('usertype', ['client', 'admin', 'support'])
-                ->select('id', 'name', 'usertype', 'email')
-                ->orderBy('usertype')
-                ->orderBy('name')
-                ->get()
-                ->map(function($user) {
-                    $user->display_name = $user->name . ' (' . ucfirst($user->usertype) . ')';
-                    return $user;
-                });
-                
-            // Get orders for new message dropdown
-            $userOrders = Order::where('writer_id', $user->id)
-                ->orWhereIn('id', function($query) use ($user) {
-                    $query->select('order_id')
-                        ->from('bids')
-                        ->where('user_id', $user->id);
-                })
-                ->select('id', 'title')
-                ->get();
-                
-            return view('writers.messages', compact('messageThreads', 'userOrders', 'users'));
-
-        } else {
-            // Handle unauthenticated user - perhaps redirect to login
-            $messageThreads = collect(); // Empty collection
-            return redirect()->route('login')->with('error', 'Please login to view messages');
-        }
-    }
-
-    public function sendNewMessage(Request $request)
-    {
-        $request->validate([
-            'receiver_id' => 'required|exists:users,id',
-            'title' => 'required|string|max:255',
-            'message' => 'required|string',
-            'order_id' => 'nullable|exists:orders,id',
-            'attachments.*' => 'nullable|file|max:10240', // 10MB max
-        ]);
-        
-        // Check for forbidden words
-        $forbiddenKeywords = ['dollar', 'money', 'pay', 'shillings', 'cash', 'price', 'payment'];
-        $messageText = strtolower($request->message);
-        $foundKeywords = [];
-        
-        foreach ($forbiddenKeywords as $keyword) {
-            if (strpos($messageText, $keyword) !== false) {
-                $foundKeywords[] = $keyword;
-            }
-        }
-        
-        if (!empty($foundKeywords)) {
-            return back()->with('error', 'Your message contains prohibited keywords: ' . implode(', ', $foundKeywords) . '. Please revise your message to avoid payment discussions.');
-        }
-        
-        // Create new message
-        $message = new Message();
-        $message->user_id = Auth::id();
-        $message->receiver_id = $request->receiver_id;
-        $message->title = $request->title;
-        $message->message = $request->message;
-        $message->order_id = $request->order_id;
-        $message->is_general = empty($request->order_id);
-        $message->message_type = User::find($request->receiver_id)->usertype === 'client' ? 'client' : 'support';
-        $message->save();
-        
-        // Handle file attachments
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $index => $file) {
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('message_attachments/' . $message->id, $fileName);
-                $fileSize = $file->getSize();
-                
-                $fileModel = new File([
-                    'name' => $file->getClientOriginalName(),
-                    'path' => $filePath,
-                    'size' => $fileSize,
-                    'uploaded_by' => Auth::id(),
-                    'description' => $request->input('attachment_descriptions.' . $index, null)
-                ]);
-                
-                $message->files()->save($fileModel);
-            }
-        }
-        
-        return redirect()->route('writer.messages')->with('success', 'Message sent successfully!');
-    }
-
-    public function viewMessageThread($threadId)
-    {
-        $user = Auth::user();
-        
-        // Parse the thread ID to determine if it's general or order-related
-        $parts = explode('_', $threadId);
-        $type = $parts[0];
-        
-        if ($type === 'order') {
-            $orderId = $parts[1];
-            $order = Order::findOrFail($orderId);
-            
-            // Get all messages for this order
-            $messages = Message::where('order_id', $orderId)
-                ->with(['user', 'receiver', 'files'])
-                ->orderBy('created_at')
-                ->get();
-            
-            // Mark unread messages as read
-            Message::where('order_id', $orderId)
-                ->where('receiver_id', $user->id)
-                ->whereNull('read_at')
-                ->update(['read_at' => now()]);
-                
-            $otherUser = $messages->first()->user_id == $user->id 
-                ? User::find($messages->first()->receiver_id)
-                : User::find($messages->first()->user_id);
-                
-            return view('writers.message-thread', compact('order', 'messages', 'otherUser', 'type'));
-        } else {
-            // This is a general message thread
-            $title = $parts[1];
-            $otherUserId = $parts[2];
-            $otherUser = User::findOrFail($otherUserId);
-            
-            // Get all messages between these users with this title
-            $messages = Message::where(function($query) use ($user, $otherUser) {
-                    $query->where(function($q) use ($user, $otherUser) {
-                        $q->where('user_id', $user->id)
-                        ->where('receiver_id', $otherUser->id);
-                    })->orWhere(function($q) use ($user, $otherUser) {
-                        $q->where('user_id', $otherUser->id)
-                        ->where('receiver_id', $user->id);
-                    });
-                })
-                ->where('is_general', true)
-                ->where('title', $title)
-                ->with(['user', 'receiver', 'files'])
-                ->orderBy('created_at')
-                ->get();
-            
-            // Mark unread messages as read
-            Message::where(function($query) use ($user, $otherUser) {
-                    $query->where('user_id', $otherUser->id)
-                        ->where('receiver_id', $user->id);
-                })
-                ->where('is_general', true)
-                ->where('title', $title)
-                ->whereNull('read_at')
-                ->update(['read_at' => now()]);
-                
-            return view('writers.message-thread', compact('messages', 'otherUser', 'title', 'type'));
-        }
-    }
-
-    public function replyToMessage(Request $request)
-    {
-        $request->validate([
-            'thread_id' => 'required|string',
-            'message' => 'required|string',
-            'attachments.*' => 'nullable|file|max:10240',
-        ]);
-        
-        $user = Auth::user();
-        $threadId = $request->thread_id;
-        $parts = explode('_', $threadId);
-        $type = $parts[0];
-        
-        // Check for forbidden words
-        $forbiddenKeywords = ['dollar', 'money', 'pay', 'shillings', 'cash', 'price', 'payment'];
-        $messageText = strtolower($request->message);
-        $foundKeywords = [];
-        
-        foreach ($forbiddenKeywords as $keyword) {
-            if (strpos($messageText, $keyword) !== false) {
-                $foundKeywords[] = $keyword;
-            }
-        }
-        
-        if (!empty($foundKeywords)) {
-            return back()->with('error', 'Your message contains prohibited keywords: ' . implode(', ', $foundKeywords) . '. Please revise your message to avoid payment discussions.');
-        }
-        
-        if ($type === 'order') {
-            $orderId = $parts[1];
-            $order = Order::findOrFail($orderId);
-            
-            // Get the previous message to determine the receiver
-            $previousMessage = Message::where('order_id', $orderId)
-                ->orderBy('created_at', 'desc')
-                ->first();
-                
-            $receiverId = $previousMessage->user_id == $user->id 
-                ? $previousMessage->receiver_id 
-                : $previousMessage->user_id;
-                
-            // Create the reply
-            $message = new Message();
-            $message->user_id = $user->id;
-            $message->receiver_id = $receiverId;
-            $message->order_id = $orderId;
-            $message->is_general = false;
-            $message->message = $request->message;
-            $message->message_type = User::find($receiverId)->usertype === 'client' ? 'client' : 'support';
-            $message->save();
-        } else {
-            // This is a general message
-            $title = $parts[1];
-            $otherUserId = $parts[2];
-            
-            // Create the reply
-            $message = new Message();
-            $message->user_id = $user->id;
-            $message->receiver_id = $otherUserId;
-            $message->title = $title;
-            $message->is_general = true;
-            $message->message = $request->message;
-            $message->message_type = User::find($otherUserId)->usertype === 'client' ? 'client' : 'support';
-            $message->save();
-        }
-        
-        // Handle file attachments
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $index => $file) {
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('message_attachments/' . $message->id, $fileName);
-                $fileSize = $file->getSize();
-                
-                $fileModel = new File([
-                    'name' => $file->getClientOriginalName(),
-                    'path' => $filePath,
-                    'size' => $fileSize,
-                    'uploaded_by' => Auth::id(),
-                    'description' => $request->input('attachment_descriptions.' . $index, null)
-                ]);
-                
-                $message->files()->save($fileModel);
-            }
-        }
-        
-        return back()->with('success', 'Reply sent successfully!');
-    }
-
-    public function checkNewMessages(Request $request, $orderId)
-    {
-        $messageType = $request->query('message_type', 'client');
-        $lastMessageId = $request->query('last_id', 0);
-        
-        // Only get messages newer than the last one the client has
-        $messages = Message::where('order_id', $orderId)
-            ->where('message_type', $messageType)
-            ->where('id', '>', $lastMessageId)  // This is important!
-            ->with(['user', 'files'])
-            ->orderBy('created_at', 'asc')
+        // Get completed orders (DONE, DELIVERED)
+        $completedOrders = Order::where('writer_id', $writer->id)
+            ->whereIn('status', ['DONE', 'DELIVERED'])
+            ->with('customer')
+            ->latest()
             ->get();
         
-        return response()->json([
-            'hasNewMessages' => $messages->count() > 0,
+        // Calculate remaining time for each order
+        $activeOrders->map(function($order) {
+            $deadline = Carbon::parse($order->deadline);
+            $now = Carbon::now();
+            
+            if ($now->gt($deadline)) {
+                // Deadline has passed
+                $order->time_remaining = 'Overdue';
+                $order->time_status = 'overdue';
+            } else {
+                $diff = $now->diff($deadline);
+                
+                if ($diff->days > 0) {
+                    $order->time_remaining = $diff->days . 'd ' . $diff->h . 'h';
+                } else if ($diff->h > 0) {
+                    $order->time_remaining = $diff->h . 'h ' . $diff->i . 'm';
+                } else {
+                    $order->time_remaining = $diff->i . 'm';
+                }
+                
+                // Add time status for color coding
+                if ($diff->days > 2) {
+                    $order->time_status = 'safe';
+                } else if ($diff->days > 0 || $diff->h > 5) {
+                    $order->time_status = 'warning';
+                } else {
+                    $order->time_status = 'urgent';
+                }
+            }
+            
+            return $order;
+        });
+        
+        return view('writers.current', compact('activeOrders', 'completedOrders'));
+    }
+    
+    /**
+     * Display the assigned order details
+     *
+     * @param  int  $id
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+    public function showAssignedOrder($id)
+    {
+        $writer = Auth::guard('writer')->user();
+        
+        $order = Order::with(['customer', 'files'])
+            ->where('id', $id)
+            ->where('writer_id', $writer->id)
+            ->firstOrFail();
+        
+        // Count unread messages
+        $unreadMessages = Message::where('order_id', $order->id)
+            ->where('recipient_id', $writer->id)
+            ->where('recipient_type', 'WRITER')
+            ->where('is_read', false)
+            ->count();
+        
+        // Get messages grouped by date
+        $messages = Message::where('order_id', $order->id)
+            ->orderBy('created_at')
+            ->get()
+            ->groupBy(function($message) {
+                return Carbon::parse($message->created_at)->format('F d, Y');
+            });
+        
+        return view('writers.assigned-order-details', [
+            'order' => $order,
+            'unreadMessages' => $unreadMessages,
             'messages' => $messages
         ]);
     }
-    public function userFinance()
+    
+    /**
+     * Mark messages as read
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function markMessagesRead(Request $request, $id)
     {
-        return view('writers.finance');
-    }
-
-    public function profile()
-    {
-        return view('writers.profile');
-    }
-
-    public function statistics()
-    {
-        return view('writers.statistics');
+        $writer = Auth::guard('writer')->user();
+        
+        try {
+            Message::where('order_id', $id)
+                ->where('recipient_id', $writer->id)
+                ->where('recipient_type', 'WRITER')
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+            
+            return response()->json([
+                'success' => true
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error marking messages as read: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to mark messages as read'
+            ], 500);
+        }
     }
     
-    public function AssignedOrder()
-    {
-        return view('writers.AssignedOrder');
-    }
-
-        // In HomeController.php
-    public function availableOrderDetails($id)
-    {
-        // Check if user is active
-        //$user = Auth::user();
-        //if ($user->status !== 'active') {
-        //    return redirect()->route('writer.pending')->with('error', 'Your account is not active yet.');
-        //}
-
-        // Get order details with related data
-        $order = Order::with(['files', 'client', 'bids', 'messages' => function($query) {
-            $query->with('user')->latest();
-        }])->findOrFail($id);
-
-        // Calculate time remaining until deadline
-        $deadline = Carbon::parse($order->deadline);
-        $now = Carbon::now();
-        $diff = $now->diff($deadline);
-        
-        $timeRemaining = '';
-        if ($diff->days > 0) {
-            $timeRemaining .= $diff->days . 'd ';
-        }
-        if ($diff->h > 0) {
-            $timeRemaining .= $diff->h . 'h ';
-        }
-        $timeRemaining .= $diff->i . 'm';
-        
-        // Check if user has bid on this order
-        $userHasBid = $order->bids()->where('user_id', Auth::id())->exists();
-        $bidCount = $order->bids->count();
-        
-        // Get client messages (between writer and client)
-        $clientMessages = $order->messages()
-            ->with('user')
-            ->where('message_type', 'client')
-            ->latest()
-            ->get();
-        
-        // Get support messages (between writer and support/admin)
-        $supportMessages = $order->messages()
-            ->with('user')
-            ->where('message_type', 'support')
-            ->latest()
-            ->get();
-        
-        // Verify files exist in storage
-        foreach ($order->files as $file) {
-            $file->exists = Storage::exists($file->path);
-        }
-
-        return view('writers.availableOrderDetails', compact(
-            'order', 
-            'userHasBid', 
-            'timeRemaining', 
-            'bidCount',
-            'clientMessages',
-            'supportMessages',
-            'deadline'
-        ));
-    }
-
-    public function sendMessage(Request $request, $orderId)
+    /**
+     * Send a message
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function sendMessage(Request $request)
     {
         $request->validate([
-            'message' => 'required|string|max:1000',
-            'message_type' => 'required|in:client,support',
-            'attachment' => 'nullable|file|max:10240', // 10MB max
+            'order_id' => 'required|exists:orders,id',
+            'content' => 'required_without:attachment|nullable|string',
+            'attachment' => 'nullable|file|max:20000' // 20MB max
         ]);
-
+        
+        $writer = Auth::guard('writer')->user();
+        
+        $order = Order::where('id', $request->order_id)
+            ->where('writer_id', $writer->id)
+            ->firstOrFail();
+        
         try {
-            // Get the order
-            $order = Order::findOrFail($orderId);
-            
-            // Check if user can send a message for this order
-            // Writers can message if they've placed a bid or are assigned
-            $userHasBid = $order->bids()->where('user_id', Auth::id())->exists();
-            $isAssigned = $order->writer_id == Auth::id();
-            
-            if (!$userHasBid && !$isAssigned && Auth::user()->usertype !== 'admin' && Auth::user()->usertype !== 'support') {
-                if ($request->ajax()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'You must place a bid first to message about this order'
-                    ], 403);
-                }
-                return back()->with('error', 'You must place a bid first to message about this order');
-            }
-            
             // Check for forbidden keywords
             $forbiddenKeywords = ['dollar', 'money', 'pay', 'shillings', 'cash', 'price', 'payment'];
-            $messageText = strtolower($request->message);
+            $messageText = strtolower($request->content);
             $foundKeywords = [];
             
             foreach ($forbiddenKeywords as $keyword) {
@@ -583,299 +178,395 @@ class HomeController extends Controller
             }
             
             if (!empty($foundKeywords)) {
-                if ($request->ajax()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Your message contains prohibited keywords: ' . implode(', ', $foundKeywords) . '. Please revise your message to avoid payment discussions in the messaging system.'
-                    ], 400);
-                }
-                return back()->with('warning', 'Your message contains prohibited keywords: ' . implode(', ', $foundKeywords) . '. Please revise your message to avoid payment discussions in the messaging system.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your message contains prohibited keywords: ' . implode(', ', $foundKeywords) . '. Please avoid payment discussions.'
+                ], 400);
             }
             
-            // Create a new message
-            $message = new Message();
-            $message->order_id = $orderId;
-            $message->user_id = Auth::id();
-            $message->message = $request->message;
-            $message->message_type = $request->message_type;
+            // Create message
+            $message = Message::create([
+                'order_id' => $order->id,
+                'content' => $request->content,
+                'sender_id' => $writer->id,
+                'sender_type' => 'WRITER',
+                'recipient_id' => $order->customer_id,
+                'recipient_type' => 'CUSTOMER',
+                'is_read' => false
+            ]);
             
-            // Set title field - this is what was missing
-            $message->title = $request->title ?? "Order #" . $orderId . " Message";
-            
-            // Set receiver_id based on message type
-            if ($request->message_type === 'client') {
-                // For client messages, set receiver to the client
-                $message->receiver_id = $order->client_id;
-            } else {
-                // For support messages, find an admin or support user
-                $supportUser = User::where('usertype', 'admin')
-                    ->orWhere('usertype', 'support')
-                    ->first();
-                    
-                if ($supportUser) {
-                    $message->receiver_id = $supportUser->id;
-                } else {
-                    throw new \Exception("No support staff available to receive the message");
-                }
-            }
-            
-            // Set is_general to false since this is order-related
-            $message->is_general = false;
-            
-            $message->save();
-            
-            // Handle file attachment if present
+            // Handle attachment if present
             if ($request->hasFile('attachment')) {
                 $file = $request->file('attachment');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('order_messages/' . $orderId, $fileName);
-                $fileSize = $file->getSize();
                 
-                $fileModel = new File([
-                    'name' => $file->getClientOriginalName(),
-                    'path' => $filePath,
-                    'size' => $fileSize,
-                    'uploaded_by' => Auth::id(),
+                $originalName = $file->getClientOriginalName();
+                $extension = $file->getClientOriginalExtension();
+                $size = $file->getSize();
+                $mimeType = $file->getMimeType();
+                
+                // Generate unique filename
+                $filename = 'msg_' . $message->id . '_' . uniqid() . '.' . $extension;
+                
+                // Store file in storage
+                $path = $file->storeAs('message_attachments', $filename, 'public');
+                
+                // Create file record
+                $fileRecord = File::create([
+                    'order_id' => $order->id,
+                    'message_id' => $message->id,
+                    'path' => $path,
+                    'original_name' => $originalName,
+                    'mime_type' => $mimeType,
+                    'size' => $size,
+                    'description' => 'Message Attachment',
+                    'uploader_id' => $writer->id,
+                    'uploader_type' => 'WRITER'
                 ]);
                 
-                $message->files()->save($fileModel);
+                // Update message with attachment info
+                $message->has_attachment = true;
+                $message->save();
             }
-            
-            // Mark any unread messages from the other side as read
-            if ($request->message_type === 'client') {
-                // Mark client messages as read
-                Message::where('order_id', $orderId)
-                    ->where('message_type', 'client')
-                    ->where('user_id', $order->client_id)
-                    ->whereNull('read_at')
-                    ->update(['read_at' => now()]);
-            } else {
-                // Mark support messages as read
-                Message::where('order_id', $orderId)
-                    ->where('message_type', 'support')
-                    ->whereNotIn('user_id', [Auth::id()])
-                    ->whereNull('read_at')
-                    ->update(['read_at' => now()]);
-            }
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => $message
-                ]);
-            }
-            
-            return back()->with('success', 'Message sent successfully');
-        } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to send message: ' . $e->getMessage()
-                ], 500);
-            }
-            return back()->with('error', 'Failed to send message: ' . $e->getMessage());
-        }
-    }
-    
-    public function submitBid(Request $request, $orderId)
-    {
-        // Validate request
-        $request->validate([
-            'amount' => 'required|numeric|min:0',
-        ]);
-
-        try {
-            // Get the order
-            $order = Order::findOrFail($orderId);
-            
-            // Check if order is available
-            if ($order->status !== Order::STATUS_AVAILABLE) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This order is no longer available for bidding'
-                ], 400);
-            }
-            
-            // Check if user already has a bid on this order
-            $existingBid = Bid::where('order_id', $orderId)
-                ->where('user_id', Auth::id())
-                ->exists();
-                
-            if ($existingBid) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You have already placed a bid on this order'
-                ], 400);
-            }
-            
-            // Create a new bid
-            $bid = new Bid();
-            $bid->order_id = $orderId;
-            $bid->user_id = Auth::id();
-            $bid->amount = $request->amount;
-            $bid->delivery_time = $order->deadline; // Use order deadline as delivery time
-            $bid->cover_letter = $request->cover_letter ?? 'I can complete this order as requested.';
-            $bid->save();
             
             return response()->json([
                 'success' => true,
-                'message' => 'Your bid has been placed successfully'
+                'message' => $message,
+                'formatted_time' => Carbon::parse($message->created_at)->format('h:i A')
             ]);
         } catch (\Exception $e) {
+            Log::error('Error sending message: ' . $e->getMessage());
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to place bid: ' . $e->getMessage()
+                'message' => 'Failed to send message'
             ], 500);
         }
     }
-
-    public function download(Request $request)
+    
+    /**
+     * Extend order deadline
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function extendDeadline(Request $request, $id)
     {
         $request->validate([
-            'file_id' => 'required|exists:files,id',
+            'extension_hours' => 'required|integer|min:1|max:24',
+            'reason' => 'required|string|min:10'
         ]);
-
-        $file = File::findOrFail($request->file_id);
         
-        // Check if user has permission to download the file
-        // For order files, check if the order is available or assigned to this writer
-        if ($file->fileable_type === 'App\Models\Order') {
-            $order = Order::find($file->fileable_id);
+        $writer = Auth::guard('writer')->user();
+        
+        $order = Order::where('id', $id)
+            ->where('writer_id', $writer->id)
+            ->where('status', '!=', 'DONE')
+            ->firstOrFail();
+        
+        try {
+            // Update deadline
+            $currentDeadline = Carbon::parse($order->deadline);
+            $newDeadline = $currentDeadline->addHours($request->extension_hours);
             
-            if (!$order || 
-                ($order->status !== Order::STATUS_AVAILABLE && 
-                $order->writer_id !== Auth::id() && 
-                Auth::user()->usertype !== 'admin')) {
-                abort(403, 'You do not have permission to download this file');
-            }
+            $order->deadline = $newDeadline;
+            $order->save();
+            
+            // Create system message about extension
+            Message::create([
+                'order_id' => $order->id,
+                'content' => "Deadline has been extended by {$request->extension_hours} hours. Reason: {$request->reason}",
+                'sender_id' => $writer->id,
+                'sender_type' => 'WRITER',
+                'recipient_id' => $order->customer_id,
+                'recipient_type' => 'CUSTOMER',
+                'is_read' => false
+            ]);
+            
+            // Create actual message from writer
+            Message::create([
+                'order_id' => $order->id,
+                'content' => $request->reason,
+                'sender_id' => $writer->id,
+                'sender_type' => 'WRITER',
+                'recipient_id' => $order->customer_id,
+                'recipient_type' => 'CUSTOMER',
+                'is_read' => false
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'new_deadline' => $newDeadline,
+                'message' => 'Deadline extended successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error extending deadline: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to extend deadline'
+            ], 500);
         }
-
-        // Check if file exists in storage
-        if (!Storage::exists($file->path)) {
-            abort(404, 'File not found in storage');
-        }
-
-        return Storage::download($file->path, $file->name);
     }
-
-    public function downloadMultiple(Request $request)
+    
+    /**
+     * Reassign order to another writer
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function reassignOrder(Request $request, $id)
+    {
+        $writer = Auth::guard('writer')->user();
+        
+        $order = Order::where('id', $id)
+            ->where('writer_id', $writer->id)
+            ->where('status', '!=', 'DONE')
+            ->firstOrFail();
+        
+        try {
+            // Update order status to pending reassignment
+            $order->status = 'PENDING_REASSIGNMENT';
+            $order->save();
+            
+            // Create system message about reassignment
+            Message::create([
+                'order_id' => $order->id,
+                'content' => "Writer has requested order reassignment.",
+                'sender_id' => $writer->id,
+                'sender_type' => 'WRITER',
+                'recipient_id' => 0, // System/Support
+                'recipient_type' => 'SUPPORT',
+                'is_read' => false
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Order reassignment requested successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error reassigning order: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to request reassignment'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Upload files for an order
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function uploadFiles(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+            'files' => 'required|array',
+            'files.*' => 'required|file|max:99000', // 99MB limit
+            'descriptions' => 'required|array',
+            'descriptions.*' => 'nullable|string'
+        ]);
+        
+        $writer = Auth::guard('writer')->user();
+        
+        $order = Order::where('id', $request->order_id)
+            ->where('writer_id', $writer->id)
+            ->firstOrFail();
+        
+        try {
+            $uploadedFiles = [];
+            $hasCompletedFile = false;
+            
+            // Process each file
+            foreach ($request->file('files') as $index => $file) {
+                $originalName = $file->getClientOriginalName();
+                $extension = $file->getClientOriginalExtension();
+                $size = $file->getSize();
+                $mimeType = $file->getMimeType();
+                
+                // Generate unique filename
+                $filename = $order->order_number . '_' . uniqid() . '.' . $extension;
+                
+                // Store file in storage
+                $path = $file->storeAs('order_files', $filename, 'public');
+                
+                // Get description
+                $description = isset($request->descriptions[$index]) ? $request->descriptions[$index] : null;
+                
+                // Check if this file is marked as "completed"
+                if ($description === 'completed') {
+                    $hasCompletedFile = true;
+                }
+                
+                // Create file record
+                $fileRecord = File::create([
+                    'order_id' => $order->id,
+                    'path' => $path,
+                    'original_name' => $originalName,
+                    'mime_type' => $mimeType,
+                    'size' => $size,
+                    'description' => $description,
+                    'uploader_id' => $writer->id,
+                    'uploader_type' => 'WRITER'
+                ]);
+                
+                $uploadedFiles[] = $fileRecord;
+            }
+            
+            // If a completed file was uploaded, mark order as DONE
+            $statusChanged = false;
+            if ($hasCompletedFile && in_array($order->status, ['CONFIRMED', 'ON_REVISION'])) {
+                $order->status = 'DONE';
+                $order->save();
+                $statusChanged = true;
+                
+                // Create system message
+                Message::create([
+                    'order_id' => $order->id,
+                    'content' => "Writer has marked this order as completed.",
+                    'sender_id' => $writer->id,
+                    'sender_type' => 'WRITER',
+                    'recipient_id' => $order->customer_id,
+                    'recipient_type' => 'CUSTOMER',
+                    'is_read' => false
+                ]);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'files' => $uploadedFiles,
+                'status_changed' => $statusChanged,
+                'message' => 'Files uploaded successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error uploading files: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload files: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Download a file
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function downloadFile($id)
+    {
+        $writer = Auth::guard('writer')->user();
+        
+        $file = File::findOrFail($id);
+        
+        // Check if writer has access to this file
+        $order = Order::where('id', $file->order_id)
+            ->where(function($query) use ($writer) {
+                $query->where('writer_id', $writer->id)
+                    ->orWhereHas('bids', function($q) use ($writer) {
+                        $q->where('user_id', $writer->id);
+                    });
+            })
+            ->firstOrFail();
+        
+        try {
+            if (!Storage::disk('public')->exists($file->path)) {
+                throw new \Exception("File not found: {$file->path}");
+            }
+            
+            return Storage::disk('public')->download($file->path, $file->original_name);
+        } catch (\Exception $e) {
+            Log::error('Error downloading file: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'File not found or cannot be downloaded'
+            ], 404);
+        }
+    }
+    
+    /**
+     * Download multiple files as a ZIP archive
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function downloadMultipleFiles(Request $request)
     {
         $request->validate([
             'file_ids' => 'required|array',
-            'file_ids.*' => 'exists:files,id',
+            'file_ids.*' => 'required|exists:files,id'
         ]);
-
+        
+        $writer = Auth::guard('writer')->user();
         $fileIds = $request->file_ids;
         
-        // If only one file, download it directly
-        if (count($fileIds) === 1) {
-            return $this->download(new Request(['file_id' => $fileIds[0]]));
-        }
-
-        // For multiple files, create a zip
-        $zip = new ZipArchive();
-        $zipName = 'order_files_' . time() . '.zip';
-        $zipPath = storage_path('app/temp/' . $zipName);
-        
-        // Create temp directory if it doesn't exist
-        if (!Storage::exists('temp')) {
-            Storage::makeDirectory('temp');
-        }
-
-        if ($zip->open($zipPath, ZipArchive::CREATE) !== true) {
-            abort(500, 'Cannot create zip file');
-        }
-
-        $files = File::whereIn('id', $fileIds)->get();
-        
-        foreach ($files as $file) {
-            // Verify permission for each file
-            if ($file->fileable_type === 'App\Models\Order') {
-                $order = Order::find($file->fileable_id);
+        try {
+            // Get all files and verify access
+            $files = File::whereIn('id', $fileIds)->get();
+            
+            if ($files->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'No files found'], 404);
+            }
+            
+            // Check if writer has access to all files
+            foreach ($files as $file) {
+                $order = Order::where('id', $file->order_id)
+                    ->where(function($query) use ($writer) {
+                        $query->where('writer_id', $writer->id)
+                            ->orWhereHas('bids', function($q) use ($writer) {
+                                $q->where('user_id', $writer->id);
+                            });
+                    })
+                    ->first();
                 
-                if (!$order || 
-                    ($order->status !== Order::STATUS_AVAILABLE && 
-                    $order->writer_id !== Auth::id() && 
-                    Auth::user()->usertype !== 'admin')) {
-                    continue; // Skip files without permission
+                if (!$order) {
+                    return response()->json(['success' => false, 'message' => 'Access denied to one or more files'], 403);
                 }
             }
             
-            if (Storage::exists($file->path)) {
-                $fileContent = Storage::get($file->path);
-                // Generate a unique name to avoid conflicts
-                $fileNameInZip = Str::slug(pathinfo($file->name, PATHINFO_FILENAME)) . '_' . 
-                                substr(md5($file->id), 0, 6) . '.' . 
-                                pathinfo($file->name, PATHINFO_EXTENSION);
-                $zip->addFromString($fileNameInZip, $fileContent);
+            // Create temporary zip file
+            $zipFileName = 'order_files_' . time() . '.zip';
+            $zipFilePath = storage_path('app/temp/' . $zipFileName);
+            
+            // Ensure temp directory exists
+            if (!file_exists(storage_path('app/temp'))) {
+                mkdir(storage_path('app/temp'), 0755, true);
             }
+            
+            $zip = new ZipArchive();
+            
+            if ($zip->open($zipFilePath, ZipArchive::CREATE) !== true) {
+                throw new \Exception("Could not create ZIP file");
+            }
+            
+            // Add each file to the zip
+            foreach ($files as $file) {
+                if (!Storage::disk('public')->exists($file->path)) {
+                    continue; // Skip files that don't exist
+                }
+                
+                $filePath = Storage::disk('public')->path($file->path);
+                $zip->addFile($filePath, $file->original_name);
+            }
+            
+            $zip->close();
+            
+            // Return the zip file
+            return response()->download($zipFilePath, 'order_files.zip')->deleteFileAfterSend(true);
+            
+        } catch (\Exception $e) {
+            Log::error('Error creating download ZIP: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create download package'
+            ], 500);
         }
-
-        $zip->close();
-
-        return response()->download($zipPath, $zipName)->deleteFileAfterSend(true);
     }
-
-
-
 }
-
-
-// <?php
-
-// namespace App\Http\Controllers;
-
-// use Illuminate\Http\Request;
-// use App\Http\Requests;
-// use Illuminate\Support\Facades\DB;
-// use Illuminate\Support\Facades\Validator;
-// use Illuminate\Support\Facades\Auth;
-// use App\Models\User;
-// use Illuminate\Support\Facades\Session;
-// use Illuminate\Support\Facades\Storage;
-// use Illuminate\Support\Facades\File;
-// use Illuminate\Support\Facades\Hash;
-
-// class HomeController extends Controller
-// {
-//     /**
-//      * Create a new controller instance.
-//      *
-//      * @return void
-//      */
-//     public function __construct()
-//     {
-//         $this->middleware('auth');
-//     }
-
-//     /**
-//      * Show the application dashboard.
-//      *
-//      * @return \Illuminate\Contracts\Support\Renderable
-//      */
-//     public function index()
-//     {
-//         $user = auth()->user();
-
-//         if ($user->usertype == 'writer') {
-//             switch ($user->status) {
-//                 case 'pending':
-//                     return view('writer.pending');
-//                 case 'suspended':
-//                     return view('writer.suspended');
-//                 case 'terminated':
-//                     return view('writer.terminated');
-//                 case 'active':
-//                 case 'verified':
-//                     return redirect()->route('writer.admin');
-//                 default:
-//                     return view('home');
-//             }
-//         } elseif (in_array($user->usertype, ['admin', 'support'])) {
-//             return redirect()->route('admin.dashboard');
-//         }
-
-//         // Default view for other user types
-//         return view('home');
-//     }
-// }
