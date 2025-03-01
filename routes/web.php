@@ -51,3 +51,10 @@ Route::get('/writer/order/{id}/check-messages', [App\Http\Controllers\HomeContro
 
 Route::get('/writer/order/{id}/details', [App\Http\Controllers\HomeController::class, 'availableOrderDetails'])->name('writer.order.details');
 Route::post('/writer/order/{id}/message', [App\Http\Controllers\HomeController::class, 'sendMessage'])->name('writer.message.send');
+
+// File upload and management routes
+Route::post('/writer/order/upload-files', [App\Http\Controllers\HomeController::class, 'uploadFiles'])->name('writer.order.upload');
+Route::post('/writer/order/{id}/mark-messages-read', [App\Http\Controllers\HomeController::class, 'markMessagesRead'])->name('writer.order.mark-messages-read');
+
+// Dynamic assigned order viewing (instead of hardcoded 201394828)
+Route::get('/order/{id?}', [App\Http\Controllers\HomeController::class, 'AssignedOrder'])->name('assigned');
