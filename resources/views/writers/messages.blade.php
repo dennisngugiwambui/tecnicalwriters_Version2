@@ -4,21 +4,21 @@
 
 <main class="flex-1 px-4 lg:px-8 pb-8 lg:ml-72 transition-all duration-300 pt-24">
     <!-- Header with New Message button, Search bar, and dropdowns -->
-    <div class="flex justify-between items-center mb-8">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div class="flex items-center gap-4">
             <h1 class="text-xl font-semibold">Messages</h1>
             <button 
                 onclick="openNewMessageModal()"
-                class="px-4 py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600"
+                class="px-4 py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 transition-colors duration-200 flex items-center gap-2"
             >
-                New message
+                <i class="fas fa-plus-circle"></i> New message
             </button>
         </div>
 
         <!-- Search and Filter Bar -->
-        <div class="flex gap-4 items-center">
-            <div class="relative">
-                <select id="message-type-filter" class="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+        <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full md:w-auto">
+            <div class="relative w-full sm:w-48">
+                <select id="message-type-filter" class="select2-departments w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500">
                     <option value="all">All departments</option>
                     <option value="support">Support</option>
                     <option value="client">Client</option>
@@ -27,21 +27,18 @@
                     <option value="editors">Editors</option>
                     <option value="dissertation">Dissertation Dept</option>
                 </select>
-                <span class="absolute inset-y-0 left-0 flex items-center pl-2">
-                    <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </span>
             </div>
-            <input 
-                type="text" 
-                id="search-order"
-                placeholder="Order"
-                class="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-            <button id="search-button" class="px-4 py-2 bg-green-500 text-white text-sm rounded-md hover:bg-green-600">
-                Search
-            </button>
+            <div class="flex w-full sm:w-auto">
+                <input 
+                    type="text" 
+                    id="search-order"
+                    placeholder="Search by order #"
+                    class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-l-md text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+                <button id="search-button" class="px-4 py-2 bg-green-500 text-white text-sm rounded-r-md hover:bg-green-600 transition-colors duration-200">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -77,17 +74,22 @@
 
     <!-- Display Message Thread if we're viewing a specific thread -->
     @if(isset($messages) && isset($type))
-    <div class="bg-white rounded-lg shadow mb-8">
-        <div class="flex justify-between items-center p-4 border-b border-gray-100">
+    <div class="bg-white rounded-lg shadow mb-8 border border-gray-200">
+        <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50">
             <div>
-                <h2 class="text-lg font-semibold">
-                    @if($type === 'order')
-                        Order #{{ $order->id }}: {{ Str::limit($order->title, 40) }}
-                    @else
-                        {{ $title }}
-                    @endif
-                </h2>
-                <p class="text-sm text-gray-500">
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('writer.messages') }}" class="text-gray-500 hover:text-gray-700 transition-colors">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <h2 class="text-lg font-semibold">
+                        @if($type === 'order')
+                            Order #{{ $order->id }}: {{ Str::limit($order->title, 40) }}
+                        @else
+                            {{ $title }}
+                        @endif
+                    </h2>
+                </div>
+                <p class="text-sm text-gray-500 mt-1">
                     Conversation with 
                     @if(isset($otherUser))
                         {{ $otherUser->name }} ({{ ucfirst($otherUser->usertype) }})
@@ -105,22 +107,22 @@
                 @if(!$isAssignedToAnotherWriter)
                     <button 
                         onclick="openAnswerModal('{{ $type === 'order' ? 'order_' . $order->id : 'general_' . $title . '_' . $otherUser->id }}', '{{ isset($otherUser) ? $otherUser->name : 'Support' }}', '{{ $type === 'order' ? 'Order #' . $order->id . ': ' . $order->title : $title }}', '{{ $messages->count() > 0 ? Str::limit($messages->last()->message, 200) : '' }}')"
-                        class="px-4 py-1.5 text-green-500 border border-green-500 rounded-md text-sm hover:bg-green-50"
+                        class="px-4 py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 transition-colors duration-200 flex items-center gap-2"
                     >
-                        Answer
+                        <i class="fas fa-reply"></i> Reply
                     </button>
                 @endif
             @else
                 <button 
                     onclick="openAnswerModal('{{ $type === 'order' ? 'order_' . $order->id : 'general_' . $title . '_' . $otherUser->id }}', '{{ $otherUser->name }}', '{{ $type === 'order' ? 'Order #' . $order->id . ': ' . $order->title : $title }}', '{{ $messages->count() > 0 ? Str::limit($messages->last()->message, 200) : '' }}')"
-                    class="px-4 py-1.5 text-green-500 border border-green-500 rounded-md text-sm hover:bg-green-50"
+                    class="px-4 py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 transition-colors duration-200 flex items-center gap-2"
                 >
-                    Answer
+                    <i class="fas fa-reply"></i> Reply
                 </button>
             @endif
         </div>
         
-        <div class="p-4 divide-y divide-gray-100 max-h-96 overflow-y-auto">
+        <div class="p-4 divide-y divide-gray-100 max-h-96 overflow-y-auto" id="message-thread">
             @if($messages->count() > 0)
                 @foreach($messages as $message)
                     <div class="py-4 @if($loop->first) pt-2 @endif @if($loop->last) pb-2 @endif">
@@ -145,7 +147,7 @@
                                     {{ $message->message }}
                                 </div>
                                 
-                                @if($message->files->count() > 0)
+                                @if($message->files && $message->files->count() > 0)
                                     <div class="mt-3">
                                         <div class="text-sm font-semibold text-gray-500 mb-2">Attachments:</div>
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -156,10 +158,13 @@
                                                         <div class="text-sm font-medium truncate">{{ $file->name }}</div>
                                                         <div class="text-xs text-gray-500">{{ round($file->size / 1024, 2) }} KB</div>
                                                     </div>
-                                                    <a href="{{ route('writer.file.download', ['file_id' => $file->id]) }}"
-                                                       class="text-green-500 text-sm font-medium hover:text-green-600">
-                                                        Download
-                                                    </a>
+                                                    <form method="POST" action="{{ route('writer.file.download') }}" class="inline">
+                                                        @csrf
+                                                        <input type="hidden" name="file_id" value="{{ $file->id }}">
+                                                        <button type="submit" class="text-green-500 text-sm font-medium hover:text-green-600 transition-colors">
+                                                            <i class="fas fa-download"></i>
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             @endforeach
                                         </div>
@@ -179,130 +184,149 @@
     @endif
 
     <!-- Messages List -->
-    <div class="divide-y divide-gray-100">
-        @if(isset($messageThreads) && $messageThreads->count() > 0)
-            @foreach($messageThreads as $thread)
-            <div class="border-b border-gray-100 last:border-b-0 message-thread" 
-                data-order-id="{{ $thread->order_id ?? '' }}" 
-                data-message-type="{{ $thread->message_type ?? '' }}">
-                
+    <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+        <div class="divide-y divide-gray-100">
+            @if(isset($messageThreads) && $messageThreads->count() > 0)
                 @php
-                    // Determine thread ID based on message type
-                    $threadId = $thread->is_general 
-                        ? 'general_' . $thread->title . '_' . ($thread->user_id == Auth::id() ? $thread->receiver_id : $thread->user_id)
-                        : 'order_' . $thread->order_id;
-                    
-                    // Check if the order is assigned to another writer
-                    $isAssignedToAnotherWriter = false;
-                    if (!$thread->is_general && isset($thread->order) && $thread->order) {
-                        $isAssignedToAnotherWriter = $thread->order->writer_id && $thread->order->writer_id != Auth::id();
-                    }
+                    // Get the current thread ID if viewing a specific thread
+                    $currentThreadId = isset($type) && isset($messages) && $messages->count() > 0 ? 
+                        ($type === 'order' ? 'order_' . $order->id : 'general_' . $title . '_' . $otherUser->id) : null;
                 @endphp
+                
+                @foreach($messageThreads as $thread)
+                    @php
+                        // Determine thread ID based on message type
+                        $threadId = $thread->is_general 
+                            ? 'general_' . $thread->title . '_' . ($thread->user_id == Auth::id() ? $thread->receiver_id : $thread->user_id)
+                            : 'order_' . $thread->order_id;
+                        
+                        // Skip this thread if it's the one being viewed
+                        if ($currentThreadId === $threadId) continue;
+                        
+                        // Check if the order is assigned to another writer
+                        $isAssignedToAnotherWriter = false;
+                        if (!$thread->is_general && isset($thread->order) && $thread->order) {
+                            $isAssignedToAnotherWriter = $thread->order->writer_id && $thread->order->writer_id != Auth::id();
+                        }
+                    @endphp
 
-                <div 
-                    class="flex items-start gap-4 py-2 px-4 cursor-pointer hover:bg-gray-50"
-                    onclick="toggleMessage('message-{{$thread->id}}', this)"
-                >
-                    <div>
-                        <!-- FontAwesome Message Icon -->
-                        <i class="fas fa-envelope {{ $thread->read_at ? 'text-gray-400' : 'text-green-500' }}"></i>
-                    </div>
-
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 text-sm">
-                            <span class="font-semibold {{ $thread->read_at ? 'text-normal' : 'text-bold' }}" id="message-{{$thread->id}}-label">
-                                {{ $thread->user_id == Auth::id() ? 'Me' : ($thread->message_type == 'client' ? 'Customer' : 'Support') }}
-                            </span>
-                            <span class="text-gray-400">▸</span>
-                            <span>{{ $thread->user_id == Auth::id() ? ($thread->message_type == 'client' ? 'Customer' : 'Support') : 'Me' }}</span>
-                        </div>
-                        <div class="text-sm text-gray-600 font-semibold">
-                            Order #{{ $thread->order_id ?? '0' }}: {{ isset($thread->order) ? Str::limit($thread->order->title, 40) : 'New message' }}
-                        </div>
-                        <div class="text-sm text-gray-400 truncate" id="message-{{$thread->id}}-preview">
-                            {{ Str::limit($thread->message, 70) }}
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col items-end text-sm text-gray-400 whitespace-nowrap">
-                        <div class="font-semibold">#{{ $thread->order_id ?? '0' }}</div>
-                        <div class="font-semibold">{{ $thread->created_at->format('d M, h:i A') }}</div>
-                        @if($thread->files && $thread->files->count() > 0)
-                        <div class="flex items-center mt-1">
-                            <i class="fas fa-paperclip text-gray-400 mr-1"></i>
-                            <span>{{ $thread->files->count() }}</span>
-                        </div>
-                        @endif
-                    </div>
-
-                    <div class="text-gray-400">
-                        <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </div>
-                </div>
-
-                <div id="message-{{$thread->id}}" class="px-16 py-3 bg-white border-t border-gray-100 hidden">
-                    <div class="text-sm text-gray-600">
-                        {{ $thread->message }}
-                    </div>
-                    @if($thread->files && $thread->files->count() > 0)
-                    <div class="mt-3">
-                        <div class="text-sm font-semibold text-gray-500 mb-2">Attachments:</div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            @foreach($thread->files as $file)
-                                <div class="flex items-center p-2 border border-gray-200 rounded-md bg-gray-50">
-                                    <i class="fas fa-file text-gray-400 mr-2"></i>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="text-sm font-medium truncate">{{ $file->name }}</div>
-                                        <div class="text-xs text-gray-500">{{ round($file->size / 1024, 2) }} KB</div>
-                                    </div>
-                                    <a href="{{ route('writer.file.download', ['file_id' => $file->id]) }}"
-                                       class="text-green-500 text-sm font-medium hover:text-green-600">
-                                        Download
-                                    </a>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                    @endif
-                    <div class="mt-3">
-                        @if(!$isAssignedToAnotherWriter)
-                        <button 
-                            onclick="openAnswerModal('{{ $threadId }}', '{{ $thread->user_id == Auth::id() ? ($thread->message_type == 'client' ? 'Customer' : 'Support') : $thread->user->name }}', '{{ isset($thread->order) ? 'Order #' . $thread->order_id . ': ' . Str::limit($thread->order->title, 40) : $thread->title }}', '{{ Str::limit($thread->message, 200) }}')"
-                            class="px-4 py-1.5 text-green-500 border border-green-500 rounded-md text-sm hover:bg-green-50"
+                    <div class="border-b border-gray-100 last:border-b-0 message-thread hover:bg-gray-50 transition-colors duration-200" 
+                        data-order-id="{{ $thread->order_id ?? '' }}" 
+                        data-message-type="{{ $thread->message_type ?? '' }}">
+                        
+                        <div 
+                            class="flex items-start gap-4 py-3 px-4 cursor-pointer"
+                            onclick="toggleMessage('message-{{$thread->id}}', this)"
                         >
-                            Answer
-                        </button>
-                        @endif
-                        <a href="{{ route('writer.message.thread', $threadId) }}" class="ml-2 px-4 py-1.5 text-blue-500 border border-blue-500 rounded-md text-sm hover:bg-blue-50">
-                            View Thread
-                        </a>
+                            <div class="flex-shrink-0">
+                                <!-- FontAwesome Message Icon -->
+                                <div class="w-10 h-10 rounded-full {{ $thread->read_at ? 'bg-gray-100' : 'bg-green-50' }} flex items-center justify-center">
+                                    <i class="fas fa-envelope {{ $thread->read_at ? 'text-gray-400' : 'text-green-500' }}"></i>
+                                </div>
+                            </div>
+
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="font-semibold {{ $thread->read_at ? 'text-normal' : 'text-bold' }}" id="message-{{$thread->id}}-label">
+                                        {{ $thread->user_id == Auth::id() ? 'Me' : ($thread->message_type == 'client' ? 'Customer' : 'Support') }}
+                                    </span>
+                                    <span class="text-gray-400">▸</span>
+                                    <span>{{ $thread->user_id == Auth::id() ? ($thread->message_type == 'client' ? 'Customer' : 'Support') : 'Me' }}</span>
+                                </div>
+                                <div class="text-sm text-gray-600 font-semibold">
+                                    Order #{{ $thread->order_id ?? '0' }}: {{ isset($thread->order) ? Str::limit($thread->order->title, 40) : 'New message' }}
+                                </div>
+                                <div class="text-sm text-gray-400 truncate" id="message-{{$thread->id}}-preview">
+                                    {{ Str::limit($thread->message, 70) }}
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col items-end text-sm text-gray-400 whitespace-nowrap">
+                                <div class="font-semibold">#{{ $thread->order_id ?? '0' }}</div>
+                                <div class="font-semibold">{{ $thread->created_at->format('d M, h:i A') }}</div>
+                                @if($thread->files && $thread->files->count() > 0)
+                                <div class="flex items-center mt-1">
+                                    <i class="fas fa-paperclip text-gray-400 mr-1"></i>
+                                    <span>{{ $thread->files->count() }}</span>
+                                </div>
+                                @endif
+                            </div>
+
+                            <div class="text-gray-400 transform transition-transform" id="message-{{$thread->id}}-arrow">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+
+                        <div id="message-{{$thread->id}}" class="px-16 py-3 bg-white border-t border-gray-100 hidden">
+                            <div class="text-sm text-gray-600">
+                                {{ $thread->message }}
+                            </div>
+                            @if($thread->files && $thread->files->count() > 0)
+                            <div class="mt-3">
+                                <div class="text-sm font-semibold text-gray-500 mb-2">Attachments:</div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    @foreach($thread->files as $file)
+                                        <div class="flex items-center p-2 border border-gray-200 rounded-md bg-gray-50">
+                                            <i class="fas fa-file text-gray-400 mr-2"></i>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-sm font-medium truncate">{{ $file->name }}</div>
+                                                <div class="text-xs text-gray-500">{{ round($file->size / 1024, 2) }} KB</div>
+                                            </div>
+                                            <form method="POST" action="{{ route('writer.file.download') }}" class="inline">
+                                                @csrf
+                                                <input type="hidden" name="file_id" value="{{ $file->id }}">
+                                                <button type="submit" class="text-green-500 text-sm font-medium hover:text-green-600 transition-colors">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endif
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                @if(!$isAssignedToAnotherWriter)
+                                <button 
+                                    onclick="openAnswerModal('{{ $threadId }}', '{{ $thread->user_id == Auth::id() ? ($thread->message_type == 'client' ? 'Customer' : 'Support') : $thread->user->name }}', '{{ isset($thread->order) ? 'Order #' . $thread->order_id . ': ' . Str::limit($thread->order->title, 40) : $thread->title }}', '{{ Str::limit($thread->message, 200) }}')"
+                                    class="px-4 py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 transition-colors duration-200 flex items-center gap-2"
+                                >
+                                    <i class="fas fa-reply"></i> Answer
+                                </button>
+                                @endif
+                                <a href="{{ route('writer.message.thread', $threadId) }}" class="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-200 flex items-center gap-2">
+                                    <i class="fas fa-eye"></i> View Thread
+                                </a>
+                            </div>
+                        </div>
                     </div>
+                @endforeach
+            @else
+                <div class="py-8 text-center">
+                    <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-600 mb-1">No messages yet</h3>
+                    <p class="text-gray-500">Start a new conversation with support or clients</p>
                 </div>
-            </div>
-            @endforeach
-        @else
-            <div class="py-8 text-center">
-                <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <h3 class="text-lg font-medium text-gray-600 mb-1">No messages yet</h3>
-                <p class="text-gray-500">Start a new conversation with support or clients</p>
-            </div>
-        @endif
+            @endif
+        </div>
     </div>
 </main>
 
 <!-- New Message Modal -->
 <div id="newMessageModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center hidden z-50">
-    <div class="bg-white p-8 rounded-md w-full max-w-md">
-        <h2 class="text-xl mb-4">New Message</h2>
+    <div class="bg-white p-6 rounded-md w-full max-w-lg mx-4 sm:mx-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">New Message</h2>
+            <button onclick="closeNewMessageModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
         
         <div>
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">Order</label>
-                <select id="selectOrder" class="w-full p-2 border rounded-md text-sm">
+                <select id="selectOrder" class="select2-orders w-full p-2 border rounded-md text-sm">
                     <option value="">Select an order...</option>
                     @if(isset($userOrders))
                         @foreach($userOrders as $order)
@@ -314,51 +338,65 @@
             
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">Recipient</label>
-                <select id="selectRecipient" class="w-full p-2 border rounded-md text-sm">
+                <select id="selectRecipient" class="select2-recipients w-full p-2 border rounded-md text-sm">
                     <option value="">Select recipient...</option>
                     <option value="client">Customer</option>
-                    <option value="support">Support</option>
+                    <option value="support">Support Team</option>
+                    <option value="payment">Payment Dept.</option>
+                    <option value="quality">Quality Assurance Dept.</option>
+                    <option value="dissertation">Dissertation Dept.</option>
+                    <option value="writers">Writers Dept.</option>
+                    <option value="editors">Editors Dept.</option>
+                    <option value="mentors">Mentors Dept.</option>
                 </select>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Subject</label>
+                <input type="text" id="messageSubject" class="w-full p-2 border rounded-md text-sm" placeholder="Enter subject" />
             </div>
 
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">Message</label>
                 <textarea id="messageContent" class="w-full h-32 p-2 border rounded-md text-sm" placeholder="Type your message here..." onkeyup="checkForbiddenWords(this)"></textarea>
                 <div id="forbiddenWordsWarning" class="hidden mt-2 p-2 bg-yellow-100 text-yellow-800 text-xs rounded-lg border border-yellow-200">
-                    Warning: Your message contains prohibited keywords. Please avoid payment-related discussions.
+                    <i class="fas fa-exclamation-triangle mr-1"></i> Warning: Your message contains prohibited keywords. Please avoid payment-related discussions.
                 </div>
             </div>
 
             <!-- Attach File Section -->
-            <div id="attachments" class="mb-4 space-y-2">
-                <!-- Attachment rows will be added here -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Attachments</label>
+                <div id="attachments" class="space-y-2 mt-2 max-h-40 overflow-y-auto">
+                    <!-- Attachment rows will be added here -->
+                </div>
+                
+                <div class="mt-2">
+                    <label class="cursor-pointer">
+                        <input
+                            type="file"
+                            id="fileAttachments"
+                            class="hidden"
+                            onchange="handleFileAttach(event)"
+                            multiple
+                        />
+                        <span class="inline-flex items-center px-4 py-2 text-green-500 border border-green-500 rounded-md text-sm hover:bg-green-50 transition-colors duration-200">
+                            <i class="fas fa-paperclip mr-2"></i> Attach file
+                        </span>
+                    </label>
+                </div>
             </div>
 
-            <div class="flex justify-between gap-2">
-                <label class="cursor-pointer">
-                    <input
-                        type="file"
-                        id="fileAttachments"
-                        class="hidden"
-                        onchange="handleFileAttach(event)"
-                        multiple
-                    />
-                    <span class="inline-block px-4 py-2 text-green-500 border border-green-500 rounded-md text-sm hover:bg-green-50">
-                        Attach file
-                    </span>
-                </label>
-
-                <div class="flex justify-end gap-2">
-                    <button 
-                        onclick="closeNewMessageModal()"
-                        class="px-4 py-2 text-gray-600 text-sm hover:bg-gray-50 rounded-md"
-                    >
-                        Cancel
-                    </button>
-                    <button type="button" id="sendMessageBtn" onclick="submitMessage()" class="px-4 py-2 bg-green-500 text-white text-sm rounded-md hover:bg-green-600">
-                        Send
-                    </button>
-                </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button 
+                    onclick="closeNewMessageModal()"
+                    class="px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-md hover:bg-gray-50 transition-colors duration-200"
+                >
+                    Cancel
+                </button>
+                <button type="button" id="sendMessageBtn" onclick="submitMessage()" class="px-4 py-2 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 transition-colors duration-200">
+                    Send
+                </button>
             </div>
         </div>
     </div>
@@ -366,15 +404,20 @@
 
 <!-- Answer Message Modal -->
 <div id="answerMessageModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center hidden z-50">
-    <div class="bg-white p-8 rounded-md w-full max-w-md">
-        <h2 class="text-xl mb-4">Answer Message</h2>
+    <div class="bg-white p-6 rounded-md w-full max-w-lg mx-4 sm:mx-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">Reply to Message</h2>
+            <button onclick="closeAnswerModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
 
         <!-- Replied Message -->
-        <div class="bg-green-50 p-4 rounded-md mb-4">
-            <div class="text-sm text-green-600 font-semibold">
+        <div class="bg-gray-50 p-4 rounded-md mb-4 border-l-4 border-green-500">
+            <div class="text-sm text-gray-600 font-semibold">
                 Original message:
             </div>
-            <div class="text-sm text-green-600" id="originalMessagePreview">
+            <div class="text-sm text-gray-600 mt-1" id="originalMessagePreview">
                 Does your excel sheet look like the picture I uploaded?...
             </div>
         </div>
@@ -383,67 +426,125 @@
             @csrf
             <input type="hidden" id="threadId" name="thread_id" value="">
 
+            <div class="mb-4 hidden">
+                <label class="block text-sm font-medium mb-2">Recipient</label>
+                <input type="text" id="answerRecipient" class="w-full p-2 border border-gray-200 rounded-md text-sm bg-gray-50" readonly />
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Subject</label>
+                <input type="text" id="answerSubject" class="w-full p-2 border border-gray-200 rounded-md text-sm bg-gray-50" readonly />
+            </div>
+
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-2">Reply</label>
                 <textarea name="message" id="answerContent" class="w-full h-32 p-2 border rounded-md text-sm" placeholder="Type your reply here..." onkeyup="checkForbiddenWords(this)"></textarea>
                 <div id="answerForbiddenWordsWarning" class="hidden mt-2 p-2 bg-yellow-100 text-yellow-800 text-xs rounded-lg border border-yellow-200">
-                    Warning: Your message contains prohibited keywords. Please avoid payment-related discussions.
+                    <i class="fas fa-exclamation-triangle mr-1"></i> Warning: Your message contains prohibited keywords. Please avoid payment-related discussions.
                 </div>
             </div>
 
             <!-- Attach File Section for Answer -->
-            <div id="answerAttachments" class="mb-4 space-y-2">
-                <!-- Attachment rows will be added here -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Attachments</label>
+                <div id="answerAttachments" class="space-y-2 mt-2 max-h-40 overflow-y-auto">
+                    <!-- Attachment rows will be added here -->
+                </div>
+                
+                <div class="mt-2">
+                    <label class="cursor-pointer">
+                        <input
+                            type="file"
+                            name="attachments[]"
+                            id="answerFileInput"
+                            class="hidden"
+                            onchange="handleAnswerFileAttach(event)"
+                            multiple
+                        />
+                        <span class="inline-flex items-center px-4 py-2 text-green-500 border border-green-500 rounded-md text-sm hover:bg-green-50 transition-colors duration-200">
+                            <i class="fas fa-paperclip mr-2"></i> Attach file
+                        </span>
+                    </label>
+                </div>
             </div>
 
-            <div class="flex justify-between gap-2">
-                <label class="cursor-pointer">
-                    <input
-                        type="file"
-                        name="attachments[]"
-                        id="answerFileInput"
-                        class="hidden"
-                        onchange="handleAnswerFileAttach(event)"
-                        multiple
-                    />
-                    <span class="inline-block px-4 py-2 text-green-500 border border-green-500 rounded-md text-sm hover:bg-green-50">
-                        Attach file
-                    </span>
-                </label>
-
-                <div class="flex justify-end gap-2">
-                    <button 
-                        type="button"
-                        onclick="closeAnswerModal()"
-                        class="px-4 py-2 text-gray-600 text-sm hover:bg-gray-50 rounded-md"
-                    >
-                        Cancel
-                    </button>
-                    <button type="submit" id="sendAnswerBtn" class="px-4 py-2 bg-green-500 text-white text-sm rounded-md hover:bg-green-600">
-                        Send
-                    </button>
-                </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button 
+                    type="button"
+                    onclick="closeAnswerModal()"
+                    class="px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-md hover:bg-gray-50 transition-colors duration-200"
+                >
+                    Cancel
+                </button>
+                <button type="submit" id="sendAnswerBtn" class="px-4 py-2 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 transition-colors duration-200">
+                    Send Reply
+                </button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- Include Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<!-- Include Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
+    // Initialize Select2
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Select2 for departments
+        $('.select2-departments').select2({
+            placeholder: "Select a department",
+            width: '100%',
+            dropdownCssClass: "text-sm"
+        });
+        
+        // Initialize Select2 for orders
+        $('.select2-orders').select2({
+            placeholder: "Select an order",
+            width: '100%',
+            dropdownCssClass: "text-sm"
+        });
+        
+        // Initialize Select2 for recipients
+        $('.select2-recipients').select2({
+            placeholder: "Select a recipient",
+            width: '100%',
+            dropdownCssClass: "text-sm"
+        });
+        
+        // Scroll to active thread if viewing one
+        const messageThread = document.getElementById('message-thread');
+        if (messageThread) {
+            messageThread.scrollTop = messageThread.scrollHeight;
+        }
+    });
+
     // Toggle the message detail visibility
     function toggleMessage(messageId, button) {
         const messageDetail = document.getElementById(messageId);
-        const truncatedMessage = document.getElementById(messageId + '-preview');
+        const messageArrow = document.getElementById(messageId + '-arrow');
         
         messageDetail.classList.toggle('hidden');
         
+        // Rotate arrow icon
+        if (messageDetail.classList.contains('hidden')) {
+            messageArrow.classList.remove('rotate-180');
+        } else {
+            messageArrow.classList.add('rotate-180');
+        }
+        
         // Change the font weight based on visibility
         const label = document.getElementById(messageId + '-label');
-        if (messageDetail.classList.contains('hidden')) {
-            label.classList.remove('font-bold');
-            label.classList.add('font-normal');
-        } else {
-            label.classList.add('font-bold');
-            label.classList.remove('font-normal');
+        if (label) {
+            if (messageDetail.classList.contains('hidden')) {
+                label.classList.remove('font-bold');
+                label.classList.add('font-normal');
+            } else {
+                label.classList.add('font-bold');
+                label.classList.remove('font-normal');
+            }
         }
     }
 
@@ -488,8 +589,9 @@
         document.getElementById('newMessageModal').classList.add('hidden');
         
         // Clear form fields
-        document.getElementById('selectOrder').value = '';
-        document.getElementById('selectRecipient').value = '';
+        $('#selectOrder').val('').trigger('change');
+        $('#selectRecipient').val('').trigger('change');
+        document.getElementById('messageSubject').value = '';
         document.getElementById('messageContent').value = '';
         document.getElementById('fileAttachments').value = '';
         
@@ -504,9 +606,10 @@
     function submitMessage() {
         const orderId = document.getElementById('selectOrder').value;
         const messageType = document.getElementById('selectRecipient').value;
+        const subject = document.getElementById('messageSubject').value;
         const message = document.getElementById('messageContent').value;
         
-        if (!orderId || !messageType || !message.trim()) {
+        if (!messageType || !message.trim()) {
             alert('Please fill in all required fields');
             return;
         }
@@ -516,12 +619,17 @@
         formData.append('_token', '{{ csrf_token() }}');
         formData.append('message', message);
         formData.append('message_type', messageType);
+        formData.append('title', subject);
+        
+        if (orderId) {
+            formData.append('order_id', orderId);
+        }
         
         // Add any attachments
         const fileInput = document.getElementById('fileAttachments');
         if (fileInput.files.length > 0) {
             for (let i = 0; i < fileInput.files.length; i++) {
-                formData.append('attachment', fileInput.files[i]);
+                formData.append('attachments[]', fileInput.files[i]);
             }
         }
         
@@ -531,8 +639,16 @@
             formData.append(`attachment_descriptions[${index}]`, input.value);
         });
         
+        // Show loading state
+        const sendButton = document.getElementById('sendMessageBtn');
+        const originalText = sendButton.innerHTML;
+        sendButton.disabled = true;
+        sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        
         // Submit to the correct route
-        fetch(`/writer/order/${orderId}/message`, {
+        let url = orderId ? `/writer/order/${orderId}/message` : '/writer/send-message';
+        
+        fetch(url, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -548,17 +664,25 @@
                 window.location.reload();
             } else {
                 alert(data.message || 'Failed to send message');
+                // Reset button state
+                sendButton.disabled = false;
+                sendButton.innerHTML = originalText;
             }
         })
         .catch(error => {
             console.error('Error:', error);
             alert('Failed to send message');
+            // Reset button state
+            sendButton.disabled = false;
+            sendButton.innerHTML = originalText;
         });
     }
 
     // Open Answer Modal and display the message
     function openAnswerModal(threadId, receiver, subject, message) {
         document.getElementById('threadId').value = threadId;
+        document.getElementById('answerRecipient').value = receiver;
+        document.getElementById('answerSubject').value = subject;
         document.getElementById('originalMessagePreview').textContent = message;
         
         // Clear previous inputs
@@ -590,11 +714,17 @@
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
                 const newAttachment = document.createElement('div');
-                newAttachment.classList.add('flex', 'items-center', 'gap-4', 'p-2', 'bg-gray-50', 'rounded-md');
+                newAttachment.classList.add('flex', 'items-center', 'gap-3', 'p-3', 'bg-gray-50', 'rounded-md', 'border', 'border-gray-200');
                 newAttachment.innerHTML = `
-                    <span class="text-sm text-gray-600 truncate" style="max-width: 180px;">${file.name}</span>
-                    <input type="text" name="attachment_description" placeholder="Description" class="flex-1 p-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-green-500" />
-                    <button type="button" onclick="removeAttachment(this)" class="text-gray-400 hover:text-gray-600">
+                    <div class="flex-shrink-0 text-gray-400">
+                        <i class="fas fa-file"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium truncate">${file.name}</div>
+                        <div class="text-xs text-gray-500">${(file.size / 1024).toFixed(2)} KB</div>
+                    </div>
+                    <input type="text" name="attachment_description" placeholder="Description" class="flex-1 p-2 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-green-500" />
+                    <button type="button" onclick="removeAttachment(this)" class="text-gray-400 hover:text-red-500 transition-colors">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 `;
@@ -612,11 +742,17 @@
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
                 const newAttachment = document.createElement('div');
-                newAttachment.classList.add('flex', 'items-center', 'gap-4', 'p-2', 'bg-gray-50', 'rounded-md');
+                newAttachment.classList.add('flex', 'items-center', 'gap-3', 'p-3', 'bg-gray-50', 'rounded-md', 'border', 'border-gray-200');
                 newAttachment.innerHTML = `
-                    <span class="text-sm text-gray-600 truncate" style="max-width: 180px;">${file.name}</span>
-                    <input type="text" name="attachment_descriptions[${i}]" placeholder="Description" class="flex-1 p-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-green-500" />
-                    <button type="button" onclick="removeAttachment(this)" class="text-gray-400 hover:text-gray-600">
+                    <div class="flex-shrink-0 text-gray-400">
+                        <i class="fas fa-file"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium truncate">${file.name}</div>
+                        <div class="text-xs text-gray-500">${(file.size / 1024).toFixed(2)} KB</div>
+                    </div>
+                    <input type="text" name="attachment_descriptions[${i}]" placeholder="Description" class="flex-1 p-2 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-green-500" />
+                    <button type="button" onclick="removeAttachment(this)" class="text-gray-400 hover:text-red-500 transition-colors">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 `;
@@ -674,6 +810,52 @@
                 if (e.key === 'Enter') {
                     filterMessages();
                 }
+            });
+        }
+        
+        // Handle form submission for answer form with AJAX
+        const answerForm = document.getElementById('answerMessageForm');
+        if (answerForm) {
+            answerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(answerForm);
+                const submitButton = document.getElementById('sendAnswerBtn');
+                const originalText = submitButton.innerHTML;
+                
+                // Show loading state
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+                
+                fetch(answerForm.action, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        closeAnswerModal();
+                        // Refresh the page to show the reply
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Failed to send reply');
+                        // Reset button state
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalText;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to send reply. Please try again.');
+                    // Reset button state
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                });
             });
         }
     });

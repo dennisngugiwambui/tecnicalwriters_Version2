@@ -3,7 +3,7 @@
 @section('content')
 
 <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
-<div class="flex h-full pt-20 px-6 lg:px-8">
+<div class="flex-1 px-4 lg:px-8 pb-8 lg:ml-72 transition-all duration-300 pt-24">
     <main class="flex-1 max-w-7xl mx-auto bg-white shadow p-6 rounded-md">
         <h3 class="text-2xl font-semibold">My Dashboards</h3>
         
