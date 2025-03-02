@@ -503,6 +503,128 @@ class HomeController extends Controller
         }
     }
 
+
+        /**
+     * Get messages list for AJAX updates without reloading the page
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getMessagesList()
+    {
+        $user = Auth::user();
+        
+        // Get all message threads related to this user (sent or received)
+        $messageThreads = Message::where(function($query) use ($user) {
+                $query->where('user_id', $user->id)
+                    ->orWhere('receiver_id', $user->id);
+            })
+            ->with(['user', 'receiver', 'order', 'files'])
+            ->latest()
+            ->get()
+            ->groupBy(function($message) {
+                // Group by conversation
+                if ($message->is_general) {
+                    // If it's a general message, group by title and the other user
+                    return 'general_' . $message->title . '_' . 
+                        ($message->user_id == Auth::id() ? $message->receiver_id : $message->user_id);
+                } else {
+                    // If it's order related, group by order
+                    return 'order_' . ($message->order_id ?? 0);
+                }
+            })
+            ->map(function($messages) {
+                // For each thread, get the latest message
+                $latest = $messages->first();
+                $latest->thread_messages_count = $messages->count();
+                $latest->unread_count = $messages
+                    ->where('receiver_id', Auth::id())
+                    ->whereNull('read_at')
+                    ->count();
+                    
+                return $latest;
+            });
+        
+        // Render only the message list part
+        $html = view('writers.partials.message-list', compact('messageThreads'))->render();
+        
+        return response()->json([
+            'success' => true,
+            'html' => $html
+        ]);
+    }
+
+    /**
+     * Search messages by order ID or content
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function searchMessages(Request $request)
+    {
+        $user = Auth::user();
+        $searchTerm = $request->query('search');
+        $messageType = $request->query('type', 'all');
+        
+        // Build the query based on search parameters
+        $query = Message::where(function($q) use ($user) {
+                $q->where('user_id', $user->id)
+                    ->orWhere('receiver_id', $user->id);
+            });
+        
+        // Apply message type filter if not "all"
+        if ($messageType !== 'all') {
+            $query->where('message_type', $messageType);
+        }
+        
+        // Apply search term if provided
+        if ($searchTerm) {
+            // If search term is numeric, it might be an order ID
+            if (is_numeric($searchTerm)) {
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('order_id', $searchTerm)
+                        ->orWhere('message', 'LIKE', "%{$searchTerm}%");
+                });
+            } else {
+                // Otherwise search in message content
+                $query->where('message', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('title', 'LIKE', "%{$searchTerm}%");
+            }
+        }
+        
+        // Get messages with relationships
+        $messages = $query->with(['user', 'receiver', 'order', 'files'])
+            ->latest()
+            ->get();
+        
+        // Group messages by thread
+        $messageThreads = $messages->groupBy(function($message) {
+                if ($message->is_general) {
+                    return 'general_' . $message->title . '_' . 
+                        ($message->user_id == Auth::id() ? $message->receiver_id : $message->user_id);
+                } else {
+                    return 'order_' . ($message->order_id ?? 0);
+                }
+            })
+            ->map(function($messages) {
+                $latest = $messages->first();
+                $latest->thread_messages_count = $messages->count();
+                $latest->unread_count = $messages
+                    ->where('receiver_id', Auth::id())
+                    ->whereNull('read_at')
+                    ->count();
+                    
+                return $latest;
+            });
+        
+        // Render the message list with search results
+        $html = view('writers.partials.message-list', compact('messageThreads'))->render();
+        
+        return response()->json([
+            'success' => true,
+            'html' => $html,
+            'count' => $messageThreads->count()
+        ]);
+    }
     /**
      * Send a new message
      *
