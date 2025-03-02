@@ -14,7 +14,7 @@
         border-radius: 0.5rem;
     }
     .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 40px;
+        block-size: 40px;
     }
 </style>
 
@@ -157,12 +157,12 @@
                     $timeLeft = '';
                     
                     if ($diff->days > 0) {
-                        $timeLeft .= $diff->days . 'd ';
+                        $timeLeft .= "{$diff->days}d ";
                     }
                     if ($diff->h > 0) {
-                        $timeLeft .= $diff->h . 'h ';
+                        $timeLeft .= "{$diff->h}h ";
                     }
-                    $timeLeft .= $diff->i . 'm';
+                    $timeLeft .= "{$diff->i}m";
                 @endphp
                 <!-- Order Item -->
                 <div class="bg-white rounded-xl shadow-lg hover-scale p-6 transition-all duration-300">
@@ -222,7 +222,13 @@
             $('#filterContent').toggleClass('hidden');
             $(this).find('i').toggleClass('rotate-180');
         });
+
+        $('#toggleSearch').click(function() {
+            $('#searchFilters').toggleClass('hidden');
+        });
     });
+
+    
 </script>
 
 @endsection

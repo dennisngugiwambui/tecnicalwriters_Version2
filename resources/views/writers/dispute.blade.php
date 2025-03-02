@@ -1,4 +1,4 @@
-```php
+
 @extends('writers.app')
 @section('content')
 

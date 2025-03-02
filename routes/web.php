@@ -31,9 +31,6 @@ Route::get('/profile', [App\Http\Controllers\HomeController::class,'profile'])->
 Route::get('/statistics', [App\Http\Controllers\HomeController::class,'statistics'])->name('statistics');
 
 
-
-Route::get('/order/201394828', [App\Http\Controllers\HomeController::class,'AssignedOrder'])->name('assigned');
-
 // routes/web.php
 Route::get('/order/{id}', [App\Http\Controllers\HomeController::class, 'availableOrderDetails'])->name('availableOrderDetails');
 
