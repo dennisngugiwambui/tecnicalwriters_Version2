@@ -147,7 +147,7 @@
                 <p class="text-gray-500">No orders under revision currently.</p>
             </div>
         @endif
-    </div
+        </div>
 </main>
 
 @endsection
