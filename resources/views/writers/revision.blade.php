@@ -140,7 +140,7 @@
                 <div class="truncate-text">{{ $order->notes }}</div>
                 <div>{{ $order->pages }}</div>
                 <div class="text-gray-800 font-semibold text-lg">${{ number_format($order->cost, 2) }}</div>
-            </div
+            </div>
             @endforeach
         @else
             <div class="border rounded-lg p-6 text-center bg-gray-50 mt-4">
