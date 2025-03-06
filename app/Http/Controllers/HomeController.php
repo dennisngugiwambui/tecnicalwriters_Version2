@@ -203,7 +203,23 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-   
+    public function currentOrdersOnRevision()
+    {
+        $revisedOrders = Order::where('writer_id', Auth::id())
+            ->where('status', Order::STATUS_REVISION)
+            ->latest()
+            ->get();
+            
+        return view('writers.revision', compact('revisedOrders'));
+    }
+
+    
+    /**
+     * Display completed orders
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
     public function completedOrders(Request $request)
     {
         // Start with base query for writer's completed orders
@@ -245,15 +261,24 @@ class HomeController extends Controller
             ->paginate(10)
             ->withQueryString();
         
-        // Calculate total earnings for displayed orders
-        $totalEarnings = $completedOrders->sum(function($order) {
-            return $order->payments->where('type', 'writer')->sum('amount');
-        });
+        // Calculate total earnings for all completed orders (not just current page)
+        $totalEarningsQuery = Order::where('writer_id', Auth::id())
+            ->whereIn('status', [
+                Order::STATUS_COMPLETED, 
+                Order::STATUS_PAID,
+                Order::STATUS_FINISHED
+            ])
+            ->with('payments')
+            ->get();
+            
+        $totalEarnings = 0;
+        foreach ($totalEarningsQuery as $order) {
+            $totalEarnings += $order->payments->where('type', 'writer')->sum('amount');
+        }
         
         // Pass data to view
         return view('writers.finished', compact('completedOrders', 'totalEarnings'));
     }
-
     /**
      * Display orders that are on dispute
      *
