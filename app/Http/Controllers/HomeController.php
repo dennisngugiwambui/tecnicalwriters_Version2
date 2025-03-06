@@ -220,16 +220,28 @@ class HomeController extends Controller
      */
     public function completedOrders()
     {
-        $completedOrders = Order::where('writer_id', Auth::id())
+          // Get completed orders with pagination
+            $completedOrders = Order::where('writer_id', Auth::id())
             ->whereIn('status', [
                 Order::STATUS_COMPLETED, 
-                Order::STATUS_PAID
+                Order::STATUS_PAID,
+                Order::STATUS_FINISHED
             ])
+            ->with(['client', 'payments'])
             ->latest()
-            ->get();
+            ->paginate(10);
             
-        return view('writers.finished', compact('completedOrders'));
+        // Calculate total earnings
+        $totalEarnings = 0;
+        foreach ($completedOrders as $order) {
+            // Add the writer payment amount for this order
+            $totalEarnings += $order->payments->where('type', 'writer')->sum('amount');
+        }
+
+        // Pass data to view
+        return view('writers.finished', compact('completedOrders', 'totalEarnings'));
     }
+
 
     /**
      * Display orders that are on dispute
