@@ -1,10 +1,7 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
 class Order extends Model
 {
     protected $fillable = [
@@ -12,12 +9,10 @@ class Order extends Model
         'type_of_service', 'discipline', 'software', 'status',
         'client_id', 'writer_id', 'customer_comments'
     ];
-
     protected $casts = [
         'deadline' => 'datetime',
         'price' => 'decimal:2',
     ];
-
     // Order status constants
     const STATUS_AVAILABLE = 'available';
     const STATUS_CONFIRMED = 'confirmed';
@@ -29,7 +24,9 @@ class Order extends Model
     const STATUS_DISPUTE = 'dispute';
     const STATUS_COMPLETED = 'completed';
     const STATUS_CANCELLED = 'cancelled';
-
+    const STATUS_PAID = 'paid';
+    const STATUS_FINISHED = 'finished';
+    
     // Relationships
     public function client()
     {
@@ -56,6 +53,11 @@ class Order extends Model
         return $this->hasMany(Message::class);
     }
     
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+    
     // Scopes for different order statuses
     public function scopeAvailable($query)
     {
@@ -77,5 +79,34 @@ class Order extends Model
     public function scopeCompleted($query)
     {
         return $query->where('status', self::STATUS_COMPLETED);
+    }
+    
+    // New scope for finished orders including completed, paid, and finished statuses
+    public function scopeFinished($query)
+    {
+        return $query->whereIn('status', [
+            self::STATUS_COMPLETED,
+            self::STATUS_PAID,
+            self::STATUS_FINISHED
+        ]);
+    }
+    
+    // Check if order is completed or finished
+    public function isCompleted()
+    {
+        return in_array($this->status, [
+            self::STATUS_COMPLETED,
+            self::STATUS_PAID,
+            self::STATUS_FINISHED
+        ]);
+    }
+    
+    // Check if payment has been processed
+    public function isPaid()
+    {
+        return in_array($this->status, [
+            self::STATUS_PAID,
+            self::STATUS_FINISHED
+        ]);
     }
 }

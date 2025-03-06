@@ -203,45 +203,56 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-    public function currentOrdersOnRevision()
+   
+    public function completedOrders(Request $request)
     {
-        $revisedOrders = Order::where('writer_id', Auth::id())
-            ->where('status', Order::STATUS_REVISION)
-            ->latest()
-            ->get();
-            
-        return view('writers.revision', compact('revisedOrders'));
-    }
-
-    /**
-     * Display completed orders
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
-     */
-    public function completedOrders()
-    {
-          // Get completed orders with pagination
-            $completedOrders = Order::where('writer_id', Auth::id())
-            ->whereIn('status', [
+        // Start with base query for writer's completed orders
+        $query = Order::where('writer_id', Auth::id());
+        
+        // Apply status filter - default to all finished statuses if not specified
+        if ($request->has('status') && !empty($request->status)) {
+            $query->whereIn('status', $request->status);
+        } else {
+            $query->whereIn('status', [
                 Order::STATUS_COMPLETED, 
                 Order::STATUS_PAID,
                 Order::STATUS_FINISHED
-            ])
-            ->with(['client', 'payments'])
-            ->latest()
-            ->paginate(10);
-            
-        // Calculate total earnings
-        $totalEarnings = 0;
-        foreach ($completedOrders as $order) {
-            // Add the writer payment amount for this order
-            $totalEarnings += $order->payments->where('type', 'writer')->sum('amount');
+            ]);
         }
-
+        
+        // Apply date range filter if provided
+        if ($request->filled('start_date')) {
+            $query->whereDate('updated_at', '>=', $request->start_date);
+        }
+        
+        if ($request->filled('end_date')) {
+            $query->whereDate('updated_at', '<=', $request->end_date);
+        }
+        
+        // Apply order ID filter if provided
+        if ($request->filled('order_id')) {
+            $query->where('id', 'like', '%' . $request->order_id . '%');
+        }
+        
+        // Apply topic title filter if provided
+        if ($request->filled('topic')) {
+            $query->where('title', 'like', '%' . $request->topic . '%');
+        }
+        
+        // Get completed orders with related data and pagination
+        $completedOrders = $query->with(['client', 'payments'])
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+        
+        // Calculate total earnings for displayed orders
+        $totalEarnings = $completedOrders->sum(function($order) {
+            return $order->payments->where('type', 'writer')->sum('amount');
+        });
+        
         // Pass data to view
         return view('writers.finished', compact('completedOrders', 'totalEarnings'));
     }
-
 
     /**
      * Display orders that are on dispute
