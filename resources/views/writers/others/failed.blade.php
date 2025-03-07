@@ -192,7 +192,7 @@
         <div class="text-center mt-8">
             <a href="" class="btn btn-primary">Thanks {{ auth()->user()->name }}</a>
         </div>
-    </div>
+    </div
 </div>
 
 <script>
