@@ -1,66 +1,75 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\AssessmentController;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/welcome', function () {
+    return view('writers.others.welcome');
+})->name('welcome');
+
+Route::get('/failed', function () {
+    // Get the user's latest assessment result
+    $result = App\Models\AssessmentResult::where('user_id', Auth::id())
+        ->latest()
+        ->first();
+        
+    if (!$result) {
+        // Fallback if no result exists
+        $result = new stdClass();
+        $result->percentage = 0;
+        $result->created_at = now();
+    }
+    
+    return view('writers.others.failed', compact('result'));
+})->name('failed');
+
 Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+// Assessment routes (available to authenticated users, regardless of verification status)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/assessment/grammar', [AssessmentController::class, 'showAssessment'])->name('assessment.grammar');
+    Route::post('/assessment/submit', [AssessmentController::class, 'submitAssessment'])->name('assessment.submit');
+    Route::post('/assessment/auto-submit', [AssessmentController::class, 'autoSubmitAssessment'])->name('assessment.auto-submit');
+});
 
-Route::get('/current', [App\Http\Controllers\HomeController::class,'currentOrders'])->name('curret');
+// Public routes that don't require authentication
+Route::get('/order/{id}', [HomeController::class, 'availableOrderDetails'])->name('availableOrderDetails');
 
-Route::get('/bids', [App\Http\Controllers\HomeController::class,'currentBidOrders'])->name('bids');
-
-Route::get('/revision', [App\Http\Controllers\HomeController::class,'currentOrdersOnRevision'])->name('revision');
-
-Route::get('/finished', [App\Http\Controllers\HomeController::class,'completedOrders'])->name('finished');
-
-Route::get('/dispute', [App\Http\Controllers\HomeController::class,'orderOnDispute'])->name('dispute');
-
-Route::get('/messages', [App\Http\Controllers\HomeController::class,'Messages'])->name('writer.messages');
-
-
-Route::get('/finance', [App\Http\Controllers\HomeController::class,'userFinance'])->name('finance');
-
-
-Route::get('/profile', [App\Http\Controllers\HomeController::class,'profile'])->name('profile');
-
-Route::get('/statistics', [App\Http\Controllers\HomeController::class,'statistics'])->name('statistics');
-
-
-// routes/web.php
-Route::get('/order/{id}', [App\Http\Controllers\HomeController::class, 'availableOrderDetails'])->name('availableOrderDetails');
-
-
-Route::post('/bid/submit/{id}', [App\Http\Controllers\HomeController::class, 'submitBid'])->name('writer.bid.submit');
-
-Route::post('/file/download', [App\Http\Controllers\HomeController::class, 'download'])->name('writer.file.download');
-Route::post('/file/download-multiple', [App\Http\Controllers\HomeController::class, 'downloadMultiple'])->name('writer.file.downloadMultiple');
-
-Route::post('/writer/messages/send', [App\Http\Controllers\HomeController::class, 'sendNewMessage'])->name('writer.message.sendNew');
-Route::get('/writer/messages/thread/{orderId}', [App\Http\Controllers\HomeController::class, 'viewMessageThread'])->name('writer.message.thread');
-Route::post('/writer/messages/reply', [App\Http\Controllers\HomeController::class, 'replyToMessage'])->name('writer.message.reply');
-Route::get('/writer/order/{id}/check-messages', [App\Http\Controllers\HomeController::class, 'checkNewMessages'])->name('writer.message.check');
-
-
-Route::get('/writer/order/{id}/details', [App\Http\Controllers\HomeController::class, 'availableOrderDetails'])->name('writer.order.details');
-Route::post('/writer/order/{id}/message', [App\Http\Controllers\HomeController::class, 'sendMessage'])->name('writer.message.send');
-
-// File upload and management routes
-Route::post('/writer/order/upload-files', [App\Http\Controllers\HomeController::class, 'uploadFiles'])->name('writer.order.upload');
-Route::post('/writer/order/{id}/mark-messages-read', [App\Http\Controllers\HomeController::class, 'markMessagesRead'])->name('writer.order.mark-messages-read');
-
-// Dynamic assigned order viewing (instead of hardcoded 201394828)
-Route::get('/order/{id?}', [App\Http\Controllers\HomeController::class, 'AssignedOrder'])->name('assigned');
-
-// Add these routes to routes/web.php
-
-// Get messages list for AJAX updates
-Route::get('/writer/messages/list', [App\Http\Controllers\HomeController::class, 'getMessagesList'])->name('writer.messages.list');
-
-// Search messages
-Route::get('/writer/messages/search', [App\Http\Controllers\HomeController::class, 'searchMessages'])->name('writer.messages.search');
-
+// Middleware to check if user is verified
+Route::middleware(['auth', 'writer.verified'])->group(function () {
+    // Routes that require verified writer status
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/current', [HomeController::class, 'currentOrders'])->name('current');
+    Route::get('/bids', [HomeController::class, 'currentBidOrders'])->name('bids');
+    Route::get('/revision', [HomeController::class, 'currentOrdersOnRevision'])->name('revision');
+    Route::get('/finished', [HomeController::class, 'completedOrders'])->name('finished');
+    Route::get('/dispute', [HomeController::class, 'orderOnDispute'])->name('dispute');
+    Route::get('/messages', [HomeController::class, 'Messages'])->name('writer.messages');
+    Route::get('/finance', [HomeController::class, 'userFinance'])->name('finance');
+    Route::get('/profile', [HomeController::class, 'profile'])->name('profile');
+    Route::get('/statistics', [HomeController::class, 'statistics'])->name('statistics');
+    
+    // Order management routes
+    Route::post('/bid/submit/{id}', [HomeController::class, 'submitBid'])->name('writer.bid.submit');
+    Route::post('/file/download', [HomeController::class, 'download'])->name('writer.file.download');
+    Route::post('/file/download-multiple', [HomeController::class, 'downloadMultiple'])->name('writer.file.downloadMultiple');
+    Route::get('/writer/order/{id}/details', [HomeController::class, 'availableOrderDetails'])->name('writer.order.details');
+    Route::post('/writer/order/{id}/message', [HomeController::class, 'sendMessage'])->name('writer.message.send');
+    Route::post('/writer/order/upload-files', [HomeController::class, 'uploadFiles'])->name('writer.order.upload');
+    Route::post('/writer/order/{id}/mark-messages-read', [HomeController::class, 'markMessagesRead'])->name('writer.order.mark-messages-read');
+    Route::get('/order/{id?}', [HomeController::class, 'AssignedOrder'])->name('assigned');
+    
+    // Message routes
+    Route::post('/writer/messages/send', [HomeController::class, 'sendNewMessage'])->name('writer.message.sendNew');
+    Route::get('/writer/messages/thread/{orderId}', [HomeController::class, 'viewMessageThread'])->name('writer.message.thread');
+    Route::post('/writer/messages/reply', [HomeController::class, 'replyToMessage'])->name('writer.message.reply');
+    Route::get('/writer/order/{id}/check-messages', [HomeController::class, 'checkNewMessages'])->name('writer.message.check');
+    Route::get('/writer/messages/list', [HomeController::class, 'getMessagesList'])->name('writer.messages.list');
+    Route::get('/writer/messages/search', [HomeController::class, 'searchMessages'])->name('writer.messages.search');
+});

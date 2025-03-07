@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Registered;
 
 class LoginController extends Controller
 {
@@ -35,5 +37,27 @@ class LoginController extends Controller
     public function username()
     {
         return 'phone';
+    }
+
+      /**
+     * The user has been authenticated.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        if ($user->usertype === 'writer') {
+            if ($user->status === 'pending') {
+                return redirect()->route('welcome');
+            } elseif (in_array($user->status, ['failed', 'suspended', 'banned', 'terminated', 'locked']) || 
+                     $user->is_suspended === 'yes') {
+                return redirect()->route('failed');
+            }
+        }
+        
+        // Default redirection for active users
+        return redirect()->intended($this->redirectPath());
     }
 }

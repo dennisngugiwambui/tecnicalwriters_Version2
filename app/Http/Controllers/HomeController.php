@@ -27,7 +27,22 @@ class HomeController extends Controller
         $this->middleware(function ($request, $next) {
             if (Auth::check()) {
                 $user = Auth::user();
-                
+
+                  
+                // Check user status for redirection
+                if ($user->usertype === 'writer') {
+                    if ($user->status === 'pending') {
+                        return redirect()->route('assessment.grammar')
+                            ->with('message', 'You need to complete the grammar assessment.');
+                    }
+                    
+                    if (in_array($user->status, ['failed', 'suspended', 'banned', 'terminated', 'locked']) || 
+                        $user->is_suspended === 'yes') {
+                        return redirect()->route('failed')
+                            ->with('message', 'Your account has been ' . $user->status);
+                    }
+                }
+                    
                 // Current orders count
                 $currentCount = Order::where('writer_id', $user->id)
                     ->whereIn('status', [

@@ -1,17 +1,13 @@
 <?php
-
 namespace App\Models;
-
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
-
     /**
      * The attributes that are mass assignable.
      *
@@ -29,9 +25,8 @@ class User extends Authenticatable
         'bio',
         'rating',
         'specialization',
-        'last_active_at'
+        'last_active_at',
     ];
-
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -41,7 +36,6 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
-
     /**
      * Get the attributes that should be cast.
      *
@@ -56,7 +50,6 @@ class User extends Authenticatable
             'rating' => 'decimal:1',
         ];
     }
-
     // Role constants (using existing usertype values)
     const ROLE_ADMIN = 'admin';
     const ROLE_CLIENT = 'client';
@@ -68,6 +61,11 @@ class User extends Authenticatable
     const STATUS_PENDING = 'pending';
     const STATUS_SUSPENDED = 'suspended';
     const STATUS_BANNED = 'banned';
+    
+    // Verification status constants
+    const VERIFICATION_PENDING = 'pending';
+    const VERIFICATION_VERIFIED = 'verified';
+    const VERIFICATION_FAILED = 'failed';
     
     // Relationships
     public function ordersAsClient()
@@ -94,7 +92,102 @@ class User extends Authenticatable
     {
         return $this->hasMany(File::class, 'uploaded_by');
     }
+    
+    /**
+     * Get the assessments for the user
+     */
+    public function assessments()
+    {
+        return $this->hasMany(Assessment::class);
+    }
+    
+    /**
+     * Get the assessment results for the user
+     */
+    public function assessmentResults()
+    {
+        return $this->hasMany(AssessmentResult::class);
+    }
+    
+    /**
+     * Check if user is verified (has passed grammar assessment)
+     *
+     * @return bool
+     */
+    public function isVerified()
+    {
+        return $this->verification_status === self::VERIFICATION_VERIFIED;
+    }
+    
+    /**
+     * Check if user needs to take the grammar assessment
+     *
+     * @return bool
+     */
+    public function needsAssessment()
+    {
+        // Only writers need to take the assessment
+        if ($this->usertype !== self::ROLE_WRITER) {
+            return false;
+        }
+        
+        return $this->verification_status === self::VERIFICATION_PENDING 
+            || $this->verification_status === self::VERIFICATION_FAILED;
+    }
+    
+    /**
+     * Get the latest assessment result
+     *
+     * @return \App\Models\AssessmentResult|null
+     */
+    public function getLatestAssessmentResult()
+    {
+        return $this->assessmentResults()
+            ->where('assessment_type', 'grammar')
+            ->latest()
+            ->first();
+    }
+    
+    /**
+     * Check if user can retake a failed assessment
+     *
+     * @return bool
+     */
+    public function canRetakeAssessment()
+    {
+        if ($this->verification_status !== self::VERIFICATION_FAILED) {
+            return true;
+        }
+        
+        $latestResult = $this->getLatestAssessmentResult();
+        
+        if (!$latestResult) {
+            return true;
+        }
+        
+        // Check if 7 days have passed since the last attempt
+        return $latestResult->created_at->addDays(7)->isPast();
+    }
+    
+    /**
+     * Set user as verified (passed assessment)
+     *
+     * @return void
+     */
+    public function markAsVerified()
+    {
+        $this->verification_status = self::VERIFICATION_VERIFIED;
+        $this->save();
+    }
+    
+    /**
+     * Set user as failed (failed assessment)
+     *
+     * @return void
+     */
+    public function markAsFailed()
+    {
+        $this->verification_status = self::VERIFICATION_FAILED;
+        $this->save();
+    }
 }
-
-
-
