@@ -195,7 +195,7 @@
     </div>
 </div>
 
-<script>
+<script
     // Calculate days until retry is available
     const lastAttemptDate = new Date('{{ $result->created_at }}');
     const retryDate = new Date(lastAttemptDate);
