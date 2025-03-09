@@ -25,12 +25,58 @@ class AssessmentController extends Controller
     }
 
     /**
+     * Show the failed assessment page
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+    public function showFailedPage()
+    {
+        // Check if user is authenticated
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'You must be logged in to view this page.');
+        }
+
+        $user = Auth::user();
+        
+        // Only writers with failed status should see this page
+        if ($user->usertype !== 'writer' || $user->status !== 'failed') {
+            return redirect()->route('home');
+        }
+        
+        // Get the latest assessment result
+        $latestResult = AssessmentResult::where('user_id', $user->id)
+            ->where('assessment_type', 'grammar')
+            ->where('passed', false)
+            ->latest()
+            ->first();
+            
+        if (!$latestResult) {
+            return redirect()->route('home');
+        }
+        
+        // Calculate remaining time until retake
+        $lastAttempt = Carbon::parse($latestResult->created_at);
+        $hoursRemaining = 168 - $lastAttempt->diffInHours(Carbon::now()); // 168 hours = 7 days
+        $hoursRemaining = max(0, $hoursRemaining);
+        
+        return view('writers.others.failed', [
+            'hoursRemaining' => $hoursRemaining,
+            'percentage' => $latestResult->percentage
+        ]);
+    }
+
+    /**
      * Show the grammar assessment page
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
     public function showAssessment()
     {
+        // Check if user is authenticated
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'You must be logged in to take the assessment.');
+        }
+        
         $user = Auth::user();
         
         // If user is not a writer or already active, redirect to home
@@ -112,7 +158,7 @@ class AssessmentController extends Controller
                 return redirect()->route('welcome')->with('error', 'Assessment system is being updated. Please try again later.');
             }
             
-            return view('writers.others.welcome', [
+            return view('writers.others.assessment', [
                 'questions' => $questions,
                 'assessment' => $assessment
             ]);
@@ -131,6 +177,11 @@ class AssessmentController extends Controller
      */
     public function submitAssessment(Request $request)
     {
+        // Check if user is authenticated
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'You must be logged in to submit an assessment.');
+        }
+        
         try {
             $request->validate([
                 'assessment_id' => 'required|exists:assessments,id',
@@ -257,7 +308,7 @@ class AssessmentController extends Controller
             }
             
             if ($passed) {
-                return redirect()->route('home')->with('success', 
+                return redirect()->route('profilesetup')->with('success', 
                     'Congratulations! You passed the grammar assessment with ' . round($percentage) . '%.');
             } else {
                 return redirect()->route('failed')->with([
@@ -279,6 +330,11 @@ class AssessmentController extends Controller
      */
     public function autoSubmitAssessment(Request $request)
     {
+        // Check if user is authenticated via AJAX
+        if (!Auth::check()) {
+            return response()->json(['success' => false, 'message' => 'Authentication required', 'redirect' => route('login')], 401);
+        }
+        
         try {
             $validatedData = $request->validate([
                 'assessment_id' => 'required|exists:assessments,id',
@@ -352,7 +408,7 @@ class AssessmentController extends Controller
                 return response()->json(['success' => false, 'message' => 'Error saving assessment: ' . $e->getMessage()], 500);
             }
             
-            $redirectUrl = $passed ? route('home') : route('failed');
+            $redirectUrl = $passed ? route('profilesetup') : route('failed');
             $message = $passed ? 
                 'Congratulations! You passed the grammar assessment with ' . round($percentage) . '%.' :
                 'You did not pass the grammar assessment. You scored ' . round($percentage) . 
