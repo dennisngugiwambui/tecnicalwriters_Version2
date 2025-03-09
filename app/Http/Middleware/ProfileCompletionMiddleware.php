@@ -49,12 +49,14 @@ class ProfileCompletionMiddleware
         if ($user->status === 'pending') {
             // User needs to take the assessment
             if (!in_array($path, $assessmentRoutes)) {
-                return redirect()->route('assessment.grammar');
+                return redirect()->route('assessment.grammar')
+                    ->with('warning', 'You need to complete the grammar assessment first.');
             }
         } else if ($user->status === 'failed') {
             // User failed the assessment
             if (!in_array($path, $assessmentRoutes)) {
-                return redirect()->route('failed');
+                return redirect()->route('failed')
+                    ->with('error', 'You did not pass the grammar assessment. Please wait until the waiting period ends to retake it.');
             }
         } else if ($user->status === 'active' && !$user->profile_completed) {
             // User passed assessment but needs to complete profile

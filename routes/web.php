@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AssessmentController;
+use App\Http\Controllers\ProfileSetupController;
+use App\Http\Controllers\UploadController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
@@ -13,21 +15,8 @@ Route::get('/welcome', function () {
     return view('writers.others.welcome');
 })->name('welcome');
 
-Route::get('/failed', function () {
-    // Get the user's latest assessment result
-    $result = App\Models\AssessmentResult::where('user_id', Auth::id())
-        ->latest()
-        ->first();
-        
-    if (!$result) {
-        // Fallback if no result exists
-        $result = new stdClass();
-        $result->percentage = 0;
-        $result->created_at = now();
-    }
-    
-    return view('writers.others.failed', compact('result'));
-})->name('failed');
+// Override the previous route to use the controller method instead
+Route::get('/failed', [AssessmentController::class, 'showFailedPage'])->name('failed');
 
 Auth::routes();
 
@@ -38,12 +27,18 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/assessment/auto-submit', [AssessmentController::class, 'autoSubmitAssessment'])->name('assessment.auto-submit');
 });
 
+// Profile setup routes - accessible after passing assessment but before accessing main system
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profilesetup', [ProfileSetupController::class, 'showProfileSetup'])->name('profilesetup');
+    Route::post('/profilesetup/submit', [ProfileSetupController::class, 'saveProfileSetup'])->name('profilesetup.submit');
+});
+
 // Public routes that don't require authentication
 Route::get('/order/{id}', [HomeController::class, 'availableOrderDetails'])->name('availableOrderDetails');
 
-// Middleware to check if user is verified
-Route::middleware(['auth', 'writer.verified'])->group(function () {
-    // Routes that require verified writer status
+// Apply profile completion middleware along with writer verification
+Route::middleware(['auth', 'writer.verified', 'profile.complete'])->group(function () {
+    // Routes that require verified writer status and completed profile
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/current', [HomeController::class, 'currentOrders'])->name('current');
     Route::get('/bids', [HomeController::class, 'currentBidOrders'])->name('bids');
@@ -54,6 +49,9 @@ Route::middleware(['auth', 'writer.verified'])->group(function () {
     Route::get('/finance', [HomeController::class, 'userFinance'])->name('finance');
     Route::get('/profile', [HomeController::class, 'profile'])->name('profile');
     Route::get('/statistics', [HomeController::class, 'statistics'])->name('statistics');
+    
+    // Available Orders page (where writers go after completing profile)
+    Route::get('/available', [HomeController::class, 'index'])->name('writer.available');
     
     // Order management routes
     Route::post('/bid/submit/{id}', [HomeController::class, 'submitBid'])->name('writer.bid.submit');
@@ -72,4 +70,11 @@ Route::middleware(['auth', 'writer.verified'])->group(function () {
     Route::get('/writer/order/{id}/check-messages', [HomeController::class, 'checkNewMessages'])->name('writer.message.check');
     Route::get('/writer/messages/list', [HomeController::class, 'getMessagesList'])->name('writer.messages.list');
     Route::get('/writer/messages/search', [HomeController::class, 'searchMessages'])->name('writer.messages.search');
+    
+    // File upload routes
+    Route::get('/upload/modal/{orderId}', [UploadController::class, 'showUploadModal'])->name('upload.modal');
+    Route::post('/upload/file', [UploadController::class, 'uploadFile'])->name('upload.file');
+    Route::post('/upload/submit', [UploadController::class, 'submitFinalWork'])->name('upload.submit');
+    Route::delete('/upload/{uploadId}', [UploadController::class, 'deleteUpload'])->name('upload.delete');
+    Route::get('/upload/download/{uploadId}', [UploadController::class, 'downloadFile'])->name('upload.download');
 });
