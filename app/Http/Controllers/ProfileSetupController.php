@@ -31,11 +31,6 @@ class ProfileSetupController extends Controller
      */
     public function showProfileSetup()
     {
-        // Ensure user is authenticated
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
-
         $user = Auth::user();
         
         // Check if the user is a writer and has passed the assessment
@@ -43,8 +38,11 @@ class ProfileSetupController extends Controller
             if ($user->usertype === 'writer' && $user->status === 'pending') {
                 return redirect()->route('assessment.grammar')
                     ->with('warning', 'You need to complete the grammar assessment first.');
-            } else if ($user->usertype === 'writer' && $user->status === 'failed') {
-                return redirect()->route('failed');
+            } else if ($user->usertype === 'writer' && 
+                      (in_array($user->status, ['failed', 'suspended', 'banned', 'terminated', 'locked']) || 
+                       $user->is_suspended === 'yes')) {
+                return redirect()->route('failed')
+                    ->with('error', 'Your account status does not allow profile setup.');
             } else {
                 return redirect()->route('home');
             }
@@ -59,7 +57,7 @@ class ProfileSetupController extends Controller
         // Get existing profile data if any
         $profile = WriterProfile::where('user_id', $user->id)->first();
         
-        // Get list of subjects for dropdown (can be customized based on your database)
+        // Get list of subjects for dropdown
         $subjects = $this->getSubjectsList();
         
         // Return the profile setup view
@@ -78,22 +76,27 @@ class ProfileSetupController extends Controller
      */
     public function saveProfileSetup(Request $request)
     {
-        // Ensure user is authenticated
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
-        
         $user = Auth::user();
         
         // Check if the user is a writer and has passed the assessment
         if ($user->usertype !== 'writer' || $user->status !== 'active') {
             if ($user->usertype === 'writer' && $user->status === 'pending') {
-                return redirect()->route('assessment.grammar');
-            } else if ($user->usertype === 'writer' && $user->status === 'failed') {
-                return redirect()->route('failed');
+                return redirect()->route('assessment.grammar')
+                    ->with('warning', 'You need to complete the grammar assessment first.');
+            } else if ($user->usertype === 'writer' && 
+                      (in_array($user->status, ['failed', 'suspended', 'banned', 'terminated', 'locked']) || 
+                       $user->is_suspended === 'yes')) {
+                return redirect()->route('failed')
+                    ->with('error', 'Your account status does not allow profile setup.');
             } else {
                 return redirect()->route('home');
             }
+        }
+        
+        // Check if profile is already completed
+        if ($user->profile_completed) {
+            return redirect()->route('writer.available')
+                ->with('info', 'Your profile has already been set up.');
         }
         
         // Validate request data
@@ -173,6 +176,7 @@ class ProfileSetupController extends Controller
             
             // Mark user profile as completed
             $user->profile_completed = true;
+            $user->verified_at = Carbon::now(); // Add a timestamp for verification
             $user->save();
             
             DB::commit();

@@ -85,15 +85,28 @@ class AssessmentController extends Controller
      */
     public function showAssessment()
     {
+        // Debug log to check if the method is being called
+        Log::info('Assessment controller called');
+        
         // Check if user is authenticated
         if (!Auth::check()) {
+            Log::info('User not authenticated');
             return redirect()->route('login')->with('error', 'You must be logged in to take the assessment.');
         }
         
         $user = Auth::user();
+        Log::info('User accessed assessment: ' . $user->id . ' with status: ' . $user->status);
         
         // If user is not a writer or already active, redirect to home
         if ($user->usertype !== 'writer' || $user->status === 'active') {
+            if ($user->status === 'active') {
+                // If profile is not completed, go to profile setup
+                if (!$user->profile_completed) {
+                    return redirect()->route('profilesetup');
+                }
+                // If profile is completed, go to available orders
+                return redirect()->route('writer.available');
+            }
             return redirect()->route('home');
         }
         
@@ -172,7 +185,8 @@ class AssessmentController extends Controller
                 return redirect()->route('welcome')->with('error', 'Assessment system is being updated. Please try again later.');
             }
             
-            return view('new.assessment', [
+            // Return the assessment view with questions
+            return view('writers.others.assessment', [
                 'questions' => $questions,
                 'assessment' => $assessment
             ]);
