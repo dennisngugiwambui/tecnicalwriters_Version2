@@ -150,7 +150,7 @@
     
     <div class="failed-content">
         <div class="score-card">
-            <div class="score-value">{{ round($result->percentage) }}%</div>
+            <div class="score-value">{{ round($percentage) }}%</div>
             <div class="score-label">YOUR SCORE (80% REQUIRED TO PASS)</div>
         </div>
         

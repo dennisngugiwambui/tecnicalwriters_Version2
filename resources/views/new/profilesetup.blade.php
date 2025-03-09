@@ -1,5 +1,7 @@
 @extends('new.app')
 
+@section('title', 'Complete Your Profile')
+
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-4xl mx-auto">

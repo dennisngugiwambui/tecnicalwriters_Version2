@@ -38,30 +38,43 @@ class AssessmentController extends Controller
 
         $user = Auth::user();
         
-        // Only writers with failed status should see this page
-        if ($user->usertype !== 'writer' || $user->status !== 'failed') {
+        // Only writers should see this page
+        if ($user->usertype !== 'writer') {
             return redirect()->route('home');
         }
         
         // Get the latest assessment result
-        $latestResult = AssessmentResult::where('user_id', $user->id)
+        $result = AssessmentResult::where('user_id', $user->id)
             ->where('assessment_type', 'grammar')
             ->where('passed', false)
             ->latest()
             ->first();
             
-        if (!$latestResult) {
+        // If no failed result exists and user is not in failed status, redirect
+        if (!$result && $user->status !== 'failed') {
             return redirect()->route('home');
         }
         
+        // If no result exists but status is failed, create a placeholder result object
+        if (!$result) {
+            // Create a dummy result object with basic properties
+            $result = new \stdClass();
+            $result->percentage = 0;
+            $result->created_at = now()->subDays(6); // Assume 6 days ago to show 1 day remaining
+        }
+        
         // Calculate remaining time until retake
-        $lastAttempt = Carbon::parse($latestResult->created_at);
+        $lastAttempt = Carbon::parse($result->created_at);
         $hoursRemaining = 168 - $lastAttempt->diffInHours(Carbon::now()); // 168 hours = 7 days
         $hoursRemaining = max(0, $hoursRemaining);
         
+        // Calculate percentage if it comes from session flash data
+        $percentage = session('percentage') ?? $result->percentage ?? 0;
+        
         return view('writers.others.failed', [
+            'result' => $result,
             'hoursRemaining' => $hoursRemaining,
-            'percentage' => $latestResult->percentage
+            'percentage' => $percentage
         ]);
     }
 
@@ -96,7 +109,7 @@ class AssessmentController extends Controller
                 $user->status = 'active';
                 $user->save();
                 
-                return redirect()->route('home')->with('success', 'You have already passed the grammar assessment.');
+                return redirect()->route('profilesetup')->with('success', 'You have already passed the grammar assessment.');
             } else {
                 // If failed and 7 days have passed, allow retake
                 $lastAttempt = Carbon::parse($existingResult->created_at);
@@ -106,6 +119,7 @@ class AssessmentController extends Controller
                 if ($daysSinceLastAttempt < 7) {
                     return redirect()->route('failed')->with([
                         'error' => 'You did not pass the grammar assessment. You can retake it after the waiting period.',
+                        'percentage' => $existingResult->percentage,
                         'hoursRemaining' => $hoursRemaining
                     ]);
                 }
@@ -158,7 +172,7 @@ class AssessmentController extends Controller
                 return redirect()->route('welcome')->with('error', 'Assessment system is being updated. Please try again later.');
             }
             
-            return view('writers.others.assessment', [
+            return view('new.assessment', [
                 'questions' => $questions,
                 'assessment' => $assessment
             ]);
