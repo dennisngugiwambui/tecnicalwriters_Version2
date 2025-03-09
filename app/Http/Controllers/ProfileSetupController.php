@@ -103,15 +103,20 @@ class ProfileSetupController extends Controller
         $validator = Validator::make($request->all(), [
             'education_level' => 'required|string|in:high_school,bachelor,master,phd',
             'experience_years' => 'required|integer|min:0|max:30',
-            'subjects' => 'required|array|min:1',
+            'subjects' => 'required|array|min:2|max:5',
             'subjects.*' => 'string',
             'bio' => 'required|string|min:100|max:1000',
             'phone_number' => 'required|string|max:15',
-            'address' => 'required|string|max:255',
-            'city' => 'required|string|max:100',
+            'national_id' => 'required|string|max:20',
+            'national_id_image' => 'required|image|max:5120', // 5MB max
             'country' => 'required|string|max:100',
+            'county' => 'required|string|max:100',
+            'native_language' => 'required|string',
             'profile_picture' => 'nullable|image|max:2048', // 2MB max
-            'resume' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // 5MB max
+            'night_calls' => 'nullable|boolean',
+            'force_assign' => 'nullable|boolean',
+            'linkedin' => 'nullable|url|max:255',
+            'facebook' => 'nullable|url|max:255',
             'payment_method' => 'required|string|in:mpesa,bank,paypal',
             'payment_details' => 'required|string|max:255',
         ]);
@@ -129,17 +134,46 @@ class ProfileSetupController extends Controller
             // Find or create writer profile
             $profile = WriterProfile::firstOrNew(['user_id' => $user->id]);
             
+            // Generate writer_id if it doesn't exist
+            if (!$profile->writer_id) {
+                $profile->writer_id = WriterProfile::generateWriterId($user->id);
+            }
+            
             // Update profile data
+            $profile->phone_number = $request->phone_number;
+            $profile->national_id = $request->national_id;
+            $profile->country = $request->country;
+            $profile->county = $request->county;
+            $profile->native_language = $request->native_language;
             $profile->education_level = $request->education_level;
             $profile->experience_years = $request->experience_years;
             $profile->subjects = $request->subjects;
             $profile->bio = $request->bio;
-            $profile->phone_number = $request->phone_number;
-            $profile->address = $request->address;
-            $profile->city = $request->city;
-            $profile->country = $request->country;
+            $profile->night_calls = $request->has('night_calls');
+            $profile->force_assign = $request->has('force_assign');
+            $profile->linkedin = $request->linkedin;
+            $profile->facebook = $request->facebook;
             $profile->payment_method = $request->payment_method;
             $profile->payment_details = $request->payment_details;
+            $profile->id_verification_status = 'not-verified';
+            
+            // Handle national ID image upload
+            if ($request->hasFile('national_id_image')) {
+                $file = $request->file('national_id_image');
+                $fileName = $user->id . '_national_id_' . time() . '.' . $file->getClientOriginalExtension();
+                
+                // Delete previous file if exists
+                if ($profile->national_id_image && Storage::exists('private/national_ids/' . $profile->national_id_image)) {
+                    Storage::delete('private/national_ids/' . $profile->national_id_image);
+                }
+                
+                // Store new file in a private directory (not publicly accessible)
+                $file->storeAs('private/national_ids', $fileName);
+                $profile->national_id_image = $fileName;
+                
+                // Set verification status to pending
+                $profile->id_verification_status = 'pending';
+            }
             
             // Handle profile picture upload
             if ($request->hasFile('profile_picture')) {
@@ -156,20 +190,10 @@ class ProfileSetupController extends Controller
                 $profile->profile_picture = $fileName;
             }
             
-            // Handle resume upload
-            if ($request->hasFile('resume')) {
-                $file = $request->file('resume');
-                $fileName = uniqid('resume_') . '.' . $file->getClientOriginalExtension();
-                
-                // Delete previous file if exists
-                if ($profile->resume && Storage::exists('public/resumes/' . $profile->resume)) {
-                    Storage::delete('public/resumes/' . $profile->resume);
-                }
-                
-                // Store new file
-                $file->storeAs('public/resumes', $fileName);
-                $profile->resume = $fileName;
-            }
+            // Initialize statistics
+            $profile->rating = 0.00;
+            $profile->jobs_completed = 0;
+            $profile->earnings = 0.00;
             
             // Save profile
             $profile->save();
@@ -182,11 +206,11 @@ class ProfileSetupController extends Controller
             DB::commit();
             
             // Log successful profile setup
-            Log::info('Writer #' . $user->id . ' completed profile setup');
+            Log::info('Writer #' . $user->id . ' completed profile setup with writer_id: ' . $profile->writer_id);
             
             // Redirect to available orders page
             return redirect()->route('writer.available')
-                ->with('success', 'Your profile has been set up successfully. You can now start accepting orders.');
+                ->with('success', 'Your profile has been set up successfully. Your ID is pending verification. You can now start accepting orders.');
                 
         } catch (\Exception $e) {
             DB::rollBack();

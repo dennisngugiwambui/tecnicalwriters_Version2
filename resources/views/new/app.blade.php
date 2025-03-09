@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Freelance Writers Platform') }} - @yield('title', 'Writer Portal')</title>
+    <title>{{ config('app.name', 'Writers Hub') }} - @yield('title', 'Writer Portal')</title>
 
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
@@ -13,11 +13,67 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Styles -->
     <style>
         [x-cloak] { display: none !important; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Animation classes */
+        .fade-in-up {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Hover effects */
+        .hover-lift {
+            transition: transform 0.2s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-3px);
+        }
+        
+        /* Gradient animations */
+        .gradient-shift {
+            background-size: 200% 200%;
+            animation: gradientShift 5s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
     </style>
     
     <!-- Scripts -->
@@ -27,7 +83,7 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Poppins', 'sans-serif'],
                     },
                     colors: {
                         primary: {
@@ -42,6 +98,21 @@
                             800: '#075985',
                             900: '#0c4a6e',
                         },
+                        secondary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        },
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     },
                 },
             },
@@ -51,90 +122,80 @@
     
     @stack('styles')
 </head>
-<body class="font-sans antialiased bg-gray-50 text-gray-900">
-    <div class="min-h-screen">
+<body class="font-sans antialiased bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+    <div class="flex-grow flex flex-col">
         <!-- Navigation -->
-        <nav class="bg-white border-b border-gray-200">
+        <nav x-data="{ open: false, profileOpen: false }" class="bg-white shadow-md relative z-30">
+            <!-- Decorative top bar -->
+            <div class="h-1 w-full bg-gradient-to-r from-primary-500 via-secondary-500 to-indigo-500 gradient-shift"></div>
+            
             <div class="mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <div class="flex">
                         <!-- Logo -->
                         <div class="flex-shrink-0 flex items-center">
-                            <a href="{{ route('welcome') }}" class="flex items-center">
-                                <svg class="h-8 w-auto text-primary-600" viewBox="0 0 40 40" fill="currentColor">
-                                    <path d="M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331ZM16.6667 28.3333L8.33337 20L10.6834 17.65L16.6667 23.6166L29.3167 10.9666L31.6667 13.3333L16.6667 28.3333Z"/>
-                                </svg>
-                                <span class="ml-2 text-xl font-bold text-gray-900">{{ config('app.name', 'Writers Hub') }}</span>
-                            </a>
-                        </div>
-
-                        <!-- Navigation Links (visible on larger screens) -->
-                        <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                            @auth
-                                @if(Auth::user()->status === 'active' && Auth::user()->profile_completed)
-                                    <a href="{{ route('writer.available') }}" class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('writer.available') ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} text-sm font-medium">
-                                        Available Orders
-                                    </a>
-                                    <a href="{{ route('writer.assigned') ?? '#' }}" class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('writer.assigned') ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} text-sm font-medium">
-                                        My Orders
-                                    </a>
-                                    <a href="{{ route('writer.messages') ?? '#' }}" class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('writer.messages') ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} text-sm font-medium">
-                                        Messages
-                                    </a>
-                                    <a href="{{ route('profile') ?? '#' }}" class="inline-flex items-center px-1 pt-1 border-b-2 {{ request()->routeIs('profile') ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} text-sm font-medium">
-                                        Profile
-                                    </a>
-                                @endif
-                            @endauth
+                           
                         </div>
                     </div>
 
                     <!-- Settings Dropdown -->
                     <div class="hidden sm:flex sm:items-center sm:ml-6">
                         @auth
-                            <div x-data="{ open: false }" class="ml-3 relative">
-                                <div>
-                                    <button @click="open = !open" class="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition">
-                                        <div class="h-8 w-8 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold">
+                            <div class="relative">
+                                <button @click="profileOpen = !profileOpen" class="flex items-center text-sm focus:outline-none transition duration-150 ease-in-out">
+                                    <div class="mr-2 text-right hidden sm:block">
+                                        <p class="text-sm font-medium text-gray-900 truncate">{{ Auth::user()->name }}</p>
+                                        <p class="text-xs text-gray-500 truncate">{{ Auth::user()->email }}</p>
+                                    </div>
+                                    <div class="h-9 w-9 rounded-full overflow-hidden border-2 border-white shadow-md hover:border-primary-200 transition-colors">
+                                        <div class="h-full w-full bg-gradient-to-br from-primary-400 to-secondary-500 flex items-center justify-center text-white font-bold">
                                             {{ substr(Auth::user()->name, 0, 1) }}
                                         </div>
-                                    </button>
-                                </div>
+                                    </div>
+                                </button>
 
-                                <div x-show="open" 
-                                     @click.away="open = false" 
+                                <div x-show="profileOpen" 
+                                     @click.away="profileOpen = false" 
                                      x-transition:enter="transition ease-out duration-200" 
                                      x-transition:enter-start="transform opacity-0 scale-95" 
                                      x-transition:enter-end="transform opacity-100 scale-100" 
                                      x-transition:leave="transition ease-in duration-75" 
                                      x-transition:leave-start="transform opacity-100 scale-100" 
                                      x-transition:leave-end="transform opacity-0 scale-95" 
-                                     class="absolute right-0 z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" 
+                                     class="absolute right-0 z-50 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" 
                                      x-cloak>
-                                    <div class="py-1">
-                                        <div class="px-4 py-2 text-xs text-gray-500">
-                                            Manage Account
+                                    <div class="py-1 rounded-lg bg-white divide-y divide-gray-100">
+                                        <div class="px-4 py-3">
+                                            <p class="text-sm font-medium text-gray-900 truncate">{{ Auth::user()->name }}</p>
+                                            <p class="text-xs text-gray-500 truncate">{{ Auth::user()->email }}</p>
+                                            <span class="mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ Auth::user()->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                                {{ ucfirst(Auth::user()->status) }}
+                                            </span>
                                         </div>
-                                        <a href="{{ route('profile') ?? '#' }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                            Your Profile
-                                        </a>
                                         
-                                        <div class="border-t border-gray-100"></div>
-                                        
-                                        <form method="POST" action="{{ route('logout') }}">
-                                            @csrf
-                                            <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                Sign Out
-                                            </button>
-                                        </form>
+                                        <div class="py-1">
+                                            <form method="POST" action="{{ route('logout') }}">
+                                                @csrf
+                                                <button type="submit" class="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-900">
+                                                    <svg class="mr-3 h-5 w-5 text-gray-400 group-hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                                    </svg>
+                                                    Sign Out
+                                                </button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         @else
                             <div class="space-x-4">
-                                <a href="{{ route('login') }}" class="text-sm text-gray-700 hover:text-gray-900">Log in</a>
+                                <a href="{{ route('login') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-600 bg-primary-50 hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                                    Log in
+                                </a>
                                 @if (Route::has('register'))
-                                    <a href="{{ route('register') }}" class="text-sm text-gray-700 hover:text-gray-900">Register</a>
+                                    <a href="{{ route('register') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 shadow-sm transition-colors duration-200">
+                                        Register
+                                    </a>
                                 @endif
                             </div>
                         @endauth
@@ -142,10 +203,12 @@
 
                     <!-- Hamburger -->
                     <div class="-mr-2 flex items-center sm:hidden">
-                        <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition">
-                            <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                                <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                                <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        <button @click="open = !open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-primary-500 hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 transition duration-150 ease-in-out">
+                            <svg class="h-6 w-6" :class="{'hidden': open, 'inline-flex': !open }" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                            <svg class="h-6 w-6" :class="{'hidden': !open, 'inline-flex': open }" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
@@ -153,106 +216,70 @@
             </div>
 
             <!-- Mobile Navigation Menu -->
-            <div x-data="{ open: false }" class="sm:hidden">
-                <div @click="open = !open" class="px-2 pt-2 pb-3 space-y-1">
-                    <button class="w-full text-left block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:text-gray-800 focus:bg-gray-50 focus:border-gray-300 transition">
-                        Menu
-                        <svg :class="{'rotate-180': open}" class="ml-1 inline-block h-4 w-4 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </div>
-
-                <div x-show="open" x-cloak>
-                    @auth
-                        @if(Auth::user()->status === 'active' && Auth::user()->profile_completed)
-                            <div class="pt-2 pb-3 space-y-1">
-                                <a href="{{ route('writer.available') }}" class="block pl-3 pr-4 py-2 border-l-4 {{ request()->routeIs('writer.available') ? 'border-primary-500 text-primary-700 bg-primary-50' : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300' }} text-base font-medium">
-                                    Available Orders
-                                </a>
-                                <a href="{{ route('writer.assigned') ?? '#' }}" class="block pl-3 pr-4 py-2 border-l-4 {{ request()->routeIs('writer.assigned') ? 'border-primary-500 text-primary-700 bg-primary-50' : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300' }} text-base font-medium">
-                                    My Orders
-                                </a>
-                                <a href="{{ route('writer.messages') ?? '#' }}" class="block pl-3 pr-4 py-2 border-l-4 {{ request()->routeIs('writer.messages') ? 'border-primary-500 text-primary-700 bg-primary-50' : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300' }} text-base font-medium">
-                                    Messages
-                                </a>
-                                <a href="{{ route('profile') ?? '#' }}" class="block pl-3 pr-4 py-2 border-l-4 {{ request()->routeIs('profile') ? 'border-primary-500 text-primary-700 bg-primary-50' : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300' }} text-base font-medium">
-                                    Profile
-                                </a>
+            <div :class="{'block': open, 'hidden': !open}" class="sm:hidden">
+                @auth
+                    <div class="pt-2 pb-3 space-y-1">
+                        <div class="flex items-center px-4 py-2">
+                            <div class="flex-shrink-0">
+                                <div class="h-10 w-10 rounded-full bg-gradient-to-br from-primary-400 to-secondary-500 flex items-center justify-center text-white font-bold">
+                                    {{ substr(Auth::user()->name, 0, 1) }}
+                                </div>
                             </div>
+                            <div class="ml-3">
+                                <div class="text-base font-medium text-gray-800">{{ Auth::user()->name }}</div>
+                                <div class="text-sm font-medium text-gray-500">{{ Auth::user()->email }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 pb-3 border-t border-gray-200">
+                        <div class="mt-3 space-y-1">
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="flex w-full items-center pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-red-800 hover:bg-red-50 hover:border-red-300 transition duration-150 ease-in-out">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                    </svg>
+                                    Sign Out
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @else
+                    <div class="p-4 space-y-3 border-t border-gray-200">
+                        <a href="{{ route('login') }}" class="block w-full px-4 py-2 text-center text-sm font-medium rounded-md text-primary-600 bg-primary-50 hover:bg-primary-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                            Log in
+                        </a>
+                        @if (Route::has('register'))
+                            <a href="{{ route('register') }}" class="block w-full px-4 py-2 text-center text-sm font-medium rounded-md text-white bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 shadow-sm transition-colors duration-200">
+                                Register
+                            </a>
                         @endif
-
-                        <div class="pt-4 pb-1 border-t border-gray-200">
-                            <div class="flex items-center px-4">
-                                <div class="flex-shrink-0">
-                                    <div class="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold">
-                                        {{ substr(Auth::user()->name, 0, 1) }}
-                                    </div>
-                                </div>
-
-                                <div class="ml-3">
-                                    <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                                    <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
-                                </div>
-                            </div>
-
-                            <div class="mt-3 space-y-1">
-                                <a href="{{ route('profile') ?? '#' }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">
-                                    Your Profile
-                                </a>
-                                
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit" class="w-full text-left block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">
-                                        Sign Out
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    @else
-                        <div class="py-3 border-t border-gray-200">
-                            <div class="space-y-1">
-                                <a href="{{ route('login') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">
-                                    Log in
-                                </a>
-                                @if (Route::has('register'))
-                                    <a href="{{ route('register') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">
-                                        Register
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-                    @endauth
-                </div>
+                    </div>
+                @endauth
             </div>
         </nav>
 
         <!-- Page Content -->
-        <main>
-            @yield('content')
+        <main class="flex-grow">
+            <div class="fade-in-up">
+                @yield('content')
+            </div>
         </main>
 
         <!-- Footer -->
-        <footer class="bg-white border-t border-gray-200 mt-10">
-            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <footer class="bg-white border-t border-gray-200 mt-auto">
+            <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col md:flex-row justify-between items-center">
-                    <div class="flex items-center mb-4 md:mb-0">
-                        <svg class="h-6 w-auto text-primary-600" viewBox="0 0 40 40" fill="currentColor">
-                            <path d="M20 3.33331C10.8 3.33331 3.33337 10.8 3.33337 20C3.33337 29.2 10.8 36.6666 20 36.6666C29.2 36.6666 36.6667 29.2 36.6667 20C36.6667 10.8 29.2 3.33331 20 3.33331ZM16.6667 28.3333L8.33337 20L10.6834 17.65L16.6667 23.6166L29.3167 10.9666L31.6667 13.3333L16.6667 28.3333Z"/>
-                        </svg>
-                        <span class="ml-2 text-sm font-medium text-gray-900">{{ config('app.name', 'Writers Hub') }}</span>
-                    </div>
+                    
                     <div class="flex space-x-6">
-                        <a href="#" class="text-gray-500 hover:text-gray-600">
-                            <span class="sr-only">Privacy Policy</span>
+                        <a href="#" class="text-gray-500 hover:text-primary-600 transition-colors duration-200">
                             <span class="text-sm">Privacy Policy</span>
                         </a>
-                        <a href="#" class="text-gray-500 hover:text-gray-600">
-                            <span class="sr-only">Terms of Service</span>
+                        <a href="#" class="text-gray-500 hover:text-primary-600 transition-colors duration-200">
                             <span class="text-sm">Terms of Service</span>
                         </a>
-                        <a href="#" class="text-gray-500 hover:text-gray-600">
-                            <span class="sr-only">Contact Us</span>
+                        <a href="#" class="text-gray-500 hover:text-primary-600 transition-colors duration-200">
                             <span class="text-sm">Contact Us</span>
                         </a>
                     </div>

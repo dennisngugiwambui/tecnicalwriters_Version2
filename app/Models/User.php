@@ -190,4 +190,22 @@ class User extends Authenticatable
         $this->verification_status = self::VERIFICATION_FAILED;
         $this->save();
     }
+        /**
+     * Get the writer profile associated with the user.
+     */
+    public function writerProfile()
+    {
+        return $this->hasOne(WriterProfile::class);
+    }
+
+    /**
+     * Get the writer's ID if they are a writer
+     */
+    public function getWriterIdAttribute()
+    {
+        if ($this->usertype === 'writer' && $this->writerProfile) {
+            return $this->writerProfile->writer_id;
+        }
+        return null;
+    }
 }
