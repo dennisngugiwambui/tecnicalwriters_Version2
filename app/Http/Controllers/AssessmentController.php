@@ -25,93 +25,17 @@ class AssessmentController extends Controller
     }
 
     /**
-     * Show the failed assessment page
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
-     */
-    public function showFailedPage()
-    {
-        // Check if user is authenticated
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'You must be logged in to view this page.');
-        }
-
-        $user = Auth::user();
-        
-        // Only writers should see this page
-        if ($user->usertype !== 'writer') {
-            return redirect()->route('home');
-        }
-        
-        // Get the latest assessment result
-        $result = AssessmentResult::where('user_id', $user->id)
-            ->where('assessment_type', 'grammar')
-            ->where('passed', false)
-            ->latest()
-            ->first();
-            
-        // If no failed result exists and user is not in failed status, redirect
-        if (!$result && $user->status !== 'failed') {
-            return redirect()->route('home');
-        }
-        
-        // If no result exists but status is failed, create a placeholder result object
-        if (!$result) {
-            // Create a dummy result object with basic properties
-            $result = new \stdClass();
-            $result->percentage = 0;
-            $result->created_at = now()->subDays(6); // Assume 6 days ago to show 1 day remaining
-        }
-        
-        // Calculate remaining time until retake
-        $lastAttempt = Carbon::parse($result->created_at);
-        $hoursRemaining = 168 - $lastAttempt->diffInHours(Carbon::now()); // 168 hours = 7 days
-        $hoursRemaining = max(0, $hoursRemaining);
-        
-        // Calculate percentage if it comes from session flash data
-        $percentage = session('percentage') ?? $result->percentage ?? 0;
-        
-        return view('writers.others.failed', [
-            'result' => $result,
-            'hoursRemaining' => $hoursRemaining,
-            'percentage' => $percentage
-        ]);
-    }
-
-    /**
      * Show the grammar assessment page
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
     public function showAssessment()
     {
-        // Check if user is authenticated
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'You must be logged in to take the assessment.');
-        }
-        
         $user = Auth::user();
-        Log::info('User accessed assessment: ' . $user->id . ' with status: ' . $user->status);
         
-        // Only writers with pending status should access this page
-        if ($user->usertype !== 'writer') {
-            return redirect()->route('home')->with('error', 'Only writers can access this assessment.');
-        }
-        
-        // If already active, redirect appropriately
-        if ($user->status === 'active') {
-            if (!$user->profile_completed) {
-                return redirect()->route('profilesetup')->with('info', 'You have already passed the assessment. Please complete your profile.');
-            }
-            return redirect()->route('writer.available')->with('info', 'Your account is already active.');
-        }
-        
-        // If status is not pending, redirect appropriately
-        if ($user->status !== 'pending') {
-            if ($user->status === 'failed') {
-                return redirect()->route('failed')->with('error', 'You have failed the assessment.');
-            }
-            return redirect()->route('home')->with('error', 'You cannot take the assessment at this time.');
+        // If user is not a writer or already active, redirect to home
+        if ($user->usertype !== 'writer' || $user->status === 'active') {
+            return redirect()->route('home');
         }
         
         // Check if user has already completed the assessment
@@ -126,7 +50,7 @@ class AssessmentController extends Controller
                 $user->status = 'active';
                 $user->save();
                 
-                return redirect()->route('profilesetup')->with('success', 'You have already passed the grammar assessment.');
+                return redirect()->route('home')->with('success', 'You have already passed the grammar assessment.');
             } else {
                 // If failed and 7 days have passed, allow retake
                 $lastAttempt = Carbon::parse($existingResult->created_at);
@@ -136,7 +60,6 @@ class AssessmentController extends Controller
                 if ($daysSinceLastAttempt < 7) {
                     return redirect()->route('failed')->with([
                         'error' => 'You did not pass the grammar assessment. You can retake it after the waiting period.',
-                        'percentage' => $existingResult->percentage,
                         'hoursRemaining' => $hoursRemaining
                     ]);
                 }
@@ -146,97 +69,59 @@ class AssessmentController extends Controller
             }
         }
         
-        // Check for existing assessment session
-        $existingSession = Assessment::where('user_id', $user->id)
-            ->where('type', 'grammar')
-            ->whereNull('completed_at')
-            ->first();
-            
-        if ($existingSession) {
-            // Use existing session but get fresh questions 
-            Log::info('Using existing assessment session ID: ' . $existingSession->id);
-            $assessment = $existingSession;
-        } else {
-            try {
-                // Get 20 real grammar questions
-                $questions = AssessmentQuestion::where('type', 'grammar')
-                    ->where('question', 'NOT LIKE', '%placeholder%')
-                    ->inRandomOrder()
-                    ->limit(20)
-                    ->get();
-                    
-                // Verify we have enough questions
-                if ($questions->count() < 20) {
-                    Log::error('Not enough grammar questions in database. Found: ' . $questions->count());
-                    return redirect()->route('welcome')->with('error', 'Assessment system is being updated. Please try again later.');
-                }
+        // Get 20 real grammar questions (no placeholders)
+        try {
+            $questions = AssessmentQuestion::where('type', 'grammar')
+                ->where('question', 'NOT LIKE', '%placeholder%')
+                ->inRandomOrder()
+                ->limit(20)
+                ->get();
                 
-                // Ensure all questions have valid options
-                foreach ($questions as $question) {
-                    if (!is_array($question->options) || count($question->options) < 2) {
-                        Log::error('Question ID ' . $question->id . ' has invalid options: ' . json_encode($question->options));
-                        return redirect()->route('welcome')->with('error', 'Assessment system is being updated. Please try again later.');
-                    }
-                }
-                
-                // Generate a token for this assessment session
-                $token = md5($user->id . time() . rand(1000, 9999));
-                
-                // Store assessment session
-                DB::beginTransaction();
-                try {
-                    $assessment = Assessment::create([
-                        'user_id' => $user->id,
-                        'type' => 'grammar',
-                        'token' => $token,
-                        'started_at' => Carbon::now(),
-                        'expires_at' => Carbon::now()->addMinutes(17), // 17 minute time limit
-                        'question_count' => $questions->count()
-                    ]);
-                    
-                    DB::commit();
-                    Log::info('Created new assessment session ID: ' . $assessment->id);
-                } catch (\Exception $e) {
-                    DB::rollBack();
-                    Log::error('Failed to create assessment: ' . $e->getMessage());
-                    return redirect()->route('welcome')->with('error', 'Assessment system is being updated. Please try again later.');
-                }
-                
-                // Return the assessment view with questions
-                try {
-                    // First check if the view exists
-                    if (!view()->exists('writers.others.assessment-setup')) {
-                        Log::error('View writers.others.assessment-setup does not exist');
-                        // Try fallback to assessment view
-                        if (view()->exists('writers.others.assessment')) {
-                            Log::info('Using fallback view writers.others.assessment');
-                            return view('writers.others.assessment', [
-                                'questions' => $questions,
-                                'assessment' => $assessment
-                            ]);
-                        } else {
-                            Log::error('Fallback view writers.others.assessment also does not exist');
-                            return redirect()->route('welcome')->with('error', 'Assessment system is being updated. Please try again later.');
-                        }
-                    }
-                    
-                    // View exists, proceed normally
-                    return view('writers.others.assessment-setup', [
-                        'questions' => $questions,
-                        'assessment' => $assessment
-                    ]);
-                } catch (\Exception $e) {
-                    Log::error('Error rendering assessment view: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
-                    return redirect()->route('welcome')->with('error', 'Assessment system is being updated. Please try again later.');
-                }
-            } catch (\Exception $e) {
-                Log::error('Error in showAssessment: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            if ($questions->count() < 20) {
+                Log::error('Not enough grammar questions in database. Found: ' . $questions->count());
                 return redirect()->route('welcome')->with('error', 'Assessment system is being updated. Please try again later.');
             }
+            
+            // Ensure all questions have valid options
+            foreach ($questions as $question) {
+                if (!is_array($question->options) || count($question->options) < 2) {
+                    Log::error('Question ID ' . $question->id . ' has invalid options');
+                    return redirect()->route('welcome')->with('error', 'Assessment system is being updated. Please try again later.');
+                }
+            }
+            
+            // Generate a token for this assessment session
+            $token = md5($user->id . time() . rand(1000, 9999));
+            
+            // Store assessment session with transaction to ensure data integrity
+            DB::beginTransaction();
+            try {
+                $assessment = Assessment::create([
+                    'user_id' => $user->id,
+                    'type' => 'grammar',
+                    'token' => $token,
+                    'started_at' => Carbon::now(),
+                    'expires_at' => Carbon::now()->addMinutes(17), // 17 minute time limit
+                    'question_count' => $questions->count()
+                ]);
+                
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Failed to create assessment: ' . $e->getMessage());
+                return redirect()->route('welcome')->with('error', 'Assessment system is being updated. Please try again later.');
+            }
+            
+            return view('writers.others.welcome', [
+                'questions' => $questions,
+                'assessment' => $assessment
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error in showAssessment: ' . $e->getMessage());
+            return redirect()->route('welcome')->with('error', 'Assessment system is being updated. Please try again later.');
         }
     }
-
-    
     
     /**
      * Submit the grammar assessment
@@ -246,11 +131,6 @@ class AssessmentController extends Controller
      */
     public function submitAssessment(Request $request)
     {
-        // Check if user is authenticated
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'You must be logged in to submit an assessment.');
-        }
-        
         try {
             $request->validate([
                 'assessment_id' => 'required|exists:assessments,id',
@@ -311,6 +191,33 @@ class AssessmentController extends Controller
                 }
                 
                 return redirect()->route('failed')->with('error', 'Assessment time expired. You did not complete the assessment in time.');
+            }
+
+
+            // In submitAssessment method, update the code that handles the passed assessment:
+
+            if ($passed) {
+                // Update user status to active
+                $user = User::find($assessment->user_id);
+                $user->status = 'active'; // Change to 'active' or 'verified' as needed
+                $user->save();
+                
+                Log::info('User ' . $user->id . ' passed assessment and status updated to active');
+                
+                return redirect()->route('profilesetup')->with('success', 
+                    'Congratulations! You passed the grammar assessment with ' . round($percentage) . '%.');
+            } else {
+                // Update user status to failed
+                $user = User::find($assessment->user_id);
+                $user->status = 'failed';
+                $user->save();
+                
+                Log::info('User ' . $user->id . ' failed assessment and status updated to failed');
+                
+                return redirect()->route('failed')->with([
+                    'error' => 'You did not pass the grammar assessment. You scored ' . round($percentage) . '%. You need 80% to pass. You can retake the assessment after 7 days.',
+                    'percentage' => round($percentage)
+                ]);
             }
             
             // Calculate time taken
@@ -399,11 +306,6 @@ class AssessmentController extends Controller
      */
     public function autoSubmitAssessment(Request $request)
     {
-        // Check if user is authenticated via AJAX
-        if (!Auth::check()) {
-            return response()->json(['success' => false, 'message' => 'Authentication required', 'redirect' => route('login')], 401);
-        }
-        
         try {
             $validatedData = $request->validate([
                 'assessment_id' => 'required|exists:assessments,id',
@@ -477,7 +379,7 @@ class AssessmentController extends Controller
                 return response()->json(['success' => false, 'message' => 'Error saving assessment: ' . $e->getMessage()], 500);
             }
             
-            $redirectUrl = $passed ? route('profilesetup') : route('failed');
+            $redirectUrl = $passed ? route('home') : route('failed');
             $message = $passed ? 
                 'Congratulations! You passed the grammar assessment with ' . round($percentage) . '%.' :
                 'You did not pass the grammar assessment. You scored ' . round($percentage) . 
