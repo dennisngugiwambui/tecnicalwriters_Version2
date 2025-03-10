@@ -13,6 +13,7 @@
     
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/jpeg" href="writers/technicalwriters2.jpg">
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -422,6 +423,31 @@
             }
         });
     </script>
+
+            <!-- Prevent back navigation during assessment -->
+        <script type="text/javascript">
+            window.history.pushState(null, "", window.location.href);
+            window.onpopstate = function() {
+                window.history.pushState(null, "", window.location.href);
+            };
+
+            // Prevent leaving the page accidentally during assessment
+        window.addEventListener('beforeunload', function(e) {
+            // If form is being submitted, don't show warning
+            if (document.getElementById('loadingOverlay').classList.contains('active')) {
+                return undefined;
+            }
+            
+            // Show warning when trying to leave
+            e.preventDefault();
+            e.returnValue = 'If you leave this page, your assessment will be automatically failed. Are you sure?';
+            
+            return e.returnValue;
+        });
+        </script>
+
+
+
     
     @yield('scripts')
 </body>

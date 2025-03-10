@@ -15,13 +15,15 @@ Route::get('/welcome', function () {
     return view('writers.others.welcome');
 })->name('welcome');
 
-// Override the previous route to use the controller method instead
 Route::get('/failed', [AssessmentController::class, 'showFailedPage'])->name('failed');
+
 
 Auth::routes();
 
 // Assessment routes (available to authenticated users, regardless of verification status)
 Route::middleware(['auth'])->group(function () {
+
+    
     Route::get('/assessment/grammar', [AssessmentController::class, 'showAssessment'])->name('assessment.grammar');
     Route::post('/assessment/submit', [AssessmentController::class, 'submitAssessment'])->name('assessment.submit');
     Route::post('/assessment/auto-submit', [AssessmentController::class, 'autoSubmitAssessment'])->name('assessment.auto-submit');
