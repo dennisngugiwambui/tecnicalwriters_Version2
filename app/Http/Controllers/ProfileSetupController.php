@@ -33,22 +33,24 @@ class ProfileSetupController extends Controller
     {
         $user = Auth::user();
         
-        // Check if the user is a writer and has passed the assessment
-        if ($user->usertype !== 'writer' || $user->status !== 'active') {
-            if ($user->usertype === 'writer' && $user->status === 'pending') {
+        // Check if the user is a writer
+        if ($user->usertype !== 'writer') {
+            return redirect()->route('home');
+        }
+        
+        // If user hasn't passed the assessment yet, redirect to grammar assessment
+        if ($user->status !== 'active') {
+            if ($user->status === 'pending') {
                 return redirect()->route('assessment.grammar')
                     ->with('warning', 'You need to complete the grammar assessment first.');
-            } else if ($user->usertype === 'writer' && 
-                      (in_array($user->status, ['failed', 'suspended', 'banned', 'terminated', 'locked']) || 
-                       $user->is_suspended === 'yes')) {
+            } else if (in_array($user->status, ['failed', 'suspended', 'banned', 'terminated', 'locked']) || 
+                      $user->is_suspended === 'yes') {
                 return redirect()->route('failed')
                     ->with('error', 'Your account status does not allow profile setup.');
-            } else {
-                return redirect()->route('home');
             }
         }
         
-        // Check if profile is already completed
+        // Check if profile is already completed, if yes redirect to available orders
         if ($user->profile_completed) {
             return redirect()->route('writer.available')
                 ->with('info', 'Your profile has already been set up.');
@@ -78,18 +80,20 @@ class ProfileSetupController extends Controller
     {
         $user = Auth::user();
         
-        // Check if the user is a writer and has passed the assessment
-        if ($user->usertype !== 'writer' || $user->status !== 'active') {
-            if ($user->usertype === 'writer' && $user->status === 'pending') {
+        // Check if the user is a writer
+        if ($user->usertype !== 'writer') {
+            return redirect()->route('home');
+        }
+        
+        // If user hasn't passed the assessment yet, redirect to grammar assessment
+        if ($user->status !== 'active') {
+            if ($user->status === 'pending') {
                 return redirect()->route('assessment.grammar')
                     ->with('warning', 'You need to complete the grammar assessment first.');
-            } else if ($user->usertype === 'writer' && 
-                      (in_array($user->status, ['failed', 'suspended', 'banned', 'terminated', 'locked']) || 
-                       $user->is_suspended === 'yes')) {
+            } else if (in_array($user->status, ['failed', 'suspended', 'banned', 'terminated', 'locked']) || 
+                      $user->is_suspended === 'yes') {
                 return redirect()->route('failed')
                     ->with('error', 'Your account status does not allow profile setup.');
-            } else {
-                return redirect()->route('home');
             }
         }
         
@@ -136,7 +140,7 @@ class ProfileSetupController extends Controller
             
             // Generate writer_id if it doesn't exist
             if (!$profile->writer_id) {
-                $profile->writer_id = WriterProfile::generateWriterId($user->id);
+                $profile->writer_id = $this->generateWriterId($user->id);
             }
             
             // Update profile data
@@ -220,6 +224,24 @@ class ProfileSetupController extends Controller
                 ->with('error', 'An error occurred while saving your profile. Please try again.')
                 ->withInput();
         }
+    }
+    
+    /**
+     * Generate a unique writer ID based on user ID
+     * 
+     * @param int $userId
+     * @return string
+     */
+    private function generateWriterId($userId)
+    {
+        // Create a writer ID with format WRT-XXXXX where XXXXX is padded user ID
+        $prefix = 'WRT-';
+        $paddedId = str_pad($userId, 5, '0', STR_PAD_LEFT);
+        
+        // Add a unique suffix to ensure uniqueness
+        $uniqueSuffix = substr(uniqid(), -4);
+        
+        return $prefix . $paddedId . '-' . $uniqueSuffix;
     }
     
     /**
