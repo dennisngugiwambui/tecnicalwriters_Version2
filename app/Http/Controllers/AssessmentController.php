@@ -157,9 +157,10 @@ class AssessmentController extends Controller
             // Check if assessment was already completed
             if ($assessment->completed_at) {
                 Log::warning('Attempted to submit already completed assessment ' . $assessment->id);
-                return redirect()->route('failed')->with('error', 'This assessment has already been submitted.');
+                return redirect()->route('profilesetup')->with('info', 'This assessment has already been submitted.');
             }
             
+            // Check if assessment time has expired
             if (Carbon::now()->gt($assessment->expires_at)) {
                 DB::beginTransaction();
                 try {
@@ -191,33 +192,6 @@ class AssessmentController extends Controller
                 }
                 
                 return redirect()->route('failed')->with('error', 'Assessment time expired. You did not complete the assessment in time.');
-            }
-
-
-            // In submitAssessment method, update the code that handles the passed assessment:
-
-            if ($passed) {
-                // Update user status to active
-                $user = User::find($assessment->user_id);
-                $user->status = 'active'; // Change to 'active' or 'verified' as needed
-                $user->save();
-                
-                Log::info('User ' . $user->id . ' passed assessment and status updated to active');
-                
-                return redirect()->route('profilesetup')->with('success', 
-                    'Congratulations! You passed the grammar assessment with ' . round($percentage) . '%.');
-            } else {
-                // Update user status to failed
-                $user = User::find($assessment->user_id);
-                $user->status = 'failed';
-                $user->save();
-                
-                Log::info('User ' . $user->id . ' failed assessment and status updated to failed');
-                
-                return redirect()->route('failed')->with([
-                    'error' => 'You did not pass the grammar assessment. You scored ' . round($percentage) . '%. You need 80% to pass. You can retake the assessment after 7 days.',
-                    'percentage' => round($percentage)
-                ]);
             }
             
             // Calculate time taken
@@ -277,6 +251,8 @@ class AssessmentController extends Controller
                 $assessment->save();
                 
                 DB::commit();
+                
+                Log::info('User ' . $user->id . ' ' . ($passed ? 'passed' : 'failed') . ' assessment with ' . round($percentage) . '%');
             } catch (\Exception $e) {
                 DB::rollBack();
                 Log::error('Error saving assessment result: ' . $e->getMessage());
