@@ -1042,5 +1042,5 @@
         // Update counter
         updateSubjectCount();
     }
-</script
+</script>
 @endsection
