@@ -1040,7 +1040,7 @@
         }
         
         // Update counter
-        updateSubjectCount()
+        updateSubjectCount();
     }
 </script>
 @endsection
