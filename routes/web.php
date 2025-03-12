@@ -22,8 +22,6 @@ Auth::routes();
 
 // Assessment routes (available to authenticated users, regardless of verification status)
 Route::middleware(['auth'])->group(function () {
-
-    
     Route::get('/assessment/grammar', [AssessmentController::class, 'showAssessment'])->name('assessment.grammar');
     Route::post('/assessment/submit', [AssessmentController::class, 'submitAssessment'])->name('assessment.submit');
     Route::post('/assessment/auto-submit', [AssessmentController::class, 'autoSubmitAssessment'])->name('assessment.auto-submit');
@@ -38,14 +36,18 @@ Route::middleware(['auth'])->group(function () {
 // Public routes that don't require authentication
 Route::get('/order/{id}', [HomeController::class, 'availableOrderDetails'])->name('availableOrderDetails');
 
-// Apply profile completion middleware along with writer verification
-Route::middleware(['auth', 'writer.verified', 'profile.complete'])->group(function () {
-    // Routes that require verified writer status and completed profile
+// Apply auth middleware only - we'll handle verification in the controllers
+Route::middleware(['auth'])->group(function () {
+    // Redirect to home route which will be handled by the HomeController
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/writers', [HomeController::class, 'index'])->name('writers.index');
+    
+    // Writer routes
     Route::get('/current', [HomeController::class, 'currentOrders'])->name('current');
     Route::get('/bids', [HomeController::class, 'currentBidOrders'])->name('bids');
     Route::get('/revision', [HomeController::class, 'currentOrdersOnRevision'])->name('revision');
     Route::get('/finished', [HomeController::class, 'completedOrders'])->name('finished');
+    Route::get('/current', [HomeController::class, 'currentOrders'])->name('current');
     Route::get('/dispute', [HomeController::class, 'orderOnDispute'])->name('dispute');
     Route::get('/messages', [HomeController::class, 'Messages'])->name('writer.messages');
     Route::get('/finance', [HomeController::class, 'userFinance'])->name('finance');

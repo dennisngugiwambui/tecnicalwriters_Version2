@@ -225,7 +225,7 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('curret') }}" class="menu-item {{ request()->routeIs('curret') ? 'active' : '' }}">
+                <a href="{{ route('current') }}" class="menu-item {{ request()->routeIs('current') ? 'active' : '' }}">
                     <i class="fas fa-circle text-gray-400 menu-icon"></i>
                     <span>Current</span>
                     @if(isset($currentCount) && $currentCount > 0)
@@ -294,101 +294,94 @@
     </div>
 
     <script>
-         $(document).ready(function() {
-        // Toggle Profile Dropdown
-        $('#profileButton').click(function(e) {
-            e.stopPropagation();
-            $('#userDropdown').toggleClass('show');
-        });
-
-        // Close dropdown when clicking outside
-        $(document).click(function() {
-            $('#userDropdown').removeClass('show');
-        });
-    });
-        // Initialize Select2
         $(document).ready(function() {
+            // Toggle Profile Dropdown
+            $('#profileButton').click(function(e) {
+                e.stopPropagation();
+                $('#userDropdown').toggleClass('show');
+            });
+    
+            // Close dropdown when clicking outside
+            $(document).click(function() {
+                $('#userDropdown').removeClass('show');
+            });
+            
+            // Sidebar Toggle
+            function toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                
+                if (sidebar && overlay) {
+                    sidebar.classList.toggle('-translate-x-full');
+                    overlay.classList.toggle('hidden');
+                }
+            }
+            
+            // Attach click event to menu toggle button
+            const menuToggle = document.getElementById('menuToggle');
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    toggleSidebar();
+                });
+            }
+            
+            // Initialize Select2
             $('.select2-search').select2({
                 placeholder: "Select an option",
                 allowClear: true,
-                inline-size: '100%',
-                minimumResultsForSearch: 5,
-                dropdownParent: $('#filterContent')
+                minimumResultsForSearch: 5
             });
-        });
-        $(document).ready(function() {
-            // Initialize Select2
+            
             $('.select2-basic').select2({
                 minimumResultsForSearch: 5,
-                inline-size: '100%',
                 placeholder: "Select an option",
                 allowClear: true
             });
-        });
-
-
-        // Sidebar Toggle
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
             
-            if (sidebar && overlay) {
-                sidebar.classList.toggle('-translate-x-full');
-                overlay.classList.toggle('hidden');
+            // Filter Toggle - only attach if the element exists
+            const filterToggle = document.getElementById('filterToggle');
+            if (filterToggle) {
+                filterToggle.addEventListener('click', function() {
+                    const filterContent = document.getElementById('filterContent');
+                    if (filterContent) {
+                        filterContent.classList.toggle('filter-section-mobile');
+                        filterContent.classList.toggle('show');
+                        
+                        // Rotate filter icon
+                        const filterIcon = this.querySelector('i');
+                        if (filterIcon) {
+                            filterIcon.style.transform = filterContent.classList.contains('show') 
+                                ? 'rotate(180deg)' 
+                                : 'rotate(0deg)';
+                        }
+                    }
+                });
+                
+                // jQuery version of filter toggle
+                $('#filterToggle').click(function() {
+                    $('#filterContent').slideToggle(300);
+                    $(this).find('.fa-filter').toggleClass('rotate-180');
+                });
             }
-        }
-
-        // Ensure sidebar toggle works on all pages including home
-        document.addEventListener('DOMContentLoaded', function() {
-            const menuToggle = document.getElementById('menuToggle');
-            if (menuToggle) {
-                menuToggle.addEventListener('click', toggleSidebar);
-            }
-        });
-
-        // Enhanced Filter Toggle for Mobile
-        document.getElementById('filterToggle').addEventListener('click', function() {
+            
+            // Show filter content by default on desktop if element exists
             const filterContent = document.getElementById('filterContent');
-            filterContent.classList.toggle('filter-section-mobile');
-            filterContent.classList.toggle('show');
-            
-            // Rotate filter icon
-            const filterIcon = this.querySelector('i');
-            filterIcon.style.transform = filterContent.classList.contains('show') 
-                ? 'rotate(180deg)' 
-                : 'rotate(0deg)';
-        });
-
-        // Menu Toggle
-        document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
-
-        $(document).ready(function() {
-        // Initialize Select2
-        $('.select2-basic').select2({
-            theme: 'classic',
-            inline-size: '100%'
-        });
-
-        // Filter toggle functionality
-        $('#filterToggle').click(function() {
-            $('#filterContent').slideToggle(300);
-            $(this).find('.fa-filter').toggleClass('rotate-180');
-        });
-
-        // Show filter content by default on desktop
-        if (window.innerWidth >= 768) {
-            $('#filterContent').show();
-        }
-
-        // Handle resize events
-        $(window).resize(function() {
-            if (window.innerWidth >= 768) {
-                $('#filterContent').show();
-            } else {
-                $('#filterContent').hide();
+            if (filterContent && window.innerWidth >= 768) {
+                filterContent.style.display = 'block';
             }
+            
+            // Handle resize events for filter content
+            $(window).resize(function() {
+                const filterContent = document.getElementById('filterContent');
+                if (filterContent) {
+                    if (window.innerWidth >= 768) {
+                        $(filterContent).show();
+                    } else {
+                        $(filterContent).hide();
+                    }
+                }
+            });
         });
-    });
     </script>
 </body>
 </html>

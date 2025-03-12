@@ -22,17 +22,17 @@ class VerifiedWriter
         if (Auth::check()) {
             $user = Auth::user();
             
-            // Check user status
-            if ($user->status === 'pending') {
-                return redirect()->route('assessment.grammar')
-                    ->with('message', 'You need to complete the grammar assessment before accessing this page.');
-            }
-            
-            // Redirect failed, terminated, locked users
-            if (in_array($user->status, ['failed', 'suspended', 'banned', 'terminated', 'locked']) || 
-                $user->is_suspended === 'yes') {
-                return redirect()->route('failed')
-                    ->with('message', 'Your account status does not allow access to this feature.');
+            if ($user->usertype === 'writer') {
+                if ($user->status === 'pending') {
+                    return redirect()->route('assessment.grammar')
+                        ->with('message', 'You need to complete the grammar assessment.');
+                }
+                
+                if (in_array($user->status, ['failed', 'suspended', 'banned', 'terminated', 'locked']) || 
+                    $user->is_suspended === 'yes') {
+                    return redirect()->route('failed')
+                        ->with('message', 'Your account has been ' . $user->status);
+                }
             }
             
             // If user is active, proceed
