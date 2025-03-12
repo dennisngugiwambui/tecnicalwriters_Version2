@@ -50,9 +50,10 @@ class ProfileSetupController extends Controller
             }
         }
         
-        // Check if profile is already completed, if yes redirect to available orders
-        if ($user->profile_completed) {
-            return redirect()->route('writer.available')
+        // Check if profile already exists - this is to replace the profile_completed check
+        $profileExists = WriterProfile::where('user_id', $user->id)->exists();
+        if ($profileExists) {
+            return redirect()->route('home')
                 ->with('info', 'Your profile has already been set up.');
         }
         
@@ -97,9 +98,10 @@ class ProfileSetupController extends Controller
             }
         }
         
-        // Check if profile is already completed
-        if ($user->profile_completed) {
-            return redirect()->route('writer.available')
+        // Check if profile already exists - this is to replace the profile_completed check
+        $profileExists = WriterProfile::where('user_id', $user->id)->exists();
+        if ($profileExists) {
+            return redirect()->route('home')
                 ->with('info', 'Your profile has already been set up.');
         }
         
@@ -117,8 +119,8 @@ class ProfileSetupController extends Controller
             'county' => 'required|string|max:100',
             'native_language' => 'required|string',
             'profile_picture' => 'nullable|image|max:2048', // 2MB max
-            'night_calls' => 'nullable|boolean',
-            'force_assign' => 'nullable|boolean',
+            'night_calls' => 'nullable',
+            'force_assign' => 'nullable',
             'linkedin' => 'nullable|url|max:255',
             'facebook' => 'nullable|url|max:255',
             'payment_method' => 'required|string|in:mpesa,bank,paypal',
@@ -153,13 +155,13 @@ class ProfileSetupController extends Controller
             $profile->experience_years = $request->experience_years;
             $profile->subjects = $request->subjects;
             $profile->bio = $request->bio;
-            $profile->night_calls = $request->has('night_calls');
-            $profile->force_assign = $request->has('force_assign');
+            $profile->night_calls = $request->has('night_calls') ? true : false;
+            $profile->force_assign = $request->has('force_assign') ? true : false;
             $profile->linkedin = $request->linkedin;
             $profile->facebook = $request->facebook;
             $profile->payment_method = $request->payment_method;
             $profile->payment_details = $request->payment_details;
-            $profile->id_verification_status = 'not-verified';
+            $profile->id_verification_status = 'pending';
             
             // Handle national ID image upload
             if ($request->hasFile('national_id_image')) {
@@ -172,11 +174,11 @@ class ProfileSetupController extends Controller
                 }
                 
                 // Store new file in a private directory (not publicly accessible)
-                $file->storeAs('private/national_ids', $fileName);
+                $path = $file->storeAs('private/national_ids', $fileName);
+                if (!$path) {
+                    throw new \Exception('Failed to upload national ID image');
+                }
                 $profile->national_id_image = $fileName;
-                
-                // Set verification status to pending
-                $profile->id_verification_status = 'pending';
             }
             
             // Handle profile picture upload
@@ -190,7 +192,10 @@ class ProfileSetupController extends Controller
                 }
                 
                 // Store new file
-                $file->storeAs('public/profiles', $fileName);
+                $path = $file->storeAs('public/profiles', $fileName);
+                if (!$path) {
+                    throw new \Exception('Failed to upload profile picture');
+                }
                 $profile->profile_picture = $fileName;
             }
             
@@ -202,9 +207,22 @@ class ProfileSetupController extends Controller
             // Save profile
             $profile->save();
             
-            // Mark user profile as completed
-            $user->profile_completed = true;
-            $user->verified_at = Carbon::now(); // Add a timestamp for verification
+            // Update user - we've removed the profile_completed field
+            // Only update the fields that exist in the users table
+            $user->status = 'active'; // Ensure status is active
+            $user->bio = $request->bio; // Update bio in user table if needed
+            
+            // Update user's specialization from subjects if the field exists
+            if (in_array('specialization', $user->getFillable())) {
+                $user->specialization = implode(', ', array_slice($request->subjects, 0, 2));
+            }
+            
+            // Add a verification timestamp if the field exists
+            if (in_array('verified_at', $user->getFillable())) {
+                $user->verified_at = Carbon::now();
+            }
+            
+            // Save user changes
             $user->save();
             
             DB::commit();
@@ -212,8 +230,8 @@ class ProfileSetupController extends Controller
             // Log successful profile setup
             Log::info('Writer #' . $user->id . ' completed profile setup with writer_id: ' . $profile->writer_id);
             
-            // Redirect to available orders page
-            return redirect()->route('writer.available')
+            // Redirect to index page
+            return redirect()->route('home')
                 ->with('success', 'Your profile has been set up successfully. Your ID is pending verification. You can now start accepting orders.');
                 
         } catch (\Exception $e) {
@@ -221,7 +239,7 @@ class ProfileSetupController extends Controller
             Log::error('Profile setup error: ' . $e->getMessage());
             
             return redirect()->back()
-                ->with('error', 'An error occurred while saving your profile. Please try again.')
+                ->with('error', 'An error occurred while saving your profile: ' . $e->getMessage())
                 ->withInput();
         }
     }

@@ -381,3 +381,537 @@
 
                         <div class="sm:col-span-6">
                             <label for="bio" class="block text-sm font-medium text-gray-700 mb-1">Professional Bio</label>
+
+                            <div class="mt-1 relative">
+                                <textarea id="bio" name="bio" rows="4" 
+                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                    placeholder="Tell us about your professional background, expertise, and writing experience...">{{ old('bio') }}</textarea>
+                                <div class="absolute bottom-2 right-2 text-xs text-gray-500">
+                                    <span id="bio-chars">0</span>/1000 characters (min 100)
+                                </div>
+                            </div>
+                            @error('bio')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+                <div class="px-4 py-3 bg-gray-50 flex justify-between sm:px-6">
+                    <button type="button" id="prev-professional" class="inline-flex justify-center py-1.5 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Back
+                    </button>
+                    <button type="button" id="next-professional" class="inline-flex justify-center py-1.5 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Next: Availability & Payment
+                    </button>
+                </div>
+            </div>
+
+            <!-- Availability and Payment Tab Panel -->
+            <div id="payment-content" class="tab-content hidden bg-white shadow-sm rounded-lg overflow-hidden">
+                <div class="p-4 sm:p-6">
+                    <div class="grid grid-cols-1 gap-y-4 gap-x-4 sm:grid-cols-6">
+                        <div class="sm:col-span-3">
+                            <div class="bg-white rounded-md border border-gray-200 p-3">
+                                <div class="relative flex items-start">
+                                    <div class="flex items-center h-5">
+                                        <input id="night_calls" name="night_calls" type="checkbox" value="yes" {{ old('night_calls') ? 'checked' : '' }}
+                                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                    </div>
+                                    <div class="ml-2 text-sm">
+                                        <label for="night_calls" class="font-medium text-gray-700">Available for night calls</label>
+                                        <p class="text-gray-500 text-xs mt-0.5">Select if you're available to receive calls during night hours</p>
+                                    </div>
+                                </div>
+                            </div>
+                            @error('night_calls')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <div class="bg-white rounded-md border border-gray-200 p-3">
+                                <div class="relative flex items-start">
+                                    <div class="flex items-center h-5">
+                                        <input id="force_assign" name="force_assign" type="checkbox" value="yes" {{ old('force_assign') ? 'checked' : '' }}
+                                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                    </div>
+                                    <div class="ml-2 text-sm">
+                                        <label for="force_assign" class="font-medium text-gray-700">Available for force-assign</label>
+                                        <p class="text-gray-500 text-xs mt-0.5">Select if you're available for urgent order assignments</p>
+                                    </div>
+                                </div>
+                            </div>
+                            @error('force_assign')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label for="linkedin" class="block text-sm font-medium text-gray-700 mb-1">LinkedIn Profile (Optional)</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                                    </svg>
+                                </div>
+                                <input type="url" id="linkedin" name="linkedin" 
+                                    class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" 
+                                    placeholder="https://linkedin.com/in/yourprofile" value="{{ old('linkedin') }}">
+                            </div>
+                            @error('linkedin')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label for="facebook" class="block text-sm font-medium text-gray-700 mb-1">Facebook Profile (Optional)</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/>
+                                    </svg>
+                                </div>
+                                <input type="url" id="facebook" name="facebook" 
+                                    class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" 
+                                    placeholder="https://facebook.com/yourprofile" value="{{ old('facebook') }}">
+                            </div>
+                            @error('facebook')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="sm:col-span-6">
+                            <label for="payment_method" class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                            <div class="mt-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="relative flex p-3 border border-gray-300 rounded-md cursor-pointer hover:border-indigo-300 focus-within:ring-1 focus-within:ring-indigo-500" for="mpesa">
+                                        <input type="radio" id="mpesa" name="payment_method" value="mpesa" class="sr-only" {{ old('payment_method') == 'mpesa' ? 'checked' : '' }}>
+                                        <div class="flex justify-between w-full">
+                                            <span class="flex items-center">
+                                                <span class="text-sm font-medium text-gray-900">M-Pesa</span>
+                                            </span>
+                                            <span class="h-5 w-5 flex items-center justify-center text-white rounded-full overflow-hidden" id="mpesa-indicator"></span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div>
+                                    <label class="relative flex p-3 border border-gray-300 rounded-md cursor-pointer hover:border-indigo-300 focus-within:ring-1 focus-within:ring-indigo-500" for="bank">
+                                        <input type="radio" id="bank" name="payment_method" value="bank" class="sr-only" {{ old('payment_method') == 'bank' ? 'checked' : '' }}>
+                                        <div class="flex justify-between w-full">
+                                            <span class="flex items-center">
+                                                <span class="text-sm font-medium text-gray-900">Bank Transfer</span>
+                                            </span>
+                                            <span class="h-5 w-5 flex items-center justify-center text-white rounded-full overflow-hidden" id="bank-indicator"></span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div>
+                                    <label class="relative flex p-3 border border-gray-300 rounded-md cursor-pointer hover:border-indigo-300 focus-within:ring-1 focus-within:ring-indigo-500" for="paypal">
+                                        <input type="radio" id="paypal" name="payment_method" value="paypal" class="sr-only" {{ old('payment_method') == 'paypal' ? 'checked' : '' }}>
+                                        <div class="flex justify-between w-full">
+                                            <span class="flex items-center">
+                                                <span class="text-sm font-medium text-gray-900">PayPal</span>
+                                            </span>
+                                            <span class="h-5 w-5 flex items-center justify-center text-white rounded-full overflow-hidden" id="paypal-indicator"></span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            @error('payment_method')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="sm:col-span-6">
+                            <label for="payment_details" class="block text-sm font-medium text-gray-700 mb-1">Payment Details</label>
+                            <div class="mt-1">
+                                <textarea id="payment_details" name="payment_details" rows="3" 
+                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                    placeholder="Enter your payment details (e.g., M-Pesa number, bank account details, or PayPal email)">{{ old('payment_details') }}</textarea>
+                                <p class="text-xs text-gray-500 mt-1">This information will be used to process your payments</p>
+                            </div>
+                            @error('payment_details')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+                <div class="px-4 py-3 bg-gray-50 flex justify-between sm:px-6">
+                    <button type="button" id="prev-payment" class="inline-flex justify-center py-1.5 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Back
+                    </button>
+                    <button type="submit" class="inline-flex justify-center py-1.5 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Complete Profile Setup
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab navigation
+        const personalTab = document.getElementById('personal-tab');
+        const professionalTab = document.getElementById('professional-tab');
+        const paymentTab = document.getElementById('payment-tab');
+        
+        const personalContent = document.getElementById('personal-content');
+        const professionalContent = document.getElementById('professional-content');
+        const paymentContent = document.getElementById('payment-content');
+        
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercentage = document.getElementById('progress-percentage');
+        
+        // Next and Previous buttons
+        const nextPersonalBtn = document.getElementById('next-personal');
+        const nextProfessionalBtn = document.getElementById('next-professional');
+        const prevProfessionalBtn = document.getElementById('prev-professional');
+        const prevPaymentBtn = document.getElementById('prev-payment');
+        
+        // Switch to personal tab
+        function showPersonalTab() {
+            personalContent.classList.remove('hidden');
+            professionalContent.classList.add('hidden');
+            paymentContent.classList.add('hidden');
+            
+            personalTab.classList.add('border-indigo-600', 'text-indigo-600');
+            personalTab.classList.remove('border-transparent', 'hover:border-gray-300', 'hover:text-gray-600');
+            
+            professionalTab.classList.remove('border-indigo-600', 'text-indigo-600');
+            professionalTab.classList.add('border-transparent', 'hover:border-gray-300', 'hover:text-gray-600');
+            
+            paymentTab.classList.remove('border-indigo-600', 'text-indigo-600');
+            paymentTab.classList.add('border-transparent', 'hover:border-gray-300', 'hover:text-gray-600');
+            
+            progressBar.style.width = '0%';
+            progressPercentage.textContent = '0%';
+        }
+        
+        // Switch to professional tab
+        function showProfessionalTab() {
+            personalContent.classList.add('hidden');
+            professionalContent.classList.remove('hidden');
+            paymentContent.classList.add('hidden');
+            
+            personalTab.classList.remove('border-indigo-600', 'text-indigo-600');
+            personalTab.classList.add('border-transparent', 'hover:border-gray-300', 'hover:text-gray-600');
+            
+            professionalTab.classList.add('border-indigo-600', 'text-indigo-600');
+            professionalTab.classList.remove('border-transparent', 'hover:border-gray-300', 'hover:text-gray-600');
+            
+            paymentTab.classList.remove('border-indigo-600', 'text-indigo-600');
+            paymentTab.classList.add('border-transparent', 'hover:border-gray-300', 'hover:text-gray-600');
+            
+            progressBar.style.width = '33%';
+            progressPercentage.textContent = '33%';
+        }
+        
+        // Switch to payment tab
+        function showPaymentTab() {
+            personalContent.classList.add('hidden');
+            professionalContent.classList.add('hidden');
+            paymentContent.classList.remove('hidden');
+            
+            personalTab.classList.remove('border-indigo-600', 'text-indigo-600');
+            personalTab.classList.add('border-transparent', 'hover:border-gray-300', 'hover:text-gray-600');
+            
+            professionalTab.classList.remove('border-indigo-600', 'text-indigo-600');
+            professionalTab.classList.add('border-transparent', 'hover:border-gray-300', 'hover:text-gray-600');
+            
+            paymentTab.classList.add('border-indigo-600', 'text-indigo-600');
+            paymentTab.classList.remove('border-transparent', 'hover:border-gray-300', 'hover:text-gray-600');
+            
+            progressBar.style.width = '66%';
+            progressPercentage.textContent = '66%';
+        }
+        
+        // Tab click events
+        personalTab.addEventListener('click', function() {
+            showPersonalTab();
+        });
+        
+        professionalTab.addEventListener('click', function() {
+            if (validatePersonalInfo()) {
+                showProfessionalTab();
+            } else {
+                showPersonalTab();
+            }
+        });
+        
+        paymentTab.addEventListener('click', function() {
+            if (validatePersonalInfo() && validateProfessionalInfo()) {
+                showPaymentTab();
+            } else if (validatePersonalInfo()) {
+                showProfessionalTab();
+            } else {
+                showPersonalTab();
+            }
+        });
+        
+        // Next button events
+        nextPersonalBtn.addEventListener('click', function() {
+            if (validatePersonalInfo()) {
+                showProfessionalTab();
+            }
+        });
+        
+        nextProfessionalBtn.addEventListener('click', function() {
+            if (validateProfessionalInfo()) {
+                showPaymentTab();
+            }
+        });
+        
+        // Previous button events
+        prevProfessionalBtn.addEventListener('click', function() {
+            showPersonalTab();
+        });
+        
+        prevPaymentBtn.addEventListener('click', function() {
+            showProfessionalTab();
+        });
+        
+        // Form validation functions
+        function validatePersonalInfo() {
+            const phoneNumber = document.getElementById('phone_number');
+            const nationalId = document.getElementById('national_id');
+            const country = document.getElementById('country');
+            const county = document.getElementById('county');
+            const nativeLanguage = document.getElementById('native_language');
+            const nationalIdImage = document.getElementById('national_id_image');
+            
+            let isValid = true;
+            const errorElements = document.querySelectorAll('.error-message');
+            errorElements.forEach(el => el.remove());
+            
+            if (!phoneNumber.value) {
+                addErrorMessage(phoneNumber, 'Phone number is required');
+                isValid = false;
+            }
+            
+            if (!nationalId.value) {
+                addErrorMessage(nationalId, 'National ID is required');
+                isValid = false;
+            }
+            
+            if (!country.value) {
+                addErrorMessage(country, 'Country is required');
+                isValid = false;
+            }
+            
+            if (!county.value) {
+                addErrorMessage(county, 'County/State is required');
+                isValid = false;
+            }
+            
+            if (!nativeLanguage.value) {
+                addErrorMessage(nativeLanguage, 'Native language is required');
+                isValid = false;
+            }
+            
+            if (nationalIdImage.files.length === 0 && !document.getElementById('id-preview').src) {
+                addErrorMessage(nationalIdImage.parentElement, 'National ID image is required');
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+        
+        function validateProfessionalInfo() {
+            const educationLevel = document.getElementById('education_level');
+            const experienceYears = document.getElementById('experience_years');
+            const bio = document.getElementById('bio');
+            const subjectsSelected = document.querySelectorAll('.subject-checkbox:checked');
+            
+            let isValid = true;
+            const errorElements = document.querySelectorAll('.error-message');
+            errorElements.forEach(el => el.remove());
+            
+            if (!educationLevel.value) {
+                addErrorMessage(educationLevel, 'Education level is required');
+                isValid = false;
+            }
+            
+            if (!experienceYears.value) {
+                addErrorMessage(experienceYears, 'Years of experience is required');
+                isValid = false;
+            }
+            
+            if (!bio.value || bio.value.length < 100) {
+                addErrorMessage(bio, 'Bio must be at least 100 characters');
+                isValid = false;
+            }
+            
+            if (subjectsSelected.length < 2 || subjectsSelected.length > 5) {
+                const subjectsCount = document.getElementById('subjects-count');
+                if (subjectsSelected.length < 2) {
+                    addErrorMessage(subjectsCount, 'Please select at least 2 subjects');
+                } else {
+                    addErrorMessage(subjectsCount, 'Please select no more than 5 subjects');
+                }
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+        
+        // Helper function to add error messages
+        function addErrorMessage(element, message) {
+            const errorDiv = document.createElement('p');
+            errorDiv.classList.add('text-sm', 'text-red-600', 'mt-1', 'error-message');
+            errorDiv.textContent = message;
+            element.parentNode.appendChild(errorDiv);
+        }
+        
+        // Bio character counter
+        const bioField = document.getElementById('bio');
+        const bioChars = document.getElementById('bio-chars');
+        
+        bioField.addEventListener('input', function() {
+            bioChars.textContent = this.value.length;
+            
+            if (this.value.length < 100) {
+                bioChars.classList.remove('text-green-600');
+                bioChars.classList.add('text-red-600');
+            } else {
+                bioChars.classList.remove('text-red-600');
+                bioChars.classList.add('text-green-600');
+            }
+        });
+        
+        // Initialize bio character count
+        bioField.dispatchEvent(new Event('input'));
+        
+        // Initialize subject count
+        updateSubjectCount();
+        
+        // Initialize payment method indicators
+        const paymentMethods = ['mpesa', 'bank', 'paypal'];
+        paymentMethods.forEach(method => {
+            const radioButton = document.getElementById(method);
+            const indicator = document.getElementById(`${method}-indicator`);
+            
+            radioButton.addEventListener('change', function() {
+                updatePaymentMethodIndicators();
+            });
+        });
+        
+        updatePaymentMethodIndicators();
+        
+        function updatePaymentMethodIndicators() {
+            paymentMethods.forEach(method => {
+                const radioButton = document.getElementById(method);
+                const indicator = document.getElementById(`${method}-indicator`);
+                
+                if (radioButton.checked) {
+                    indicator.innerHTML = '<svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>';
+                    indicator.classList.add('bg-indigo-600');
+                } else {
+                    indicator.innerHTML = '';
+                    indicator.classList.remove('bg-indigo-600');
+                }
+            });
+        }
+        
+        // Form submission
+        const profileForm = document.getElementById('profileForm');
+        profileForm.addEventListener('submit', function(event) {
+            let isValid = true;
+            
+            if (!validatePersonalInfo()) {
+                showPersonalTab();
+                isValid = false;
+            } else if (!validateProfessionalInfo()) {
+                showProfessionalTab();
+                isValid = false;
+            } else {
+                // Validate payment tab
+                const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+                const paymentDetails = document.getElementById('payment_details');
+                
+                const errorElements = document.querySelectorAll('.error-message');
+                errorElements.forEach(el => el.remove());
+                
+                if (!paymentMethod) {
+                    addErrorMessage(document.querySelector('.grid.grid-cols-1.sm\\:grid-cols-3'), 'Please select a payment method');
+                    isValid = false;
+                }
+                
+                if (!paymentDetails.value) {
+                    addErrorMessage(paymentDetails, 'Payment details are required');
+                    isValid = false;
+                }
+            }
+            
+            if (!isValid) {
+                event.preventDefault();
+            } else {
+                // Show completion state
+                progressBar.style.width = '100%';
+                progressPercentage.textContent = '100%';
+                
+                // Disable submit button to prevent double submission
+                const submitButton = document.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerHTML = `
+                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Submitting...
+                `;
+            }
+        });
+    });
+    
+    // Image preview function
+    function previewImage(input, previewId, placeholderId) {
+        const preview = document.getElementById(previewId);
+        const placeholder = document.getElementById(placeholderId);
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            };
+            
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+        }
+    }
+    
+    // Update subject count
+    function updateSubjectCount() {
+        const checkboxes = document.querySelectorAll('.subject-checkbox:checked');
+        const countDisplay = document.getElementById('selected-count');
+        countDisplay.textContent = checkboxes.length;
+    }
+    
+    // Check subject limit
+    function checkSubjectLimit(checkbox) {
+        const checkboxes = document.querySelectorAll('.subject-checkbox:checked');
+        const errorMessage = document.getElementById('subjects-error');
+        
+        if (checkboxes.length > 5) {
+            checkbox.checked = false;
+            errorMessage.textContent = "You can only select up to 5 subjects";
+            errorMessage.classList.remove('hidden');
+            setTimeout(() => {
+                errorMessage.classList.add('hidden');
+            }, 3000);
+        } else if (checkboxes.length < 2) {
+            errorMessage.textContent = "Please select at least 2 subjects";
+            errorMessage.classList.remove('hidden');
+        } else {
+            errorMessage.classList.add('hidden');
+        }
+        
+        updateSubjectCount();
+    }
+</script>
+@endsection
