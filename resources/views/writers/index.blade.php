@@ -16,6 +16,30 @@
     .select2-container--default .select2-selection--single .select2-selection__arrow {
         block-size: 40px;
     }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #16a34a !important;
+    }
+    .select2-container--default .select2-selection--single {
+        block-size: 40px;
+        display: flex;
+        align-items: center;
+        border-color: #e5e7eb;
+        border-radius: 0.5rem;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        block-size: 40px;
+    }
+    /* Add this for icon rotation */
+    .rotate-180 {
+        transform: rotate(180deg);
+    }
+    /* Make sure transitions are smooth */
+    #filterContent {
+        transition: all 0.3s ease;
+    }
+    .fas {
+        transition: transform 0.3s ease;
+    }
 </style>
 
 
@@ -45,9 +69,9 @@
                 <div class="w-48">
                     <select class="select2-basic w-full" id="levelSelect">
                         <option value="">All Levels</option>
-                        <option value="1">Level 1</option>
-                        <option value="2">Level 2</option>
-                        <option value="3">Level 3</option>
+                        <option value="1">High School</option>
+                        <option value="1">Undegraduate</option>
+                        <option value="3">PostGraduate</option>
                     </select>
                 </div>
 
@@ -90,9 +114,9 @@
                 <div class="w-full">
                     <select class="select2-basic w-full" id="levelSelectMobile">
                         <option value="">All Levels</option>
-                        <option value="1">Level 1</option>
-                        <option value="2">Level 2</option>
-                        <option value="3">Level 3</option>
+                        <option value="1">High School</option>
+                        <option value="1">Undegraduate</option>
+                        <option value="3">PostGraduate</option>
                     </select>
                 </div>
 
@@ -227,6 +251,37 @@
             $('#searchFilters').toggleClass('hidden');
         });
     });
+    $(document).ready(function() {
+    // Initialize Select2
+    $('.select2-basic').select2();
+    
+    // Check window width to determine if mobile or desktop
+    function checkWindowSize() {
+        if ($(window).width() < 768) { // Mobile breakpoint
+            // Hide filter content on mobile by default
+            $('#filterContent').addClass('hidden');
+            $('#filterToggle').find('i').removeClass('rotate-180');
+        } else {
+            // Show filter content on desktop by default
+            $('#filterContent').removeClass('hidden');
+            $('#filterToggle').find('i').addClass('rotate-180');
+        }
+    }
+    
+    // Run on page load
+    checkWindowSize();
+    
+    // Run on window resize
+    $(window).resize(function() {
+        checkWindowSize();
+    });
+    
+    // Toggle filter content when clicked
+    $('#filterToggle').click(function() {
+        $('#filterContent').toggleClass('hidden');
+        $(this).find('i').toggleClass('rotate-180');
+    });
+});
 
     
 </script>

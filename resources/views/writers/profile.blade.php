@@ -1,6 +1,11 @@
 @extends('writers.app')
 
 @section('content')
+
+<!-- Add in the head section -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <div class="flex flex-col lg:flex-row min-h-screen pb-8">
     <!-- Profile Content -->
     <div class="flex-1 p-8 lg:ml-64" style="padding-top:5%;">
@@ -252,6 +257,15 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Configure toastr options
+    toastr.options = {
+        closeButton: true,
+        progressBar: true,
+        positionClass: "toast-bottom-left",
+        timeOut: 5000,
+        extendedTimeOut: 1000
+    };
+    
     // Bio character counter
     const bioField = document.querySelector('textarea[name="bio"]');
     const bioChars = document.getElementById('bio-chars');
@@ -300,6 +314,35 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initial check
     checkSubjectLimit();
+    
+    // Status select change
+    const statusSelect = document.getElementById('status-select');
+    if (statusSelect) {
+        statusSelect.addEventListener('change', function() {
+            const status = this.value;
+            
+            fetch('/profile/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                },
+                body: JSON.stringify({ status: status })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success('Status updated successfully');
+                } else {
+                    toastr.error('Error updating status: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                toastr.error('An error occurred while updating your status');
+            });
+        });
+    }
 });
 
 function confirmUpdate() {
@@ -317,12 +360,12 @@ function proceedWithUpdate() {
     let isValid = true;
     
     if (bioField && bioField.value.length < 100) {
-        alert('Bio must be at least 100 characters');
+        toastr.error('Bio must be at least 100 characters');
         isValid = false;
     }
     
     if (checkedSubjects.length < 2 || checkedSubjects.length > 5) {
-        alert('Please select between 2 and 5 subjects');
+        toastr.error('Please select between 2 and 5 subjects');
         isValid = false;
     }
     
@@ -331,30 +374,50 @@ function proceedWithUpdate() {
         const formData = new FormData();
         
         // Add form fields
-        formData.append('name', document.querySelector('input[name="name"]').value);
-        formData.append('phone_number', document.querySelector('input[name="phone_number"]').value);
-        formData.append('national_id', document.querySelector('input[name="national_id"]').value);
-        formData.append('native_language', document.querySelector('select[name="native_language"]').value);
-        formData.append('experience_years', document.querySelector('input[name="experience_years"]').value);
-        formData.append('country', document.querySelector('select[name="country"]').value);
-        formData.append('county', document.querySelector('input[name="county"]').value);
+        const nameInput = document.querySelector('input[name="name"]');
+        if (nameInput) formData.append('name', nameInput.value);
+        
+        const phoneInput = document.querySelector('input[name="phone_number"]');
+        if (phoneInput) formData.append('phone_number', phoneInput.value);
+        
+        const idInput = document.querySelector('input[name="national_id"]');
+        if (idInput) formData.append('national_id', idInput.value);
+        
+        const langSelect = document.querySelector('select[name="native_language"]');
+        if (langSelect) formData.append('native_language', langSelect.value);
+        
+        const expInput = document.querySelector('input[name="experience_years"]');
+        if (expInput) formData.append('experience_years', expInput.value);
+        
+        const countrySelect = document.querySelector('select[name="country"]');
+        if (countrySelect) formData.append('country', countrySelect.value);
+        
+        const countyInput = document.querySelector('input[name="county"]');
+        if (countyInput) formData.append('county', countyInput.value);
         
         // Night calls and force assign
-        const nightCalls = document.querySelector('input[name="night_calls"]:checked')?.value || '0';
-        const forceAssign = document.querySelector('input[name="force_assign"]:checked')?.value || '0';
-        formData.append('night_calls', nightCalls);
-        formData.append('force_assign', forceAssign);
+        const nightCalls = document.querySelector('input[name="night_calls"]:checked');
+        formData.append('night_calls', nightCalls ? nightCalls.value : '0');
+        
+        const forceAssign = document.querySelector('input[name="force_assign"]:checked');
+        formData.append('force_assign', forceAssign ? forceAssign.value : '0');
         
         // Social networks
-        formData.append('facebook', document.querySelector('input[name="facebook"]').value);
-        formData.append('linkedin', document.querySelector('input[name="linkedin"]').value);
+        const fbInput = document.querySelector('input[name="facebook"]');
+        if (fbInput) formData.append('facebook', fbInput.value);
+        
+        const liInput = document.querySelector('input[name="linkedin"]');
+        if (liInput) formData.append('linkedin', liInput.value);
         
         // Payment information
-        formData.append('payment_method', document.querySelector('select[name="payment_method"]').value);
-        formData.append('payment_details', document.querySelector('textarea[name="payment_details"]').value);
+        const payMethodSelect = document.querySelector('select[name="payment_method"]');
+        if (payMethodSelect) formData.append('payment_method', payMethodSelect.value);
+        
+        const payDetailsInput = document.querySelector('textarea[name="payment_details"]');
+        if (payDetailsInput) formData.append('payment_details', payDetailsInput.value);
         
         // Bio
-        formData.append('bio', document.querySelector('textarea[name="bio"]').value);
+        if (bioField) formData.append('bio', bioField.value);
         
         // Subjects
         checkedSubjects.forEach(checkbox => {
@@ -362,7 +425,8 @@ function proceedWithUpdate() {
         });
         
         // Add CSRF token
-        formData.append('_token', document.querySelector('input[name="_token"]').value);
+        const csrfToken = document.querySelector('input[name="_token"]');
+        if (csrfToken) formData.append('_token', csrfToken.value);
         
         // Submit form
         fetch('/profile/update', {
@@ -372,44 +436,21 @@ function proceedWithUpdate() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Profile updated successfully');
-                window.location.reload();
+                toastr.success('Profile updated successfully');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500); // Give time for the user to see the message
             } else {
-                alert('Error updating profile: ' + data.message);
+                toastr.error('Error updating profile: ' + (data.message || 'Unknown error'));
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while updating your profile');
+            toastr.error('An error occurred while updating your profile');
         });
         
         closeAlert();
     }
 }
-
-// Status select change
-document.getElementById('status-select').addEventListener('change', function() {
-    const status = this.value;
-    
-    fetch('/profile/update-status', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-        },
-        body: JSON.stringify({ status: status })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            console.log('Status updated successfully');
-        } else {
-            console.error('Error updating status:', data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-});
 </script>
 @endsection
