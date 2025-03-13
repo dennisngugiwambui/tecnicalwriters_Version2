@@ -1,9 +1,9 @@
 @extends('writers.app')
 
 @section('content')
-<div class="flex flex-col lg:flex-row min-h-screen pb-8"> <!-- Changed md:flex-row to lg:flex-row -->
+<div class="flex flex-col lg:flex-row min-h-screen pb-8">
     <!-- Profile Content -->
-    <div class="flex-1 p-8 lg:ml-64" style="padding-top:5%;"> <!-- Changed md:ml-64 to lg:ml-64 -->
+    <div class="flex-1 p-8 lg:ml-64" style="padding-top:5%;">
         <div class="bg-white rounded-lg shadow-md p-6">
             <h1 class="text-2xl font-bold mb-6">Profile</h1>
             
@@ -20,11 +20,11 @@
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div class="flex flex-col">
                         <span class="text-gray-600">Your ID:</span>
-                        <span class="font-medium">433552</span>
+                        <span class="font-medium">{{ Auth::user()->writerProfile->writer_id ?? 'N/A' }}</span>
                     </div>
                     <div class="flex flex-col">
                         <span class="text-gray-600">Writer category:</span>
-                        <span class="font-medium">Advanced</span>
+                        <span class="font-medium">{{ Auth::user()->writerProfile->education_level ?? 'Advanced' }}</span>
                     </div>
                     <div class="flex flex-col">
                         <span class="text-gray-600">Writer level:</span>
@@ -32,10 +32,10 @@
                     </div>
                     <div class="flex flex-col">
                         <span class="text-gray-600">Status:</span>
-                        <select class="border rounded px-2 py-1">
-                            <option selected>Looking for orders</option>
-                            <option>On vacation</option>
-                            <option>Not willing to work</option>
+                        <select class="border rounded px-2 py-1" id="status-select">
+                            <option value="active" {{ Auth::user()->status === 'active' ? 'selected' : '' }}>Looking for orders</option>
+                            <option value="vacation" {{ Auth::user()->status === 'vacation' ? 'selected' : '' }}>On vacation</option>
+                            <option value="inactive" {{ Auth::user()->status === 'inactive' ? 'selected' : '' }}>Not willing to work</option>
                         </select>
                     </div>
                 </div>
@@ -44,38 +44,24 @@
             <!-- Basic Info -->
             <div>
                 <h2 class="text-xl font-semibold mb-4">Basic Info</h2>
-                <form class="space-y-4">
+                <form class="space-y-4" id="basic-info-form">
+                    @csrf
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
-                            <label class="block text-gray-600 mb-1">First name <span class="text-red-500">*</span></label>
-                            <input type="text" class="w-full border rounded px-3 py-2" value="John" readonly>
+                            <label class="block text-gray-600 mb-1">Full name <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" class="w-full border rounded px-3 py-2" value="{{ Auth::user()->name }}" readonly>
                         </div>
                         <div>
-                            <label class="block text-gray-600 mb-1">Middle name</label>
-                            <input type="text" class="w-full border rounded px-3 py-2" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-gray-600 mb-1">Last name <span class="text-red-500">*</span></label>
-                            <input type="text" class="w-full border rounded px-3 py-2" value="Doe" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-gray-600 mb-1">Gender <span class="text-red-500">*</span></label>
-                            <div class="flex space-x-4 mt-2">
-                                <label class="flex items-center">
-                                    <input type="radio" name="gender" class="mr-2" disabled> Female
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="gender" class="mr-2" checked disabled> Male
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-span-1 md:col-span-2">
                             <label class="block text-gray-600 mb-1">Email address</label>
-                            <input type="email" class="w-full border rounded px-3 py-2" value="john.doe@example.com" readonly>
+                            <input type="email" name="email" class="w-full border rounded px-3 py-2" value="{{ Auth::user()->email }}" readonly>
                         </div>
-                        <div class="col-span-1 md:col-span-2">
+                        <div>
                             <label class="block text-gray-600 mb-1">Phone number</label>
-                            <input type="text" class="w-full border rounded px-3 py-2" placeholder="Enter your phone number">
+                            <input type="text" name="phone_number" class="w-full border rounded px-3 py-2" value="{{ Auth::user()->writerProfile->phone_number ?? '' }}" placeholder="Enter your phone number">
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 mb-1">National ID</label>
+                            <input type="text" name="national_id" class="w-full border rounded px-3 py-2" value="{{ Auth::user()->writerProfile->national_id ?? '' }}" {{ Auth::user()->writerProfile && Auth::user()->writerProfile->id_verification_status === 'verified' ? 'readonly' : '' }}>
                         </div>
                     </div>
                 </form>
@@ -87,57 +73,49 @@
                 <div class="space-y-6">
                     <div>
                         <label class="block text-gray-600 mb-2">What is your native language? <span class="text-red-500">*</span></label>
-                        <select class="w-full border rounded px-3 py-2">
-                            <option>English</option>
-                            <option>Spanish</option>
-                            <option>French</option>
+                        <select name="native_language" class="w-full border rounded px-3 py-2">
+                            @php
+                                $nativeLanguage = Auth::user()->writerProfile->native_language ?? '';
+                                $languages = ['English', 'Spanish', 'French', 'German', 'Swahili', 'Arabic', 'Chinese', 'Hindi', 'Japanese', 'Russian', 'Portuguese', 'Other'];
+                            @endphp
+                            @foreach($languages as $language)
+                                <option value="{{ $language }}" {{ $nativeLanguage === $language ? 'selected' : '' }}>{{ $language }}</option>
+                            @endforeach
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-gray-600 mb-2">Did you ever work for any other online academic assistance companies? <span class="text-red-500">*</span></label>
-                        <div class="flex space-x-4 mb-3">
-                            <label class="flex items-center">
-                                <input type="radio" name="worked_before" class="mr-2"> Yes
-                            </label>
-                            <label class="flex items-center">
-                                <input type="radio" name="worked_before" class="mr-2"> No
-                            </label>
-                        </div>
-                        <div>
-                            <label class="block text-gray-600 mb-2">List the companies:</label>
-                            <input type="text" class="w-full border rounded px-3 py-2" placeholder="Ex.: Company A, Company B">
-                        </div>
+                        <label class="block text-gray-600 mb-2">Years of experience <span class="text-red-500">*</span></label>
+                        <input type="number" name="experience_years" min="0" max="30" class="w-full border rounded px-3 py-2" value="{{ Auth::user()->writerProfile->experience_years ?? 0 }}">
                     </div>
 
                     <div>
-                        <label class="block text-gray-600 mb-2">Disciplines you are proficient in:</label>
+                        <label class="block text-gray-600 mb-2">Subjects you are proficient in:</label>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" class="form-checkbox" checked>
-                                <span>Computer science</span>
-                            </label>
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" class="form-checkbox" checked>
-                                <span>Web programming</span>
-                            </label>
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" class="form-checkbox" checked>
-                                <span>Desktop applications</span>
-                            </label>
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" class="form-checkbox" checked>
-                                <span>Mobile applications</span>
-                            </label>
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" class="form-checkbox" checked>
-                                <span>Database design</span>
-                            </label>
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" class="form-checkbox" checked>
-                                <span>Data analysis</span>
-                            </label>
+                            @php
+                                $userSubjects = Auth::user()->writerProfile->subjects ?? [];
+                                if (!is_array($userSubjects)) {
+                                    $userSubjects = [];
+                                }
+                                
+                                $allSubjects = [
+                                    'English Literature', 'History', 'Mathematics', 'Physics', 'Chemistry', 
+                                    'Biology', 'Computer Science', 'Economics', 'Business Studies', 'Psychology', 
+                                    'Sociology', 'Political Science', 'Philosophy', 'Law', 'Medicine', 
+                                    'Engineering', 'Architecture', 'Art & Design', 'Music', 'Film Studies',
+                                    'Media Studies', 'Communications', 'Journalism', 'Marketing', 'Management', 
+                                    'Finance', 'Accounting', 'Nursing', 'Education', 'Social Work'
+                                ];
+                            @endphp
+                            
+                            @foreach($allSubjects as $subject)
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" name="subjects[]" value="{{ $subject }}" class="form-checkbox subject-checkbox" {{ in_array($subject, $userSubjects) ? 'checked' : '' }}>
+                                    <span>{{ $subject }}</span>
+                                </label>
+                            @endforeach
                         </div>
+                        <p id="subjects-error" class="mt-1 text-sm text-red-600 hidden">Please select between 2 and 5 subjects</p>
                     </div>
                 </div>
             </div>
@@ -148,46 +126,22 @@
                 <div class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-gray-600 mb-2">Time zone:</label>
-                            <select class="w-full border rounded px-3 py-2">
-                                <option>GMT -8:00</option>
-                                <option>GMT -7:00</option>
-                                <option>GMT -6:00</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-gray-600 mb-2">Phone <span class="text-red-500">*</span></label>
-                            <div class="grid grid-cols-3 gap-2">
-                                <input type="text" class="border rounded px-3 py-2" placeholder="Country">
-                                <input type="text" class="border rounded px-3 py-2" placeholder="Operator">
-                                <input type="text" class="border rounded px-3 py-2" placeholder="Number">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
                             <label class="block text-gray-600 mb-2">Country <span class="text-red-500">*</span></label>
-                            <select class="w-full border rounded px-3 py-2">
-                                <option>United States</option>
-                                <option>Canada</option>
-                                <option>United Kingdom</option>
+                            <select name="country" class="w-full border rounded px-3 py-2">
+                                @php
+                                    $userCountry = Auth::user()->writerProfile->country ?? '';
+                                    $countries = ['United States', 'Canada', 'United Kingdom', 'Australia', 'Germany', 'France', 'Kenya', 'Nigeria', 'South Africa', 'India', 'China', 'Japan', 'Brazil', 'Other'];
+                                @endphp
+                                <option value="">Select a country</option>
+                                @foreach($countries as $country)
+                                    <option value="{{ $country }}" {{ $userCountry === $country ? 'selected' : '' }}>{{ $country }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div>
-                            <label class="block text-gray-600 mb-2">State <span class="text-red-500">*</span></label>
-                            <input type="text" class="w-full border rounded px-3 py-2">
+                            <label class="block text-gray-600 mb-2">County/State <span class="text-red-500">*</span></label>
+                            <input type="text" name="county" class="w-full border rounded px-3 py-2" value="{{ Auth::user()->writerProfile->county ?? '' }}">
                         </div>
-                        <div>
-                            <label class="block text-gray-600 mb-2">City <span class="text-red-500">*</span></label>
-                            <input type="text" class="w-full border rounded px-3 py-2">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-gray-600 mb-2">Address <span class="text-red-500">*</span></label>
-                        <input type="text" class="w-full border rounded px-3 py-2" placeholder="House Number Street, Apt. number or PO Box">
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -195,10 +149,10 @@
                             <label class="block text-gray-600 mb-2">Available for night calls <span class="text-red-500">*</span></label>
                             <div class="flex space-x-4">
                                 <label class="flex items-center">
-                                    <input type="radio" name="night_calls" class="mr-2"> Yes
+                                    <input type="radio" name="night_calls" value="1" class="mr-2" {{ Auth::user()->writerProfile && Auth::user()->writerProfile->night_calls ? 'checked' : '' }}> Yes
                                 </label>
                                 <label class="flex items-center">
-                                    <input type="radio" name="night_calls" class="mr-2"> No
+                                    <input type="radio" name="night_calls" value="0" class="mr-2" {{ Auth::user()->writerProfile && !Auth::user()->writerProfile->night_calls ? 'checked' : '' }}> No
                                 </label>
                             </div>
                         </div>
@@ -206,10 +160,10 @@
                             <label class="block text-gray-600 mb-2">Available for force-assign <span class="text-red-500">*</span></label>
                             <div class="flex space-x-4">
                                 <label class="flex items-center">
-                                    <input type="radio" name="force_assign" class="mr-2"> Yes
+                                    <input type="radio" name="force_assign" value="1" class="mr-2" {{ Auth::user()->writerProfile && Auth::user()->writerProfile->force_assign ? 'checked' : '' }}> Yes
                                 </label>
                                 <label class="flex items-center">
-                                    <input type="radio" name="force_assign" class="mr-2"> No
+                                    <input type="radio" name="force_assign" value="0" class="mr-2" {{ Auth::user()->writerProfile && !Auth::user()->writerProfile->force_assign ? 'checked' : '' }}> No
                                 </label>
                             </div>
                         </div>
@@ -224,36 +178,53 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-gray-600 mb-2">Facebook</label>
-                        <input type="url" class="w-full border rounded px-3 py-2" placeholder="https://facebook.com/username">
+                        <input type="url" name="facebook" class="w-full border rounded px-3 py-2" placeholder="https://facebook.com/username" value="{{ Auth::user()->writerProfile->facebook ?? '' }}">
                     </div>
                     <div>
                         <label class="block text-gray-600 mb-2">LinkedIn</label>
-                        <input type="url" class="w-full border rounded px-3 py-2" placeholder="https://linkedin.com/in/username">
+                        <input type="url" name="linkedin" class="w-full border rounded px-3 py-2" placeholder="https://linkedin.com/in/username" value="{{ Auth::user()->writerProfile->linkedin ?? '' }}">
                     </div>
                 </div>
             </div>
 
-            <!-- Education -->
+            <!-- Payment Information -->
             <div class="mt-8">
-                <h2 class="text-xl font-semibold mb-4">Education</h2>
-                <div class="bg-gray-50 p-4 rounded-lg border">
-                    <p class="text-gray-600">You already have 1 place of study inserted</p>
-                    <button class="mt-3 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
-                        Add another place of study
-                    </button>
+                <h2 class="text-xl font-semibold mb-4">Payment Information</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-600 mb-2">Payment Method <span class="text-red-500">*</span></label>
+                        <select name="payment_method" class="w-full border rounded px-3 py-2">
+                            @php
+                                $paymentMethod = Auth::user()->writerProfile->payment_method ?? '';
+                            @endphp
+                            <option value="">Select payment method</option>
+                            <option value="mpesa" {{ $paymentMethod === 'mpesa' ? 'selected' : '' }}>M-Pesa</option>
+                            <option value="bank" {{ $paymentMethod === 'bank' ? 'selected' : '' }}>Bank Transfer</option>
+                            <option value="paypal" {{ $paymentMethod === 'paypal' ? 'selected' : '' }}>PayPal</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-600 mb-2">Payment Details <span class="text-red-500">*</span></label>
+                        <textarea name="payment_details" class="w-full border rounded px-3 py-2 h-24" placeholder="Enter your payment details (e.g., M-Pesa number, bank account details, or PayPal email)">{{ Auth::user()->writerProfile->payment_details ?? '' }}</textarea>
+                    </div>
                 </div>
             </div>
 
-            <!-- Additional Information -->
+            <!-- Bio -->
             <div class="mt-8">
-                <h2 class="text-xl font-semibold mb-4">Additional Information about You</h2>
-                <textarea class="w-full border rounded px-3 py-2 h-32" placeholder="Share any additional information that might be relevant..."></textarea>
+                <h2 class="text-xl font-semibold mb-4">Professional Bio</h2>
+                <textarea name="bio" class="w-full border rounded px-3 py-2 h-32" placeholder="Tell us about your professional background, expertise, and writing experience...">{{ Auth::user()->writerProfile->bio ?? Auth::user()->bio ?? '' }}</textarea>
+                <div class="mt-1 text-right text-sm text-gray-500">
+                    <span id="bio-chars">0</span>/1000 characters (min 100)
+                </div>
             </div>
-
         </div>
-        <button class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors mt-4 mb-4" onclick="confirmUpdate()">
-            Save Changes    
-        </button>
+        
+        <div class="flex justify-end mt-4 mb-4">
+            <button class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors" onclick="confirmUpdate()">
+                Save Changes    
+            </button>
+        </div>
     </div>
 </div>
 
@@ -264,11 +235,11 @@
             <h3 class="text-lg leading-6 font-medium text-gray-900">Confirm Update</h3>
             <div class="mt-2 px-7 py-3">
                 <p class="text-sm text-gray-500">
-                    Are you sure you want to update the information?
+                    Are you sure you want to update your profile information?
                 </p>
             </div>
             <div class="items-center px-4 py-3">
-                <button id="ok-btn" class="px-4 py-2 bg-orange-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-300" onclick="proceedWithUpdate()">
+                <button id="ok-btn" class="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300" onclick="proceedWithUpdate()">
                     Yes, Update
                 </button>
                 <button class="mt-3 px-4 py-2 bg-white text-gray-700 text-base font-medium rounded-md w-full shadow-sm border border-gray-300 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300" onclick="closeAlert()">
@@ -280,6 +251,57 @@
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Bio character counter
+    const bioField = document.querySelector('textarea[name="bio"]');
+    const bioChars = document.getElementById('bio-chars');
+    
+    if (bioField && bioChars) {
+        bioField.addEventListener('input', function() {
+            bioChars.textContent = this.value.length;
+            
+            if (this.value.length < 100) {
+                bioChars.classList.remove('text-green-500');
+                bioChars.classList.add('text-red-500');
+            } else {
+                bioChars.classList.remove('text-red-500');
+                bioChars.classList.add('text-green-500');
+            }
+        });
+        
+        // Trigger initial count
+        bioField.dispatchEvent(new Event('input'));
+    }
+    
+    // Subject checkbox limit
+    const subjectCheckboxes = document.querySelectorAll('.subject-checkbox');
+    subjectCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', checkSubjectLimit);
+    });
+    
+    function checkSubjectLimit() {
+        const checked = document.querySelectorAll('.subject-checkbox:checked');
+        const errorElement = document.getElementById('subjects-error');
+        
+        if (checked.length > 5) {
+            this.checked = false;
+            errorElement.textContent = "You can only select up to 5 subjects";
+            errorElement.classList.remove('hidden');
+            setTimeout(() => {
+                errorElement.classList.add('hidden');
+            }, 3000);
+        } else if (checked.length < 2) {
+            errorElement.textContent = "Please select at least 2 subjects";
+            errorElement.classList.remove('hidden');
+        } else {
+            errorElement.classList.add('hidden');
+        }
+    }
+    
+    // Initial check
+    checkSubjectLimit();
+});
+
 function confirmUpdate() {
     document.getElementById('custom-alert').classList.remove('hidden');
 }
@@ -289,8 +311,105 @@ function closeAlert() {
 }
 
 function proceedWithUpdate() {
-    // Add your update logic here
-    closeAlert();
+    // Validate form
+    const bioField = document.querySelector('textarea[name="bio"]');
+    const checkedSubjects = document.querySelectorAll('.subject-checkbox:checked');
+    let isValid = true;
+    
+    if (bioField && bioField.value.length < 100) {
+        alert('Bio must be at least 100 characters');
+        isValid = false;
+    }
+    
+    if (checkedSubjects.length < 2 || checkedSubjects.length > 5) {
+        alert('Please select between 2 and 5 subjects');
+        isValid = false;
+    }
+    
+    if (isValid) {
+        // Collect form data
+        const formData = new FormData();
+        
+        // Add form fields
+        formData.append('name', document.querySelector('input[name="name"]').value);
+        formData.append('phone_number', document.querySelector('input[name="phone_number"]').value);
+        formData.append('national_id', document.querySelector('input[name="national_id"]').value);
+        formData.append('native_language', document.querySelector('select[name="native_language"]').value);
+        formData.append('experience_years', document.querySelector('input[name="experience_years"]').value);
+        formData.append('country', document.querySelector('select[name="country"]').value);
+        formData.append('county', document.querySelector('input[name="county"]').value);
+        
+        // Night calls and force assign
+        const nightCalls = document.querySelector('input[name="night_calls"]:checked')?.value || '0';
+        const forceAssign = document.querySelector('input[name="force_assign"]:checked')?.value || '0';
+        formData.append('night_calls', nightCalls);
+        formData.append('force_assign', forceAssign);
+        
+        // Social networks
+        formData.append('facebook', document.querySelector('input[name="facebook"]').value);
+        formData.append('linkedin', document.querySelector('input[name="linkedin"]').value);
+        
+        // Payment information
+        formData.append('payment_method', document.querySelector('select[name="payment_method"]').value);
+        formData.append('payment_details', document.querySelector('textarea[name="payment_details"]').value);
+        
+        // Bio
+        formData.append('bio', document.querySelector('textarea[name="bio"]').value);
+        
+        // Subjects
+        checkedSubjects.forEach(checkbox => {
+            formData.append('subjects[]', checkbox.value);
+        });
+        
+        // Add CSRF token
+        formData.append('_token', document.querySelector('input[name="_token"]').value);
+        
+        // Submit form
+        fetch('/profile/update', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Profile updated successfully');
+                window.location.reload();
+            } else {
+                alert('Error updating profile: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating your profile');
+        });
+        
+        closeAlert();
+    }
 }
+
+// Status select change
+document.getElementById('status-select').addEventListener('change', function() {
+    const status = this.value;
+    
+    fetch('/profile/update-status', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+        },
+        body: JSON.stringify({ status: status })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Status updated successfully');
+        } else {
+            console.error('Error updating status:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
 </script>
 @endsection

@@ -14,6 +14,11 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use App\Models\WriterProfile; 
+use Illuminate\Support\Facades\DB;
+
+
 
 class HomeController extends Controller
 {
@@ -914,7 +919,216 @@ class HomeController extends Controller
      */
     public function profile()
     {
-        return view('writers.profile');
+        $user = Auth::user();
+        
+        // Eager load the writer profile
+        $user->load('writerProfile');
+        
+        return view('writers.profile', [
+            'user' => $user
+        ]);
+        
+    }
+    public function ProfileUpdate(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Validate the request data
+        $validator = Validator::make($request->all(), [
+            'phone_number' => 'required|string|max:15',
+            'national_id' => 'required|string|max:20',
+            'native_language' => 'required|string',
+            'experience_years' => 'required|integer|min:0|max:30',
+            'subjects' => 'required|array|min:2|max:5',
+            'subjects.*' => 'string',
+            'bio' => 'required|string|min:100|max:1000',
+            'country' => 'required|string|max:100',
+            'county' => 'required|string|max:100',
+            'night_calls' => 'required|boolean',
+            'force_assign' => 'required|boolean',
+            'linkedin' => 'nullable|url|max:255',
+            'facebook' => 'nullable|url|max:255',
+            'payment_method' => 'required|string|in:mpesa,bank,paypal',
+            'payment_details' => 'required|string|max:255',
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        try {
+            // Start a database transaction
+            DB::beginTransaction();
+            
+            // Update user's bio
+            $user->bio = $request->bio;
+            $user->save();
+            
+            // Find or create writer profile
+            $profile = WriterProfile::firstOrNew(['user_id' => $user->id]);
+            
+            // Generate writer_id if it doesn't exist
+            if (!$profile->writer_id) {
+                $profile->writer_id = WriterProfile::generateWriterId($user->id);
+            }
+            
+            // Update profile data
+            $profile->phone_number = $request->phone_number;
+            $profile->national_id = $request->national_id;
+            $profile->country = $request->country;
+            $profile->county = $request->county;
+            $profile->native_language = $request->native_language;
+            $profile->experience_years = $request->experience_years;
+            $profile->subjects = $request->subjects;
+            $profile->bio = $request->bio;
+            $profile->night_calls = $request->night_calls;
+            $profile->force_assign = $request->force_assign;
+            $profile->linkedin = $request->linkedin;
+            $profile->facebook = $request->facebook;
+            $profile->payment_method = $request->payment_method;
+            $profile->payment_details = $request->payment_details;
+            
+            // Save the profile
+            $profile->save();
+            
+            // Commit the transaction
+            DB::commit();
+            
+            // Return success response
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile updated successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            // Rollback the transaction on error
+            DB::rollBack();
+            
+            // Log the error
+            Log::error('Error updating profile: ' . $e->getMessage());
+            
+            // Return error response
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while updating your profile: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+      /**
+     * Update the user's status.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function updateStatus(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|string|in:active,vacation,inactive'
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid status value'
+            ], 422);
+        }
+        
+        try {
+            $user = Auth::user();
+            $user->status = $request->status;
+            $user->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Status updated successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error updating status: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while updating your status'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Upload a profile picture.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function uploadProfilePicture(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'profile_picture' => 'required|image|max:2048' // 2MB max
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid image file'
+            ], 422);
+        }
+        
+        try {
+            $user = Auth::user();
+            
+            // Find or create writer profile
+            $profile = WriterProfile::firstOrNew(['user_id' => $user->id]);
+            
+            // Handle profile picture upload
+            if ($request->hasFile('profile_picture')) {
+                $file = $request->file('profile_picture');
+                $fileName = uniqid('profile_') . '.' . $file->getClientOriginalExtension();
+                
+                // Delete previous file if exists
+                if ($profile->profile_picture && \Storage::exists('public/profiles/' . $profile->profile_picture)) {
+                    \Storage::delete('public/profiles/' . $profile->profile_picture);
+                }
+                
+                // Store new file
+                $path = $file->storeAs('public/profiles', $fileName);
+                
+                if (!$path) {
+                    throw new \Exception('Failed to upload profile picture');
+                }
+                
+                $profile->profile_picture = $fileName;
+                $profile->save();
+                
+                // Also update user's profile picture field if it exists
+                if (in_array('profile_picture', $user->getFillable())) {
+                    $user->profile_picture = $fileName;
+                    $user->save();
+                }
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Profile picture uploaded successfully',
+                    'file_path' => \Storage::url('public/profiles/' . $fileName)
+                ]);
+            }
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'No profile picture file found'
+            ], 400);
+            
+        } catch (\Exception $e) {
+            Log::error('Error uploading profile picture: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while uploading your profile picture'
+            ], 500);
+        }
     }
 
     /**

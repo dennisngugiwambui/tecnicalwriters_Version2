@@ -81,4 +81,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/upload/submit', [UploadController::class, 'submitFinalWork'])->name('upload.submit');
     Route::delete('/upload/{uploadId}', [UploadController::class, 'deleteUpload'])->name('upload.delete');
     Route::get('/upload/download/{uploadId}', [UploadController::class, 'downloadFile'])->name('upload.download');
+
+
+    
+    Route::post('/profile/update', [HomeController::class, 'ProfileUpdate'])->name('profile.update');
+    Route::post('/profile/update-status', [HomeController::class, 'updateStatus'])->name('profile.update-status');
+    Route::post('/profile/upload-picture', [HomeController::class, 'uploadProfilePicture'])->name('profile.upload-picture');
 });
