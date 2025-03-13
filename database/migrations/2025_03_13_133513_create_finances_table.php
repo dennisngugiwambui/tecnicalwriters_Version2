@@ -13,7 +13,20 @@ return new class extends Migration
     {
         Schema::create('finances', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('order_id')->nullable()->constrained()->onDelete('set null');
+            $table->string('transaction_type');
+            $table->decimal('amount', 10, 2);
+            $table->decimal('balance_before', 10, 2);
+            $table->decimal('balance_after', 10, 2);
+            $table->string('status');
+            $table->string('payment_method')->nullable();
+            $table->string('payment_reference')->nullable();
+            $table->text('description')->nullable();
+            $table->foreignId('processed_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->timestamp('processed_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
