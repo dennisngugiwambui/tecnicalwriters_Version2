@@ -208,4 +208,38 @@ class User extends Authenticatable
         }
         return null;
     }
+
+    // Add these relationships to your User model
+
+    /**
+     * Get the financial transactions for the user.
+     */
+    public function financialTransactions()
+    {
+        return $this->hasMany(Finance::class);
+    }
+
+    /**
+     * Get the user's current balance.
+     */
+    public function getCurrentBalance()
+    {
+        return Finance::getCurrentBalance($this->id);
+    }
+
+    /**
+     * Get the user's available balance.
+     */
+    public function getAvailableBalance()
+    {
+        return Finance::getAvailableBalance($this->id);
+    }
+
+    /**
+     * Get the user's recent transactions.
+     */
+    public function getRecentTransactions($limit = 10)
+    {
+        return Finance::getUserTransactions($this->id, $limit);
+    }
 }

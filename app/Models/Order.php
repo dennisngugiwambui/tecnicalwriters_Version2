@@ -109,4 +109,42 @@ class Order extends Model
             self::STATUS_FINISHED
         ]);
     }
+
+    // Add this relationship to your Order model
+
+    /**
+     * Get the financial transactions associated with the order.
+     */
+    public function financialTransactions()
+    {
+        return $this->hasMany(Finance::class);
+    }
+
+    /**
+     * Process payment to writer when order is completed
+     */
+    public function processWriterPayment($processedBy = null)
+    {
+        if (!$this->writer_id || !$this->isCompleted() || $this->isPaid()) {
+            return false;
+        }
+        
+        // Calculate writer payment (you can adjust this calculation based on your business rules)
+        $writerAmount = $this->price * 0.70; // 70% goes to writer
+        
+        // Record the payment
+        $transaction = Finance::addOrderPayment(
+            $this->writer_id, 
+            $this->id, 
+            $writerAmount, 
+            "Payment for order #{$this->id}: {$this->title}", 
+            $processedBy
+        );
+        
+        // Update order status
+        $this->status = self::STATUS_PAID;
+        $this->save();
+        
+        return $transaction;
+    }
 }
