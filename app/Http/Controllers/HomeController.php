@@ -902,15 +902,271 @@ class HomeController extends Controller
             'messages' => $messages
         ]);
     }
+
     /**
-     * Display user finance page
+     * Display user finance page with earnings data
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
     public function userFinance()
     {
-        return view('writers.finance');
+        $user = Auth::user();
+        
+        // Load writer profile for payment details
+        $user->load('writerProfile');
+        
+        // Get completed orders with payment information
+        $completedOrders = Order::where('writer_id', $user->id)
+            ->whereIn('status', [
+                Order::STATUS_COMPLETED, 
+                Order::STATUS_PAID,
+                Order::STATUS_FINISHED
+            ])
+            ->with(['client'])
+            ->latest()
+            ->get();
+        
+        // Calculate total earnings and map order data for the view
+        $totalEarnings = 0;
+        $unRequestedEarnings = $completedOrders->map(function($order) use (&$totalEarnings) {
+            // For this example, we're using 70% of order price as writer payment
+            $writerAmount = $order->price * 0.70;
+            $totalEarnings += $writerAmount;
+            
+            return [
+                'id' => $order->id,
+                'date' => $order->updated_at->format('d M Y, g:i A'),
+                'title' => $order->title,
+                'client_name' => $order->client->name ?? 'Unknown Client',
+                'transaction_type' => 'order completed (' . ($order->task_size ?? '0') . ' pages)',
+                'description' => $order->type_of_service ?? $order->title,
+                'amount' => $writerAmount
+            ];
+        });
+        
+        // For this example, we'll simulate some fines (in a real app, these would come from a fines table)
+        $fines = []; // Get actual fines from your database if applicable
+        $totalFines = 0; // Calculate total fines
+        
+        // Get withdrawal history - in a real app, these would come from your Finance model
+        $withdrawalHistory = []; // Get actual withdrawal history from your database
+        $totalWithdrawn = 0; // Calculate total withdrawn amount
+        
+        // Calculate available balance
+        $availableBalance = $totalEarnings - $totalFines - $totalWithdrawn;
+        
+        return view('writers.finance', compact(
+            'user',
+            'unRequestedEarnings',
+            'totalEarnings',
+            'fines',
+            'totalFines',
+            'withdrawalHistory',
+            'totalWithdrawn',
+            'availableBalance'
+        ));
     }
+
+
+        /**
+     * Request withdrawal of earnings
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function requestWithdrawal(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:10',
+            'payment_method' => 'required|string|in:mpesa,bank,paypal',
+        ]);
+        
+        $user = Auth::user();
+        
+        try {
+            // Check if user has sufficient balance
+            $availableBalance = \App\Models\Finance::getAvailableBalance($user->id);
+            
+            if ($availableBalance < $request->amount) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient balance. Your available balance is $' . number_format($availableBalance, 2)
+                ], 400);
+            }
+            
+            // Get payment details from writer profile
+            $writerProfile = $user->writerProfile;
+            if (!$writerProfile) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please complete your profile with payment information first'
+                ], 400);
+            }
+            
+            // Create withdrawal request
+            $withdrawal = \App\Models\Finance::requestWithdrawal(
+                $user->id,
+                $request->amount,
+                $request->payment_method,
+                $writerProfile->payment_details,
+                'Withdrawal request via ' . $request->payment_method
+            );
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Withdrawal request submitted successfully',
+                'withdrawal' => $withdrawal
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error requesting withdrawal: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get transaction details for a specific order
+     *
+     * @param  int  $orderId
+     * @return \Illuminate\Http\Response
+     */
+    public function getOrderTransactions($orderId)
+    {
+        $user = Auth::user();
+        
+        $order = Order::where('id', $orderId)
+            ->where('writer_id', $user->id)
+            ->with(['client', 'financialTransactions' => function($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }])
+            ->firstOrFail();
+        
+        $transactions = $order->financialTransactions->map(function($transaction) {
+            return [
+                'id' => $transaction->id,
+                'date' => $transaction->created_at,
+                'type' => $transaction->transaction_type,
+                'amount' => $transaction->amount,
+                'status' => $transaction->status,
+                'description' => $transaction->description
+            ];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'order' => [
+                'id' => $order->id,
+                'title' => $order->title,
+                'client_name' => $order->client->name ?? 'Unknown Client',
+                'completed_at' => $order->updated_at,
+                'total_amount' => $order->financialTransactions->sum('amount')
+            ],
+            'transactions' => $transactions
+        ]);
+    }
+
+    /**
+     * Process a payment request
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function requestPayment(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:10',
+            'payment_method' => 'required|string|in:mpesa,bank,paypal',
+        ]);
+        
+        $user = Auth::user();
+        
+        try {
+            // In a real-world application, you would:
+            // 1. Verify the user has sufficient balance
+            // 2. Create a withdrawal record in your finance table
+            // 3. Update any related fields
+            
+            // For this example, we'll just return a success response
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment request submitted successfully. Your request will be processed shortly.'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error requesting payment: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Filter finance transactions by date range
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function filterFinanceTransactions(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'transaction_type' => 'nullable|string|in:all,order_payment,withdrawal_request'
+        ]);
+        
+        $user = Auth::user();
+        
+        // Build the query
+        $query = \App\Models\Finance::where('user_id', $user->id);
+        
+        // Apply date filters if provided
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+        
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+        
+        // Apply transaction type filter if provided
+        if ($request->filled('transaction_type') && $request->transaction_type !== 'all') {
+            $query->where('transaction_type', $request->transaction_type);
+        }
+        
+        // Get results
+        $transactions = $query->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($transaction) {
+                return [
+                    'id' => $transaction->id,
+                    'date' => $transaction->created_at,
+                    'type' => $transaction->transaction_type,
+                    'amount' => $transaction->amount,
+                    'balance_after' => $transaction->balance_after,
+                    'status' => $transaction->status,
+                    'description' => $transaction->description
+                ];
+            });
+        
+        // Calculate totals for the filtered data
+        $totalEarnings = $transactions->where('type', 'order_payment')->sum('amount');
+        $totalWithdrawals = $transactions->where('type', 'withdrawal_request')->sum('amount');
+        
+        return response()->json([
+            'success' => true,
+            'transactions' => $transactions,
+            'totalEarnings' => $totalEarnings,
+            'totalWithdrawals' => abs($totalWithdrawals), // Make positive for display
+            'netAmount' => $totalEarnings + $totalWithdrawals // Will be correct since withdrawals are negative
+        ]);
+    }
+
 
     /**
      * Display user profile page

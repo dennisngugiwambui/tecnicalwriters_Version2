@@ -76,13 +76,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/writer/messages/search', [HomeController::class, 'searchMessages'])->name('writer.messages.search');
     
     // File upload routes
-    Route::get('/upload/modal/{orderId}', [UploadController::class, 'showUploadModal'])->name('upload.modal');
-    Route::post('/upload/file', [UploadController::class, 'uploadFile'])->name('upload.file');
-    Route::post('/upload/submit', [UploadController::class, 'submitFinalWork'])->name('upload.submit');
-    Route::delete('/upload/{uploadId}', [UploadController::class, 'deleteUpload'])->name('upload.delete');
-    Route::get('/upload/download/{uploadId}', [UploadController::class, 'downloadFile'])->name('upload.download');
+   // Route::get('/upload/modal/{orderId}', [UploadController::class, 'showUploadModal'])->name('upload.modal');
+   // Route::post('/upload/file', [UploadController::class, 'uploadFile'])->name('upload.file');
+    //Route::post('/upload/submit', [UploadController::class, 'submitFinalWork'])->name('upload.submit');
+    //Route::delete('/upload/{uploadId}', [UploadController::class, 'deleteUpload'])->name('upload.delete');
+   // Route::get('/upload/download/{uploadId}', [UploadController::class, 'downloadFile'])->name('upload.download');
 
 
+    //Route::get('/finance', [HomeController::class, 'userFinance'])->name('writer.finance');
+    Route::post('/finance/request-payment', [HomeController::class, 'requestPayment'])->name('finance.request-payment');
+    Route::post('/finance/withdraw', [HomeController::class, 'requestWithdrawal'])->name('writer.finance.withdraw');
+    Route::get('/finance/order/{id}', [HomeController::class, 'getOrderTransactions'])->name('writer.finance.order');
+    Route::post('/finance/filter', [HomeController::class, 'filterFinanceTransactions'])->name('writer.finance.filter');
     
     Route::post('/profile/update', [HomeController::class, 'ProfileUpdate'])->name('profile.update');
     Route::post('/profile/update-status', [HomeController::class, 'updateStatus'])->name('profile.update-status');
