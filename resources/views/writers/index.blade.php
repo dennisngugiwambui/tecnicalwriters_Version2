@@ -103,51 +103,22 @@
                 </button>
             </div>
 
-            <!-- Mobile View: Stacked -->
-            <div class="md:hidden space-y-4">
-                <!-- Search Bar -->
-                <div class="w-full">
-                    <input type="text" placeholder="Search orders..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" id="searchOrdersMobile">
-                </div>
-
-                <!-- Level Select -->
-                <div class="w-full">
-                    <select class="select2-basic w-full" id="levelSelectMobile">
-                        <option value="">All Levels</option>
-                        <option value="1">High School</option>
-                        <option value="1">Undegraduate</option>
-                        <option value="3">PostGraduate</option>
-                    </select>
-                </div>
-
-                <!-- Discipline Select -->
-                <div class="w-full">
-                    <select class="select2-basic w-full" id="disciplineSelectMobile">
-                        <option value="">All Disciplines</option>
-                        @foreach($availableOrders->pluck('discipline')->unique() as $discipline)
-                            <option value="{{ $discipline }}">{{ $discipline }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Checkboxes -->
-                <div class="flex flex-col space-y-2">
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" class="h-4 w-4 text-green-600 rounded border-gray-300 focus:ring-green-500">
-                        <span class="text-sm text-gray-600">Only Orders</span>
-                    </label>
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" class="h-4 w-4 text-green-600 rounded border-gray-300 focus:ring-green-500">
-                        <span class="text-sm text-gray-600">Only New</span>
-                    </label>
-                </div>
-
-                <!-- Search Button -->
-                <button class="w-full bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition shadow-md hover:shadow-lg flex items-center justify-center">
-                    <i class="fas fa-search mr-2"></i>Search
-                </button>
+           
+                    
             </div>
         </div>
+         <!-- Mobile View: Stacked -->
+
+                    <!-- Mobile Filter Toggle Button -->
+                    <div class="lg:hidden flex items-center justify-between mb-4">
+                        <button onclick="toggleMobileFilter()" class="flex items-center bg-green-500 text-white px-4 py-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2.586a1 1 0 01-.293.707l-3 3V14a1 1 0 01-.293.707l-3 3A1 1 0 019 17v-5.586l-3-3A1 1 0 015 6.586V4z" clip-rule="evenodd" />
+                            </svg>
+                            <span>Filters</span>
+                        </button>
+                        <button id="clearFilters" class="text-red-500 text-sm font-medium">Clear filters</button>
+                    </div>
     </div>
 
     <!-- Orders Grid -->
