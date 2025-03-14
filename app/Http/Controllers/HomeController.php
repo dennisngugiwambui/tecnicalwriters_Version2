@@ -114,6 +114,8 @@ class HomeController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
+        
         // Get IDs of orders the user has already bid on
         $biddedOrderIds = Bid::where('user_id', Auth::id())->pluck('order_id');
         
@@ -124,7 +126,24 @@ class HomeController extends Controller
             ->latest()
             ->get();
         
-        return view('writers.index', compact('availableOrders'));
+        // Get unique disciplines from available orders
+        $disciplines = $availableOrders->pluck('discipline')->unique()->filter()->values();
+        
+        // Get writer profile for subjects
+        $writerProfile = WriterProfile::where('user_id', $user->id)->first();
+        $userSubjects = $writerProfile ? $writerProfile->subjects : [];
+        
+        // Get all available subjects from the system
+        $allSubjects = [
+            'English Literature', 'History', 'Mathematics', 'Physics', 'Chemistry', 
+            'Biology', 'Computer Science', 'Economics', 'Business Studies', 'Psychology', 
+            'Sociology', 'Political Science', 'Philosophy', 'Law', 'Medicine', 
+            'Engineering', 'Architecture', 'Art & Design', 'Music', 'Film Studies',
+            'Media Studies', 'Communications', 'Journalism', 'Marketing', 'Management', 
+            'Finance', 'Accounting', 'Nursing', 'Education', 'Social Work'
+        ];
+        
+        return view('writers.index', compact('availableOrders', 'disciplines', 'userSubjects', 'allSubjects'));
     }
 
     /**

@@ -260,6 +260,17 @@
     $(document).ready(function() {
     // Initialize Select2
     $('.select2-basic').select2();
+
+    function toggleFilter() {
+        const filterContent = document.querySelector('#desktopFilter .grid');
+        filterContent.classList.toggle('hidden');
+        const button = document.querySelector('#desktopFilter button');
+        if (filterContent.classList.contains('hidden')) {
+            button.textContent = 'More options ▼';
+        } else {
+            button.textContent = 'Less options ▲';
+        }
+    }
     
     // Check window width to determine if mobile or desktop
     function checkWindowSize() {
