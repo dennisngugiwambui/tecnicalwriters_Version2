@@ -119,6 +119,41 @@
                         </button>
                         <button id="clearFilters" class="text-red-500 text-sm font-medium">Clear filters</button>
                     </div>
+
+                    <!-- Mobile Filter Modal -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 items-center justify-center" id="mobileFilter">
+        <div class="bg-white p-6 rounded-lg shadow w-11/12 max-w-md">
+            <div class="flex justify-between mb-4">
+                <h3 class="font-semibold">Filters</h3>
+                <button onclick="toggleMobileFilter()" class="text-gray-500">✖</button>
+            </div>
+            <form id="mobileFilterForm" method="GET" action="{{ route('finished') }}">
+                <div class="grid grid-cols-1 gap-4">
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" name="status[]" value="completed" class="form-checkbox text-green-500" {{ request()->has('status') && in_array('completed', request()->status) ? 'checked' : '' }} />
+                        <span>Completed</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" name="status[]" value="paid" class="form-checkbox text-green-500" {{ request()->has('status') && in_array('paid', request()->status) ? 'checked' : '' }} />
+                        <span>Paid</span>
+                    </label>
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" name="status[]" value="finished" class="form-checkbox text-green-500" {{ request()->has('status') && in_array('finished', request()->status) ? 'checked' : '' }} />
+                        <span>Finished</span>
+                    </label>
+                    
+                    <label class="block text-sm font-medium text-gray-700">Date Range</label>
+                    <input type="date" name="start_date" class="p-2 border rounded w-full" placeholder="Start Date" value="{{ request('start_date') }}" />
+                    <input type="date" name="end_date" class="p-2 border rounded w-full" placeholder="End Date" value="{{ request('end_date') }}" />
+                  
+                    <input type="text" name="order_id" class="p-2 border rounded w-full" placeholder="Order ID" value="{{ request('order_id') }}" />
+                    <input type="text" name="topic" class="p-2 border rounded w-full" placeholder="Topic Title" value="{{ request('topic') }}" />
+                </div>
+                <button type="submit" class="mt-4 p-2 bg-green-500 text-white rounded flex items-center justify-center w-full">
+                    <span class="mr-2 hidden lg:inline">🔍</span> Search
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- Orders Grid -->
