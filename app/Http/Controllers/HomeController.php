@@ -108,43 +108,43 @@ class HomeController extends Controller
     }
 
     /**
-     * Show the application dashboard.
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
-     */
-    public function index()
-    {
-        $user = Auth::user();
-        
-        // Get IDs of orders the user has already bid on
-        $biddedOrderIds = Bid::where('user_id', Auth::id())->pluck('order_id');
-        
-        // Get available orders excluding those the user has already bid on
-        $availableOrders = Order::where('status', Order::STATUS_AVAILABLE)
-            ->whereNotIn('id', $biddedOrderIds)
-            ->with(['files', 'client', 'bids'])
-            ->latest()
-            ->get();
-        
-        // Get unique disciplines from available orders
-        $disciplines = $availableOrders->pluck('discipline')->unique()->filter()->values();
-        
-        // Get writer profile for subjects
-        $writerProfile = WriterProfile::where('user_id', $user->id)->first();
-        $userSubjects = $writerProfile ? $writerProfile->subjects : [];
-        
-        // Get all available subjects from the system
-        $allSubjects = [
-            'English Literature', 'History', 'Mathematics', 'Physics', 'Chemistry', 
-            'Biology', 'Computer Science', 'Economics', 'Business Studies', 'Psychology', 
-            'Sociology', 'Political Science', 'Philosophy', 'Law', 'Medicine', 
-            'Engineering', 'Architecture', 'Art & Design', 'Music', 'Film Studies',
-            'Media Studies', 'Communications', 'Journalism', 'Marketing', 'Management', 
-            'Finance', 'Accounting', 'Nursing', 'Education', 'Social Work'
-        ];
-        
-        return view('writers.index', compact('availableOrders', 'disciplines', 'userSubjects', 'allSubjects'));
-    }
+ * Show the application dashboard.
+ *
+ * @return \Illuminate\Contracts\Support\Renderable
+ */
+public function index()
+{
+    $user = Auth::user();
+    
+    // Get IDs of orders the user has already bid on
+    $biddedOrderIds = Bid::where('user_id', Auth::id())->pluck('order_id');
+    
+    // Get available orders excluding those the user has already bid on
+    $availableOrders = Order::where('status', Order::STATUS_AVAILABLE)
+        ->whereNotIn('id', $biddedOrderIds)
+        ->with(['files', 'client', 'bids'])
+        ->latest()
+        ->get();
+    
+    // Get unique disciplines from available orders
+    $disciplines = $availableOrders->pluck('discipline')->unique()->filter()->values();
+    
+    // Get writer profile for subjects
+    $writerProfile = WriterProfile::where('user_id', $user->id)->first();
+    $userSubjects = $writerProfile ? $writerProfile->subjects : [];
+    
+    // Get all available subjects from the system
+    $allSubjects = [
+        'English Literature', 'History', 'Mathematics', 'Physics', 'Chemistry', 
+        'Biology', 'Computer Science', 'Economics', 'Business Studies', 'Psychology', 
+        'Sociology', 'Political Science', 'Philosophy', 'Law', 'Medicine', 
+        'Engineering', 'Architecture', 'Art & Design', 'Music', 'Film Studies',
+        'Media Studies', 'Communications', 'Journalism', 'Marketing', 'Management', 
+        'Finance', 'Accounting', 'Nursing', 'Education', 'Social Work'
+    ];
+    
+    return view('writers.index', compact('availableOrders', 'disciplines', 'userSubjects', 'allSubjects'));
+}
 
     /**
      * Display current orders - split between active (CONFIRMED/UNCONFIRMED) and completed (DONE/DELIVERED)
@@ -1411,9 +1411,493 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-    public function statistics()
+    /**
+     * Display user statistics dashboard
+     *
+     * @param Request $request
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+    public function statistics(Request $request)
     {
-        return view('writers.statistics');
+        $user = Auth::user();
+        
+        // Load writer profile
+        $user->load('writerProfile');
+        
+        // Calculate writer tenure
+        $registrationDate = $user->created_at;
+        $now = Carbon::now();
+        $diffInMonths = $registrationDate->diffInMonths($now);
+        $years = floor($diffInMonths / 12);
+        $months = $diffInMonths % 12;
+        
+        // Format registration date for display
+        $formattedRegistrationDate = $registrationDate->format('M Y');
+        
+        // Get total completed orders lifetime
+        $totalLifetimeOrders = Order::where('writer_id', $user->id)
+            ->whereIn('status', [
+                Order::STATUS_COMPLETED,
+                Order::STATUS_PAID,
+                Order::STATUS_FINISHED
+            ])
+            ->count();
+        
+        // Get default date range (last 30 days)
+        $endDate = Carbon::now();
+        $startDate = Carbon::now()->subDays(30);
+        
+        // If request has date parameters, use them instead
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $startDate = Carbon::parse($request->start_date);
+            $endDate = Carbon::parse($request->end_date)->endOfDay();
+        }
+        
+        // Get recent completed orders
+        $completedOrders = Order::where('writer_id', $user->id)
+            ->whereIn('status', [
+                Order::STATUS_COMPLETED,
+                Order::STATUS_PAID,
+                Order::STATUS_FINISHED
+            ])
+            ->whereBetween('updated_at', [$startDate, $endDate])
+            ->get();
+        
+        // Get top disciplines from completed orders
+        $disciplineCount = [];
+        foreach ($completedOrders as $order) {
+            if (!empty($order->discipline)) {
+                if (!isset($disciplineCount[$order->discipline])) {
+                    $disciplineCount[$order->discipline] = 0;
+                }
+                $disciplineCount[$order->discipline]++;
+            }
+        }
+        
+        // Sort disciplines by count and take top 10
+        arsort($disciplineCount);
+        $topDisciplines = array_slice($disciplineCount, 0, 10, true);
+        
+        $totalOrders = $completedOrders->count();
+        
+        // Calculate statistics for completed orders
+        $totalCompletedOrders = $completedOrders->count();
+        $totalPages = $completedOrders->sum('task_size');
+        
+        // Calculate late orders (where deadline is before completion date)
+        $totalLateOrders = $completedOrders->filter(function($order) {
+            return $order->deadline && $order->updated_at && $order->deadline < $order->updated_at;
+        })->count();
+        
+        // Get dispute orders
+        $totalDisputes = Order::where('writer_id', $user->id)
+            ->where('status', Order::STATUS_DISPUTE)
+            ->whereBetween('updated_at', [$startDate, $endDate])
+            ->count();
+        
+        // Calculate percentages
+        $latenessPercentage = $totalCompletedOrders > 0 ? round(($totalLateOrders / $totalCompletedOrders) * 100, 1) : 0;
+        $disputesPercentage = $totalCompletedOrders > 0 ? round(($totalDisputes / $totalCompletedOrders) * 100, 1) : 0;
+        
+        // Get monthly statistics for chart
+        $monthlyData = $this->getMonthlyOrdersData($user->id, $startDate, $endDate);
+        
+        // Calculate writer rating
+        $writerRating = $this->calculateWriterRating($user);
+        
+        return view('writers.statistics', [
+            'user' => $user,
+            'years' => $years,
+            'months' => $months,
+            'registrationDate' => $formattedRegistrationDate,
+            'totalLifetimeOrders' => $totalLifetimeOrders,
+            'topDisciplines' => $topDisciplines,
+            'totalOrders' => $totalOrders,
+            'totalCompletedOrders' => $totalCompletedOrders,
+            'totalPages' => $totalPages,
+            'totalLateOrders' => $totalLateOrders,
+            'totalDisputes' => $totalDisputes,
+            'latenessPercentage' => $latenessPercentage,
+            'disputesPercentage' => $disputesPercentage,
+            'monthlyData' => $monthlyData,
+            'startDate' => $startDate->format('Y-m-d'),
+            'endDate' => $endDate->format('Y-m-d'),
+            'currentRating' => $writerRating['currentRating'],
+            'possibleRating' => $writerRating['possibleRating'],
+            'qualityLevel' => $writerRating['qualityLevel'],
+            'possibleQualityLevel' => $writerRating['possibleQualityLevel'],
+            'workDuration' => $writerRating['workDuration'],
+            'disputeCount' => $writerRating['disputeCount'],
+            'possibleDisputeCount' => $writerRating['possibleDisputeCount'],
+            'latenessCount' => $writerRating['latenessCount'],
+            'possibleLatenessCount' => $writerRating['possibleLatenessCount'],
+            'requestCount' => $writerRating['requestCount'],
+            'possibleRequestCount' => $writerRating['possibleRequestCount']
+        ]);
+    }
+
+    /**
+     * Get monthly orders statistics
+     *
+     * @param int $writerId
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @return array
+     */
+    private function getMonthlyOrdersData($writerId, $startDate, $endDate)
+    {
+        // Create a period from start date to end date by months
+        $period = new \DatePeriod(
+            $startDate->copy()->startOfMonth(),
+            new \DateInterval('P1M'),
+            $endDate->copy()->endOfMonth()->modify('+1 day')
+        );
+        
+        $monthlyData = [];
+        
+        foreach ($period as $date) {
+            $monthStart = $date->format('Y-m-01');
+            $monthEnd = $date->format('Y-m-t');
+            
+            // Get orders for this month
+            $orders = Order::where('writer_id', $writerId)
+                ->whereIn('status', [
+                    Order::STATUS_COMPLETED,
+                    Order::STATUS_PAID,
+                    Order::STATUS_FINISHED
+                ])
+                ->whereBetween('updated_at', [$monthStart, $monthEnd])
+                ->get();
+            
+            // Count late orders
+            $lateOrders = $orders->filter(function($order) {
+                return $order->deadline && $order->updated_at && $order->deadline < $order->updated_at;
+            })->count();
+            
+            // Count disputes
+            $disputes = Order::where('writer_id', $writerId)
+                ->where('status', Order::STATUS_DISPUTE)
+                ->whereBetween('updated_at', [$monthStart, $monthEnd])
+                ->count();
+            
+            $monthlyData[] = [
+                'month' => $date->format('M Y'),
+                'orders' => $orders->count(),
+                'pages' => $orders->sum('task_size'),
+                'late_orders' => $lateOrders,
+                'disputes' => $disputes
+            ];
+        }
+        
+        return $monthlyData;
+    }
+
+    /**
+     * Calculate writer's rating
+     *
+     * @param User $user
+     * @return array
+     */
+    private function calculateWriterRating($user)
+    {
+        // Work duration points
+        $monthsWorking = Carbon::parse($user->created_at)->diffInMonths(Carbon::now());
+        $workDurationPoints = 0;
+        
+        if ($monthsWorking >= 18) {
+            $workDurationPoints = 20;
+        } elseif ($monthsWorking >= 13) {
+            $workDurationPoints = 15;
+        } elseif ($monthsWorking >= 9) {
+            $workDurationPoints = 10;
+        } elseif ($monthsWorking >= 5) {
+            $workDurationPoints = 5;
+        }
+        
+        // Last 3 months period
+        $lastThreeMonths = Carbon::now()->subMonths(3);
+        
+        // Get completed orders in last 3 months
+        $recentOrders = Order::where('writer_id', $user->id)
+            ->whereIn('status', [
+                Order::STATUS_COMPLETED,
+                Order::STATUS_PAID,
+                Order::STATUS_FINISHED
+            ])
+            ->where('updated_at', '>=', $lastThreeMonths)
+            ->get();
+        
+        // Count late orders by comparing deadline with completion date
+        $lateOrdersCount = $recentOrders->filter(function($order) {
+            return $order->deadline && $order->updated_at && $order->deadline < $order->updated_at;
+        })->count();
+        
+        $latenessPoints = 0;
+        if ($lateOrdersCount === 0) {
+            $latenessPoints = 20;
+        } elseif ($lateOrdersCount === 1) {
+            $latenessPoints = 10;
+        }
+        
+        // Disputes count (last 3 months)
+        $disputesCount = Order::where('writer_id', $user->id)
+            ->where('status', Order::STATUS_DISPUTE)
+            ->where('updated_at', '>=', $lastThreeMonths)
+            ->count();
+        
+        $disputesPoints = 0;
+        if ($disputesCount === 0) {
+            $disputesPoints = 20;
+        } elseif ($disputesCount === 1) {
+            $disputesPoints = 10;
+        }
+        
+        // Request count - check for repeat clients as a proxy for requests
+        $clientIds = $recentOrders->pluck('client_id')->toArray();
+        $repeatClientCounts = array_count_values(array_filter($clientIds)); // Filter out null values
+        $requestCount = count(array_filter($repeatClientCounts, function($count) {
+            return $count > 1; // Client has ordered more than once from this writer
+        }));
+        
+        $requestPoints = 0;
+        if ($requestCount >= 3) {
+            $requestPoints = 20;
+        } elseif ($requestCount === 2) {
+            $requestPoints = 10;
+        } elseif ($requestCount === 1) {
+            $requestPoints = 5;
+        }
+        
+        // Quality level from writer profile or default
+        $qualityLevel = $user->writerProfile->quality_level ?? 'Undergrad. (yrs. 3-4) B';
+        
+        // Map quality level to points (will use a more detailed approach in production)
+        $levelPoints = [
+            'High School D' => 0,
+            'High School C' => 10,
+            'High School B' => 20,
+            'High School A' => 30,
+            'Undergrad. (yrs. 1-2) D' => 10,
+            'Undergrad. (yrs. 1-2) C' => 20,
+            'Undergrad. (yrs. 1-2) B' => 30,
+            'Undergrad. (yrs. 1-2) A' => 40,
+            'Undergrad. (yrs. 3-4) D' => 40,
+            'Undergrad. (yrs. 3-4) C' => 50,
+            'Undergrad. (yrs. 3-4) B' => 60,
+            'Undergrad. (yrs. 3-4) A' => 70,
+            'Graduate D' => 60,
+            'Graduate C' => 70,
+            'Graduate B' => 80,
+            'Graduate A' => 90,
+            'PhD D' => 70,
+            'PhD C' => 80,
+            'PhD B' => 90,
+            'PhD A' => 100,
+        ];
+        
+        $qualityPoints = $levelPoints[$qualityLevel] ?? 60; // Default to Undergrad 3-4 B if not found
+        
+        // Calculate total rating
+        $totalPoints = $qualityPoints + $workDurationPoints + $disputesPoints + $requestPoints + $latenessPoints;
+        $currentRating = $totalPoints; // Max is 100
+        
+        // Calculate possible rating (with optimal performance)
+        $possibleQualityLevel = $qualityLevel; // Quality level stays the same
+        $possibleDisputeCount = 0;
+        $possibleLatenessCount = 0;
+        $possibleRequestCount = 3; // Optimal is 3+
+        
+        $possibleDisputesPoints = 20; // 0 disputes
+        $possibleLatenessPoints = 20; // 0 lateness
+        $possibleRequestsPoints = 20; // 3+ requests
+        
+        $possibleTotalPoints = $qualityPoints + $workDurationPoints + $possibleDisputesPoints + $possibleRequestsPoints + $possibleLatenessPoints;
+        $possibleRating = $possibleTotalPoints; // Max is 100
+        
+        return [
+            'currentRating' => $currentRating,
+            'possibleRating' => $possibleRating,
+            'qualityLevel' => $qualityLevel,
+            'possibleQualityLevel' => $possibleQualityLevel,
+            'workDuration' => $monthsWorking,
+            'disputeCount' => $disputesCount,
+            'possibleDisputeCount' => $possibleDisputeCount,
+            'latenessCount' => $lateOrdersCount,
+            'possibleLatenessCount' => $possibleLatenessCount,
+            'requestCount' => $requestCount,
+            'possibleRequestCount' => $possibleRequestCount
+        ];
+    }
+
+    /**
+     * Get disciplines statistics as JSON for AJAX requests
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getDisciplinesStats(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+        
+        $startDate = Carbon::parse($request->start_date)->startOfDay();
+        $endDate = Carbon::parse($request->end_date)->endOfDay();
+        
+        // Get completed orders for the date range
+        $completedOrders = Order::where('writer_id', Auth::id())
+            ->whereIn('status', [
+                Order::STATUS_COMPLETED,
+                Order::STATUS_PAID,
+                Order::STATUS_FINISHED
+            ])
+            ->whereBetween('updated_at', [$startDate, $endDate])
+            ->get();
+        
+        // Group orders by discipline
+        $disciplines = [];
+        
+        // Count disciplines
+        $disciplineCount = [];
+        foreach ($completedOrders as $order) {
+            if (!empty($order->discipline)) {
+                if (!isset($disciplineCount[$order->discipline])) {
+                    $disciplineCount[$order->discipline] = 0;
+                }
+                $disciplineCount[$order->discipline]++;
+            }
+        }
+        
+        // Format data for response
+        foreach ($disciplineCount as $discipline => $count) {
+            $disciplines[] = [
+                'discipline' => $discipline,
+                'count' => $count
+            ];
+        }
+        
+        // Sort by count (highest first) and take top 10
+        usort($disciplines, function($a, $b) {
+            return $b['count'] - $a['count'];
+        });
+        
+        $disciplines = array_slice($disciplines, 0, 10);
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'disciplines' => $disciplines,
+                'total_orders' => $completedOrders->count()
+            ]
+        ]);
+    }
+
+    /**
+     * Get orders statistics as JSON for AJAX requests
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getOrdersStats(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'chart_type' => 'nullable|in:orders,pages,lateness,disputes',
+        ]);
+        
+        $startDate = Carbon::parse($request->start_date)->startOfDay();
+        $endDate = Carbon::parse($request->end_date)->endOfDay();
+        $chartType = $request->chart_type ?? 'orders';
+        
+        // Get monthly data
+        $monthlyData = $this->getMonthlyOrdersData(Auth::id(), $startDate, $endDate);
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'months' => $monthlyData,
+                'chart_type' => $chartType
+            ]
+        ]);
+    }
+
+    /**
+     * Get subjects distribution from writer profile
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getSubjectsDistribution(Request $request)
+    {
+        $user = Auth::user();
+        $writerProfile = $user->writerProfile;
+        
+        // Get subjects from writer profile
+        $subjects = [];
+        if ($writerProfile && $writerProfile->subjects) {
+            $subjects = $writerProfile->subjects;
+            
+            // If subjects is stored as a JSON string, decode it
+            if (is_string($subjects)) {
+                $subjects = json_decode($subjects, true) ?: [];
+            }
+        }
+        
+        if (empty($subjects)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No subjects found in writer profile'
+            ]);
+        }
+        
+        // Get all completed orders
+        $completedOrders = Order::where('writer_id', $user->id)
+            ->whereIn('status', [
+                Order::STATUS_COMPLETED,
+                Order::STATUS_PAID,
+                Order::STATUS_FINISHED
+            ])
+            ->get();
+        
+        // Initialize subject counts
+        $subjectCounts = array_fill_keys($subjects, 0);
+        
+        // Count orders by subject
+        foreach ($completedOrders as $order) {
+            if (empty($order->discipline)) continue;
+            
+            $orderDiscipline = strtolower($order->discipline);
+            foreach ($subjects as $subject) {
+                if (strpos($orderDiscipline, strtolower($subject)) !== false) {
+                    $subjectCounts[$subject]++;
+                    break; // Count each order only once
+                }
+            }
+        }
+        
+        // Format data for response
+        $formattedSubjects = [];
+        foreach ($subjectCounts as $subject => $count) {
+            $formattedSubjects[] = [
+                'subject' => $subject,
+                'count' => $count
+            ];
+        }
+        
+        // Sort by count (highest first)
+        usort($formattedSubjects, function($a, $b) {
+            return $b['count'] - $a['count'];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'subjects' => $formattedSubjects,
+                'total_orders' => $completedOrders->count()
+            ]
+        ]);
     }
     
     /**

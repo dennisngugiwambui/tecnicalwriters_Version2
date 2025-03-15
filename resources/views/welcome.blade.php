@@ -1,60 +1,876 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-
-        <title>Laravel</title>
-
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
-       
-            <style>
-                /* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,:before,:after{--tw-border-spacing-x: 0;--tw-border-spacing-y: 0;--tw-translate-x: 0;--tw-translate-y: 0;--tw-rotate: 0;--tw-skew-x: 0;--tw-skew-y: 0;--tw-scale-x: 1;--tw-scale-y: 1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness: proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width: 0px;--tw-ring-offset-color: #fff;--tw-ring-color: rgb(59 130 246 / .5);--tw-ring-offset-shadow: 0 0 #0000;--tw-ring-shadow: 0 0 #0000;--tw-shadow: 0 0 #0000;--tw-shadow-colored: 0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x: 0;--tw-border-spacing-y: 0;--tw-translate-x: 0;--tw-translate-y: 0;--tw-rotate: 0;--tw-skew-x: 0;--tw-skew-y: 0;--tw-scale-x: 1;--tw-scale-y: 1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness: proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width: 0px;--tw-ring-offset-color: #fff;--tw-ring-color: rgb(59 130 246 / .5);--tw-ring-offset-shadow: 0 0 #0000;--tw-ring-shadow: 0 0 #0000;--tw-shadow: 0 0 #0000;--tw-shadow-colored: 0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }*,:before,:after{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}:before,:after{--tw-content: ""}html,:host{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:Figtree,ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,samp,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dl,dd,h1,h2,h3,h4,h5,h6,hr,figure,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}ol,ul,menu{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}button,[role=button]{cursor:pointer}:disabled{cursor:default}img,svg,video,canvas,audio,iframe,embed,object{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.absolute{position:absolute}.relative{position:relative}.-bottom-16{bottom:-4rem}.-left-16{left:-4rem}.-left-20{left:-5rem}.top-0{top:0}.z-0{z-index:0}.\!row-span-1{grid-row:span 1 / span 1!important}.-mx-3{margin-left:-.75rem;margin-right:-.75rem}.-ml-px{margin-left:-1px}.ml-3{margin-left:.75rem}.mt-4{margin-top:1rem}.mt-6{margin-top:1.5rem}.flex{display:flex}.inline-flex{display:inline-flex}.table{display:table}.grid{display:grid}.\!hidden{display:none!important}.hidden{display:none}.aspect-video{aspect-ratio:16 / 9}.size-12{width:3rem;height:3rem}.size-5{width:1.25rem;height:1.25rem}.size-6{width:1.5rem;height:1.5rem}.h-12{height:3rem}.h-40{height:10rem}.h-5{height:1.25rem}.h-full{height:100%}.min-h-screen{min-height:100vh}.w-5{width:1.25rem}.w-\[calc\(100\%_\+_8rem\)\]{width:calc(100% + 8rem)}.w-auto{width:auto}.w-full{width:100%}.max-w-2xl{max-width:42rem}.max-w-\[877px\]{max-width:877px}.flex-1{flex:1 1 0%}.shrink-0{flex-shrink:0}.transform{transform:translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rotate)) skew(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-default{cursor:default}.resize{resize:both}.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.\!flex-row{flex-direction:row!important}.flex-col{flex-direction:column}.items-start{align-items:flex-start}.items-center{align-items:center}.items-stretch{align-items:stretch}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.justify-items-center{justify-items:center}.gap-2{gap:.5rem}.gap-4{gap:1rem}.gap-6{gap:1.5rem}.self-center{align-self:center}.overflow-hidden{overflow:hidden}.rounded-\[10px\]{border-radius:10px}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:.5rem}.rounded-md{border-radius:.375rem}.rounded-sm{border-radius:.125rem}.rounded-l-md{border-top-left-radius:.375rem;border-bottom-left-radius:.375rem}.rounded-r-md{border-top-right-radius:.375rem;border-bottom-right-radius:.375rem}.border{border-width:1px}.border-gray-300{--tw-border-opacity: 1;border-color:rgb(209 213 219 / var(--tw-border-opacity, 1))}.bg-\[\#FF2D20\]\/10{background-color:#ff2d201a}.bg-gray-50{--tw-bg-opacity: 1;background-color:rgb(249 250 251 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity: 1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-gradient-to-b{background-image:linear-gradient(to bottom,var(--tw-gradient-stops))}.from-transparent{--tw-gradient-from: transparent var(--tw-gradient-from-position);--tw-gradient-to: rgb(0 0 0 / 0) var(--tw-gradient-to-position);--tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to)}.via-white{--tw-gradient-to: rgb(255 255 255 / 0) var(--tw-gradient-to-position);--tw-gradient-stops: var(--tw-gradient-from), #fff var(--tw-gradient-via-position), var(--tw-gradient-to)}.to-white{--tw-gradient-to: #fff var(--tw-gradient-to-position)}.to-zinc-900{--tw-gradient-to: #18181b var(--tw-gradient-to-position)}.stroke-\[\#FF2D20\]{stroke:#ff2d20}.object-cover{-o-object-fit:cover;object-fit:cover}.object-top{-o-object-position:top;object-position:top}.p-6{padding:1.5rem}.px-2{padding-left:.5rem;padding-right:.5rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-10{padding-top:2.5rem;padding-bottom:2.5rem}.py-16{padding-top:4rem;padding-bottom:4rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.pt-3{padding-top:.75rem}.text-center{text-align:center}.font-sans{font-family:Figtree,ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji"}.text-sm{font-size:.875rem;line-height:1.25rem}.text-sm\/relaxed{font-size:.875rem;line-height:1.625}.text-xl{font-size:1.25rem;line-height:1.75rem}.font-medium{font-weight:500}.font-semibold{font-weight:600}.leading-5{line-height:1.25rem}.text-black{--tw-text-opacity: 1;color:rgb(0 0 0 / var(--tw-text-opacity, 1))}.text-black\/50{color:#00000080}.text-gray-500{--tw-text-opacity: 1;color:rgb(107 114 128 / var(--tw-text-opacity, 1))}.text-gray-700{--tw-text-opacity: 1;color:rgb(55 65 81 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity: 1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.underline{text-decoration-line:underline}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.shadow-\[0px_14px_34px_0px_rgba\(0\,0\,0\,0\.08\)\]{--tw-shadow: 0px 14px 34px 0px rgba(0,0,0,.08);--tw-shadow-colored: 0px 14px 34px 0px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000),var(--tw-ring-shadow, 0 0 #0000),var(--tw-shadow)}.shadow-sm{--tw-shadow: 0 1px 2px 0 rgb(0 0 0 / .05);--tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000),var(--tw-ring-shadow, 0 0 #0000),var(--tw-shadow)}.ring-1{--tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow, 0 0 #0000)}.ring-black{--tw-ring-opacity: 1;--tw-ring-color: rgb(0 0 0 / var(--tw-ring-opacity, 1))}.ring-gray-300{--tw-ring-opacity: 1;--tw-ring-color: rgb(209 213 219 / var(--tw-ring-opacity, 1))}.ring-transparent{--tw-ring-color: transparent}.ring-white{--tw-ring-opacity: 1;--tw-ring-color: rgb(255 255 255 / var(--tw-ring-opacity, 1))}.ring-white\/\[0\.05\]{--tw-ring-color: rgb(255 255 255 / .05)}.drop-shadow-\[0px_4px_34px_rgba\(0\,0\,0\,0\.06\)\]{--tw-drop-shadow: drop-shadow(0px 4px 34px rgba(0,0,0,.06));filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.drop-shadow-\[0px_4px_34px_rgba\(0\,0\,0\,0\.25\)\]{--tw-drop-shadow: drop-shadow(0px 4px 34px rgba(0,0,0,.25));filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.transition{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,-webkit-backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter,-webkit-backdrop-filter;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.duration-150{transition-duration:.15s}.duration-300{transition-duration:.3s}.ease-in-out{transition-timing-function:cubic-bezier(.4,0,.2,1)}.selection\:bg-\[\#FF2D20\] *::-moz-selection{--tw-bg-opacity: 1;background-color:rgb(255 45 32 / var(--tw-bg-opacity, 1))}.selection\:bg-\[\#FF2D20\] *::selection{--tw-bg-opacity: 1;background-color:rgb(255 45 32 / var(--tw-bg-opacity, 1))}.selection\:text-white *::-moz-selection{--tw-text-opacity: 1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.selection\:text-white *::selection{--tw-text-opacity: 1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.selection\:bg-\[\#FF2D20\]::-moz-selection{--tw-bg-opacity: 1;background-color:rgb(255 45 32 / var(--tw-bg-opacity, 1))}.selection\:bg-\[\#FF2D20\]::selection{--tw-bg-opacity: 1;background-color:rgb(255 45 32 / var(--tw-bg-opacity, 1))}.selection\:text-white::-moz-selection{--tw-text-opacity: 1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.selection\:text-white::selection{--tw-text-opacity: 1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.hover\:text-black:hover{--tw-text-opacity: 1;color:rgb(0 0 0 / var(--tw-text-opacity, 1))}.hover\:text-black\/70:hover{color:#000000b3}.hover\:text-gray-400:hover{--tw-text-opacity: 1;color:rgb(156 163 175 / var(--tw-text-opacity, 1))}.hover\:text-gray-500:hover{--tw-text-opacity: 1;color:rgb(107 114 128 / var(--tw-text-opacity, 1))}.hover\:ring-black\/20:hover{--tw-ring-color: rgb(0 0 0 / .2)}.focus\:z-10:focus{z-index:10}.focus\:border-blue-300:focus{--tw-border-opacity: 1;border-color:rgb(147 197 253 / var(--tw-border-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.focus\:ring:focus{--tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow, 0 0 #0000)}.focus-visible\:ring-1:focus-visible{--tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow, 0 0 #0000)}.focus-visible\:ring-\[\#FF2D20\]:focus-visible{--tw-ring-opacity: 1;--tw-ring-color: rgb(255 45 32 / var(--tw-ring-opacity, 1))}.active\:bg-gray-100:active{--tw-bg-opacity: 1;background-color:rgb(243 244 246 / var(--tw-bg-opacity, 1))}.active\:text-gray-500:active{--tw-text-opacity: 1;color:rgb(107 114 128 / var(--tw-text-opacity, 1))}.active\:text-gray-700:active{--tw-text-opacity: 1;color:rgb(55 65 81 / var(--tw-text-opacity, 1))}@media (min-width: 640px){.sm\:flex{display:flex}.sm\:hidden{display:none}.sm\:size-16{width:4rem;height:4rem}.sm\:size-6{width:1.5rem;height:1.5rem}.sm\:flex-1{flex:1 1 0%}.sm\:items-center{align-items:center}.sm\:justify-between{justify-content:space-between}.sm\:pt-5{padding-top:1.25rem}}@media (min-width: 768px){.md\:row-span-3{grid-row:span 3 / span 3}}@media (min-width: 1024px){.lg\:col-start-2{grid-column-start:2}.lg\:h-16{height:4rem}.lg\:max-w-7xl{max-width:80rem}.lg\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.lg\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.lg\:flex-col{flex-direction:column}.lg\:items-end{align-items:flex-end}.lg\:justify-center{justify-content:center}.lg\:gap-8{gap:2rem}.lg\:p-10{padding:2.5rem}.lg\:pb-10{padding-bottom:2.5rem}.lg\:pt-0{padding-top:0}.lg\:text-\[\#FF2D20\]{--tw-text-opacity: 1;color:rgb(255 45 32 / var(--tw-text-opacity, 1))}}.rtl\:flex-row-reverse:where([dir=rtl],[dir=rtl] *){flex-direction:row-reverse}@media (prefers-color-scheme: dark){.dark\:block{display:block}.dark\:hidden{display:none}.dark\:border-gray-600{--tw-border-opacity: 1;border-color:rgb(75 85 99 / var(--tw-border-opacity, 1))}.dark\:bg-black{--tw-bg-opacity: 1;background-color:rgb(0 0 0 / var(--tw-bg-opacity, 1))}.dark\:bg-gray-800{--tw-bg-opacity: 1;background-color:rgb(31 41 55 / var(--tw-bg-opacity, 1))}.dark\:bg-zinc-900{--tw-bg-opacity: 1;background-color:rgb(24 24 27 / var(--tw-bg-opacity, 1))}.dark\:via-zinc-900{--tw-gradient-to: rgb(24 24 27 / 0) var(--tw-gradient-to-position);--tw-gradient-stops: var(--tw-gradient-from), #18181b var(--tw-gradient-via-position), var(--tw-gradient-to)}.dark\:to-zinc-900{--tw-gradient-to: #18181b var(--tw-gradient-to-position)}.dark\:text-gray-300{--tw-text-opacity: 1;color:rgb(209 213 219 / var(--tw-text-opacity, 1))}.dark\:text-gray-400{--tw-text-opacity: 1;color:rgb(156 163 175 / var(--tw-text-opacity, 1))}.dark\:text-gray-600{--tw-text-opacity: 1;color:rgb(75 85 99 / var(--tw-text-opacity, 1))}.dark\:text-white{--tw-text-opacity: 1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.dark\:text-white\/50{color:#ffffff80}.dark\:text-white\/70{color:#ffffffb3}.dark\:ring-zinc-800{--tw-ring-opacity: 1;--tw-ring-color: rgb(39 39 42 / var(--tw-ring-opacity, 1))}.dark\:hover\:text-gray-300:hover{--tw-text-opacity: 1;color:rgb(209 213 219 / var(--tw-text-opacity, 1))}.dark\:hover\:text-white:hover{--tw-text-opacity: 1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.dark\:hover\:text-white\/70:hover{color:#ffffffb3}.dark\:hover\:text-white\/80:hover{color:#fffc}.dark\:hover\:ring-zinc-700:hover{--tw-ring-opacity: 1;--tw-ring-color: rgb(63 63 70 / var(--tw-ring-opacity, 1))}.dark\:focus\:border-blue-700:focus{--tw-border-opacity: 1;border-color:rgb(29 78 216 / var(--tw-border-opacity, 1))}.dark\:focus\:border-blue-800:focus{--tw-border-opacity: 1;border-color:rgb(30 64 175 / var(--tw-border-opacity, 1))}.dark\:focus-visible\:ring-\[\#FF2D20\]:focus-visible{--tw-ring-opacity: 1;--tw-ring-color: rgb(255 45 32 / var(--tw-ring-opacity, 1))}.dark\:focus-visible\:ring-white:focus-visible{--tw-ring-opacity: 1;--tw-ring-color: rgb(255 255 255 / var(--tw-ring-opacity, 1))}.dark\:active\:bg-gray-700:active{--tw-bg-opacity: 1;background-color:rgb(55 65 81 / var(--tw-bg-opacity, 1))}.dark\:active\:text-gray-300:active{--tw-text-opacity: 1;color:rgb(209 213 219 / var(--tw-text-opacity, 1))}}
-            </style>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Writers - Expert Academic Writing Services</title>
+    <meta name="description" content="Join our community of expert writers dedicated to delivering high-quality, original content that helps clients achieve academic and professional excellence.">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="icon" type="image/jpeg" href="writers/technicalwriters2.jpg">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ asset('writers/favicon.svg') }}">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
         
-    </head>
-    <body class="font-sans antialiased dark:bg-black dark:text-white/50">
-        <div class="bg-gray-50 text-black/50 dark:bg-black dark:text-white/50">
-            <img id="background" class="absolute -left-20 top-0 max-w-[877px]" src="https://laravel.com/assets/img/welcome/background.svg" alt="Laravel background" />
-            <div class="relative min-h-screen flex flex-col items-center justify-center selection:bg-[#FF2D20] selection:text-white">
-                <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
-                    <header class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3">
-                        <div class="flex lg:justify-center lg:col-start-2">
-                            <svg class="h-12 w-auto text-white lg:h-16 lg:text-[#FF2D20]" viewBox="0 0 62 65" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M61.8548 14.6253C61.8778 14.7102 61.8895 14.7978 61.8897 14.8858V28.5615C61.8898 28.737 61.8434 28.9095 61.7554 29.0614C61.6675 29.2132 61.5409 29.3392 61.3887 29.4265L49.9104 36.0351V49.1337C49.9104 49.4902 49.7209 49.8192 49.4118 49.9987L25.4519 63.7916C25.3971 63.8227 25.3372 63.8427 25.2774 63.8639C25.255 63.8714 25.2338 63.8851 25.2101 63.8913C25.0426 63.9354 24.8666 63.9354 24.6991 63.8913C24.6716 63.8838 24.6467 63.8689 24.6205 63.8589C24.5657 63.8389 24.5084 63.8215 24.456 63.7916L0.501061 49.9987C0.348882 49.9113 0.222437 49.7853 0.134469 49.6334C0.0465019 49.4816 0.000120578 49.3092 0 49.1337L0 8.10652C0 8.01678 0.0124642 7.92953 0.0348998 7.84477C0.0423783 7.8161 0.0598282 7.78993 0.0697995 7.76126C0.0884958 7.70891 0.105946 7.65531 0.133367 7.6067C0.152063 7.5743 0.179485 7.54812 0.20192 7.51821C0.230588 7.47832 0.256763 7.43719 0.290416 7.40229C0.319084 7.37362 0.356476 7.35243 0.388883 7.32751C0.425029 7.29759 0.457436 7.26518 0.498568 7.2415L12.4779 0.345059C12.6296 0.257786 12.8015 0.211853 12.9765 0.211853C13.1515 0.211853 13.3234 0.257786 13.475 0.345059L25.4531 7.2415H25.4556C25.4955 7.26643 25.5292 7.29759 25.5653 7.32626C25.5977 7.35119 25.6339 7.37362 25.6625 7.40104C25.6974 7.43719 25.7224 7.47832 25.7523 7.51821C25.7735 7.54812 25.8021 7.5743 25.8196 7.6067C25.8483 7.65656 25.8645 7.70891 25.8844 7.76126C25.8944 7.78993 25.9118 7.8161 25.9193 7.84602C25.9423 7.93096 25.954 8.01853 25.9542 8.10652V33.7317L35.9355 27.9844V14.8846C35.9355 14.7973 35.948 14.7088 35.9704 14.6253C35.9792 14.5954 35.9954 14.5692 36.0053 14.5405C36.0253 14.4882 36.0427 14.4346 36.0702 14.386C36.0888 14.3536 36.1163 14.3274 36.1375 14.2975C36.1674 14.2576 36.1923 14.2165 36.2272 14.1816C36.2559 14.1529 36.292 14.1317 36.3244 14.1068C36.3618 14.0769 36.3942 14.0445 36.4341 14.0208L48.4147 7.12434C48.5663 7.03694 48.7383 6.99094 48.9133 6.99094C49.0883 6.99094 49.2602 7.03694 49.4118 7.12434L61.3899 14.0208C61.4323 14.0457 61.4647 14.0769 61.5021 14.1055C61.5333 14.1305 61.5694 14.1529 61.5981 14.1803C61.633 14.2165 61.6579 14.2576 61.6878 14.2975C61.7103 14.3274 61.7377 14.3536 61.7551 14.386C61.7838 14.4346 61.8 14.4882 61.8199 14.5405C61.8312 14.5692 61.8474 14.5954 61.8548 14.6253ZM59.893 27.9844V16.6121L55.7013 19.0252L49.9104 22.3593V33.7317L59.8942 27.9844H59.893ZM47.9149 48.5566V37.1768L42.2187 40.4299L25.953 49.7133V61.2003L47.9149 48.5566ZM1.99677 9.83281V48.5566L23.9562 61.199V49.7145L12.4841 43.2219L12.4804 43.2194L12.4754 43.2169C12.4368 43.1945 12.4044 43.1621 12.3682 43.1347C12.3371 43.1097 12.3009 43.0898 12.2735 43.0624L12.271 43.0586C12.2386 43.0275 12.2162 42.9888 12.1887 42.9539C12.1638 42.9203 12.1339 42.8916 12.114 42.8567L12.1127 42.853C12.0903 42.8156 12.0766 42.7707 12.0604 42.7283C12.0442 42.6909 12.023 42.656 12.013 42.6161C12.0005 42.5688 11.998 42.5177 11.9931 42.4691C11.9881 42.4317 11.9781 42.3943 11.9781 42.3569V15.5801L6.18848 12.2446L1.99677 9.83281ZM12.9777 2.36177L2.99764 8.10652L12.9752 13.8513L22.9541 8.10527L12.9752 2.36177H12.9777ZM18.1678 38.2138L23.9574 34.8809V9.83281L19.7657 12.2459L13.9749 15.5801V40.6281L18.1678 38.2138ZM48.9133 9.14105L38.9344 14.8858L48.9133 20.6305L58.8909 14.8846L48.9133 9.14105ZM47.9149 22.3593L42.124 19.0252L37.9323 16.6121V27.9844L43.7219 31.3174L47.9149 33.7317V22.3593ZM24.9533 47.987L39.59 39.631L46.9065 35.4555L36.9352 29.7145L25.4544 36.3242L14.9907 42.3482L24.9533 47.987Z" fill="currentColor"/></svg>
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        /* Mobile menu animation */
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); }
+            to { transform: translateX(100%); }
+        }
+        
+        .mobile-menu-open {
+            display: block;
+            animation: slideIn 0.3s forwards;
+        }
+        
+        .mobile-menu-close {
+            animation: slideOut 0.3s forwards;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header/Navigation -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Logo and site name -->
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center">
+                        <span class="text-2xl font-bold text-indigo-600">Technical<span class="text-blue-500">Writers</span></span>
+                    </a>
+                </div>
+                
+                <!-- Main Navigation - Desktop -->
+                <nav class="hidden md:flex items-center space-x-4">
+                    <a href="#features" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 transition duration-150">How It Works</a>
+                    <a href="#testimonials" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 transition duration-150">Testimonials</a>
+                    <a href="#faq" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 transition duration-150">FAQ</a>
+                    <a href="#join-us" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50 transition duration-150">Join Us</a>
+                    
+                    <!-- Authentication Links -->
+                    @if (Route::has('login'))
+                        <div class="flex space-x-2 ml-4">
+                            @auth
+                                <a href="{{ url('/home') }}" class="rounded-md px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Dashboard
+                                </a>
+                            @else
+                                <a href="{{ route('login') }}" class="rounded-md px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Log in
+                                </a>
+                                @if (Route::has('register'))
+                                    <a href="{{ route('register') }}" class="rounded-md px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        Register
+                                    </a>
+                                @endif
+                            @endauth
                         </div>
-                        @if (Route::has('login'))
-                            <nav class="-mx-3 flex flex-1 justify-end">
-                                @auth
-                                    <a
-                                        href="{{ url('/dashboard') }}"
-                                        class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                                    >
-                                        Dashboard
-                                    </a>
-                                @else
-                                    <a
-                                        href="{{ route('login') }}"
-                                        class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                                    >
-                                        Log in
-                                    </a>
-
-                                    @if (Route::has('register'))
-                                        <a
-                                            href="{{ route('register') }}"
-                                            class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                                        >
-                                            Register
-                                        </a>
-                                    @endif
-                                @endauth
-                            </nav>
-                        @endif
-                    </header>
+                    @endif
+                </nav>
+                
+                <!-- Mobile menu button -->
+                <div class="flex items-center md:hidden">
+                    <button type="button" id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                        <span class="sr-only">Open main menu</span>
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
             </div>
         </div>
-    </body>
+        
+        <!-- Mobile menu, show/hide based on menu state -->
+        <div id="mobile-menu" class="hidden md:hidden fixed top-16 right-0 bottom-0 w-4/5 max-w-sm bg-white shadow-xl z-50 transform transition-transform border-l border-gray-200 overflow-y-auto">
+            <div class="px-4 pt-4 pb-6 space-y-4">
+                <a href="#features" class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50">How It Works</a>
+                <a href="#testimonials" class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50">Testimonials</a>
+                <a href="#faq" class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50">FAQ</a>
+                <a href="#join-us" class="block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 hover:bg-gray-50">Join Us</a>
+                
+                <!-- Authentication Links (Mobile) -->
+                @if (Route::has('login'))
+                    <div class="pt-4 pb-3 border-t border-gray-200">
+                        @auth
+                            <a href="{{ url('/home') }}" class="block w-full text-center rounded-md px-4 py-3 bg-indigo-600 text-white hover:bg-indigo-700 transition">
+                                Dashboard
+                            </a>
+                        @else
+                            <a href="{{ route('login') }}" class="block w-full text-center rounded-md px-4 py-3 mb-3 border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
+                                Log in
+                            </a>
+                            @if (Route::has('register'))
+                                <a href="{{ route('register') }}" class="block w-full text-center rounded-md px-4 py-3 bg-indigo-600 text-white hover:bg-indigo-700 transition">
+                                    Register
+                                </a>
+                            @endif
+                        @endauth
+                    </div>
+                @endif
+            </div>
+        </div>
+        
+        <!-- Mobile menu backdrop/overlay -->
+        <div id="mobile-menu-backdrop" class="hidden fixed inset-0 bg-black bg-opacity-25 z-40 md:hidden"></div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="relative bg-gradient-to-br from-indigo-700 to-blue-800 py-16 md:py-24 px-4 md:px-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col lg:flex-row items-center justify-between">
+                    <div class="w-full lg:w-1/2 text-center lg:text-left mb-10 lg:mb-0 animate-fade-in">
+                        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+                            Welcome to <span class="text-yellow-300">Technical Writers</span>
+                        </h1>
+                        <p class="text-lg md:text-xl text-blue-100 mb-8 max-w-2xl mx-auto lg:mx-0">
+                            Join our community of expert writers dedicated to delivering high-quality, original content that helps clients achieve academic and professional excellence.
+                        </p>
+                        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center lg:justify-start">
+                            @auth
+                                <a href="{{ url('/home') }}" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-white hover:bg-gray-50 transition duration-300 shadow-lg hover:shadow-xl">
+                                    <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                                </a>
+                            @else
+                                <a href="{{ route('login') }}" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-white hover:bg-gray-50 transition duration-300 shadow-lg hover:shadow-xl">
+                                    <i class="fas fa-search mr-2"></i> Browse Orders
+                                </a>
+                                <a href="#join-us" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-yellow-500 hover:bg-yellow-600 transition duration-300 shadow-lg hover:shadow-xl">
+                                    <i class="fas fa-user-plus mr-2"></i> Join Our Team
+                                </a>
+                            @endauth
+                        </div>
+                    </div>
+                    <div class="w-full lg:w-1/2 flex justify-center lg:justify-end animate-fade-in" style="animation-delay: 0.3s;">
+                        <!-- Using inline SVG instead of relying on an external file -->
+                        <svg class="w-full max-w-lg h-auto rounded-lg shadow-2xl transform hover:scale-105 transition duration-500" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+                            <!-- SVG content is the same as the hero image but embedded directly -->
+                            <defs>
+                                <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                  <stop offset="0%" stop-color="#4338CA" />
+                                  <stop offset="100%" stop-color="#1E40AF" />
+                                </linearGradient>
+                                
+                                <pattern id="paper-texture" width="100" height="100" patternUnits="userSpaceOnUse">
+                                  <rect width="100" height="100" fill="#ffffff" fill-opacity="0.03"/>
+                                  <path d="M0 0L100 100M100 0L0 100" stroke="#ffffff" stroke-width="0.5" stroke-opacity="0.05"/>
+                                </pattern>
+                                
+                                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                  <feGaussianBlur stdDeviation="5" result="blur"/>
+                                  <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                                </filter>
+                            </defs>
+                              
+                            <!-- Main background -->
+                            <rect width="800" height="500" fill="url(#bg-gradient)"/>
+                            <rect width="800" height="500" fill="url(#paper-texture)"/>
+                              
+                            <!-- Book stack -->
+                            <g transform="translate(600, 300) rotate(-10)">
+                                <rect x="-60" y="-20" width="120" height="20" rx="2" fill="#F59E0B" />
+                                <rect x="-55" y="-20" width="110" height="18" rx="1" fill="#F59E0B" stroke="#FBBF24" stroke-width="1"/>
+                                <rect x="-70" y="-40" width="130" height="20" rx="2" fill="#EF4444" />
+                                <rect x="-65" y="-40" width="120" height="18" rx="1" fill="#EF4444" stroke="#FCA5A5" stroke-width="1"/>
+                                <rect x="-65" y="-60" width="125" height="20" rx="2" fill="#10B981" />
+                                <rect x="-60" y="-60" width="115" height="18" rx="1" fill="#10B981" stroke="#6EE7B7" stroke-width="1"/>
+                                <rect x="-75" y="-80" width="135" height="20" rx="2" fill="#3B82F6" />
+                                <rect x="-70" y="-80" width="125" height="18" rx="1" fill="#3B82F6" stroke="#93C5FD" stroke-width="1"/>
+                            </g>
+                              
+                            <!-- Floating papers -->
+                            <g transform="translate(150, 230) rotate(15)">
+                                <rect x="-80" y="-100" width="160" height="200" rx="5" fill="#F3F4F6" stroke="#E5E7EB" stroke-width="2"/>
+                                <line x1="-60" y1="-60" x2="60" y2="-60" stroke="#9CA3AF" stroke-width="1.5"/>
+                                <line x1="-60" y1="-40" x2="40" y2="-40" stroke="#9CA3AF" stroke-width="1.5"/>
+                                <line x1="-60" y1="-20" x2="60" y2="-20" stroke="#9CA3AF" stroke-width="1.5"/>
+                                <line x1="-60" y1="0" x2="50" y2="0" stroke="#9CA3AF" stroke-width="1.5"/>
+                                <line x1="-60" y1="20" x2="60" y2="20" stroke="#9CA3AF" stroke-width="1.5"/>
+                                <line x1="-60" y1="40" x2="30" y2="40" stroke="#9CA3AF" stroke-width="1.5"/>
+                                <line x1="-60" y1="60" x2="60" y2="60" stroke="#9CA3AF" stroke-width="1.5"/>
+                            </g>
+                              
+                            <g transform="translate(400, 200) rotate(-10)">
+                                <rect x="-90" y="-120" width="180" height="240" rx="5" fill="#F9FAFB" stroke="#E5E7EB" stroke-width="2"/>
+                                <line x1="-70" y1="-80" x2="70" y2="-80" stroke="#9CA3AF" stroke-width="1.5"/>
+                                <line x1="-70" y1="-60" x2="50" y2="-60" stroke="#9CA3AF" stroke-width="1.5"/>
+                                <line x1="-70" y1="-40" x2="70" y2="-40" stroke="#9CA3AF" stroke-width="1.5"/>
+                                <line x1="-70" y1="-20" x2="60" y2="-20" stroke="#9CA3AF" stroke-width="1.5"/>
+                                <line x1="-70" y1="0" x2="70" y2="0" stroke="#9CA3AF" stroke-width="1.5"/>
+                                <line x1="-70" y1="20" x2="40" y2="20" stroke="#9CA3AF" stroke-width="1.5"/>
+                                <line x1="-70" y1="40" x2="70" y2="40" stroke="#9CA3AF" stroke-width="1.5"/>
+                                <line x1="-70" y1="60" x2="60" y2="60" stroke="#9CA3AF" stroke-width="1.5"/>
+                                <line x1="-70" y1="80" x2="70" y2="80" stroke="#9CA3AF" stroke-width="1.5"/>
+                            </g>
+                              
+                            <!-- Laptop Screen content continued -->
+<rect x="-85" y="-75" width="140" height="8" rx="2" fill="#F3F4F6" fill-opacity="0.15"/>
+<rect x="-85" y="-60" width="160" height="8" rx="2" fill="#F3F4F6" fill-opacity="0.15"/>
+<rect x="-85" y="-45" width="130" height="8" rx="2" fill="#F3F4F6" fill-opacity="0.15"/>
+<rect x="-85" y="-30" width="150" height="8" rx="2" fill="#F3F4F6" fill-opacity="0.15"/>
+</g>
+
+<!-- Glowing pen -->
+<g transform="translate(500, 320) rotate(45)" filter="url(#glow)">
+    <rect x="-5" y="-60" width="10" height="120" rx="5" fill="#FBBF24"/>
+    <rect x="-4" y="-59" width="8" height="118" rx="4" fill="#FCD34D"/>
+    <path d="M-5,-60 L5,-60 L0,-80 Z" fill="#F59E0B"/>
+</g>
+
+<!-- Floating ideas -->
+<g fill="#FCD34D" filter="url(#glow)">
+    <circle cx="250" cy="100" r="5" />
+    <circle cx="450" cy="120" r="4" />
+    <circle cx="600" cy="200" r="6" />
+    <circle cx="350" cy="150" r="3" />
+    <circle cx="550" cy="90" r="4" />
+    <circle cx="150" cy="140" r="5" />
+    <circle cx="650" cy="350" r="3" />
+</g>
+
+<!-- Light bulb idea -->
+<g transform="translate(200, 160)" filter="url(#glow)">
+    <path d="M0,-25 C-15,-25 -25,-15 -25,0 C-25,12 -15,20 -8,25 L8,25 C15,20 25,12 25,0 C25,-15 15,-25 0,-25 Z" fill="#FCD34D" fill-opacity="0.8"/>
+    <rect x="-6" y="25" width="12" height="5" rx="2" fill="#F59E0B"/>
+    <rect x="-6" y="30" width="12" height="5" rx="2" fill="#F59E0B"/>
+</g>
+
+<!-- Quotation marks -->
+<g transform="translate(450, 350)" filter="url(#glow)">
+    <path d="M-20,-15 L-10,-15 L-5,0 L-15,0 Z" fill="#FBBF24" fill-opacity="0.8"/>
+    <path d="M5,-15 L15,-15 L20,0 L10,0 Z" fill="#FBBF24" fill-opacity="0.8"/>
+</g>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Wave Pattern -->
+            <div class="absolute bottom-0 left-0 right-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" class="w-full h-auto" preserveAspectRatio="none">
+                    <path fill="#ffffff" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,224C672,213,768,171,864,165.3C960,160,1056,192,1152,197.3C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="bg-white py-12 lg:py-20 px-4 md:px-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-12 animate-on-scroll">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why Choose Technical Writers?</h2>
+                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">Our platform connects skilled writers with clients seeking quality content across various disciplines.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100 text-center hover:border-blue-200 animate-on-scroll">
+                        <div class="w-16 h-16 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-users text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">5,000+</h3>
+                        <p class="text-gray-600">Professional Writers</p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100 text-center hover:border-blue-200 animate-on-scroll" style="animation-delay: 0.2s;">
+                        <div class="w-16 h-16 bg-green-100 text-green-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-check-circle text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">98.7%</h3>
+                        <p class="text-gray-600">Client Satisfaction</p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100 text-center hover:border-blue-200 animate-on-scroll" style="animation-delay: 0.4s;">
+                        <div class="w-16 h-16 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-file-alt text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">200,000+</h3>
+                        <p class="text-gray-600">Completed Orders</p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100 text-center hover:border-blue-200 animate-on-scroll" style="animation-delay: 0.6s;">
+                        <div class="w-16 h-16 bg-yellow-100 text-yellow-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-graduation-cap text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">50+</h3>
+                        <p class="text-gray-600">Academic Disciplines</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="bg-gray-50 py-16 md:py-24 px-4 md:px-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-16 animate-on-scroll">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
+                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">Our streamlined process makes it easy to find and complete writing assignments.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                    <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 animate-on-scroll">
+                        <div class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center mb-6 mx-auto md:mx-0">
+                            <span class="text-xl font-bold">1</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 text-center md:text-left">Browse Available Orders</h3>
+                        <p class="text-gray-600 text-center md:text-left">Browse through our marketplace of available writing assignments across various disciplines and complexity levels.</p>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 animate-on-scroll" style="animation-delay: 0.3s;">
+                        <div class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center mb-6 mx-auto md:mx-0">
+                            <span class="text-xl font-bold">2</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 text-center md:text-left">Accept & Complete Work</h3>
+                        <p class="text-gray-600 text-center md:text-left">Select orders that match your expertise and schedule. Complete the work within the specified deadline.</p>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 animate-on-scroll" style="animation-delay: 0.6s;">
+                        <div class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center mb-6 mx-auto md:mx-0">
+                            <span class="text-xl font-bold">3</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 text-center md:text-left">Get Paid & Build Reputation</h3>
+                        <p class="text-gray-600 text-center md:text-left">Receive payment for your work and build your reputation to access higher-paying opportunities.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section id="testimonials" class="bg-white py-16 md:py-24 px-4 md:px-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-16 animate-on-scroll">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Our Writers Love Us</h2>
+                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">Hear from some of our top-performing writers about their experience.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100 relative animate-on-scroll">
+                        <div class="absolute -top-5 left-8 w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center">
+                            <i class="fas fa-quote-left"></i>
+                        </div>
+                        <p class="text-gray-600 mb-6 pt-3">
+                            "Technical Writers has transformed my freelancing career. The consistent flow of orders and fair pay structure has allowed me to work full-time as a writer while pursuing my PhD."
+                        </p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-gray-300 rounded-full overflow-hidden mr-4">
+                                <div class="w-full h-full flex items-center justify-center bg-indigo-100 text-indigo-800 font-bold">
+                                    JD
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900">John D.</h4>
+                                <p class="text-gray-600 text-sm">Academic Writer | 3+ years</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100 relative animate-on-scroll" style="animation-delay: 0.3s;">
+                        <div class="absolute -top-5 left-8 w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center">
+                            <i class="fas fa-quote-left"></i>
+                        </div>
+                        <p class="text-gray-600 mb-6 pt-3">
+                            "The flexibility to choose my own assignments and work from anywhere has been incredible. The platform is intuitive, and the support team is always there when you need them."
+                        </p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-gray-300 rounded-full overflow-hidden mr-4">
+                                <div class="w-full h-full flex items-center justify-center bg-green-100 text-green-800 font-bold">
+                                    SM
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900">Sarah M.</h4>
+                                <p class="text-gray-600 text-sm">Technical Writer | 2+ years</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100 relative animate-on-scroll" style="animation-delay: 0.6s;">
+                        <div class="absolute -top-5 left-8 w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center">
+                            <i class="fas fa-quote-left"></i>
+                        </div>
+                        <p class="text-gray-600 mb-6 pt-3">
+                            "As an ESL professional, this platform has helped me grow my writing skills while earning consistently. The feedback system is particularly helpful for improvement."
+                        </p>
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-gray-300 rounded-full overflow-hidden mr-4">
+                                <div class="w-full h-full flex items-center justify-center bg-purple-100 text-purple-800 font-bold">
+                                    RT
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900">Robert T.</h4>
+                                <p class="text-gray-600 text-sm">ESL Specialist | 4+ years</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Join Us Section -->
+        <section id="join-us" class="bg-gradient-to-br from-indigo-700 to-blue-800 py-16 md:py-24 px-4 md:px-8 relative">
+            <div class="max-w-7xl mx-auto relative z-10">
+                <div class="text-center mb-12 animate-on-scroll">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Join Our Team Today</h2>
+                    <p class="text-xl text-blue-100 max-w-3xl mx-auto">
+                        Become part of our growing community of professional writers and start earning on your own terms.
+                    </p>
+                </div>
+                
+                <div class="bg-white p-8 md:p-10 rounded-2xl shadow-2xl max-w-3xl mx-auto animate-on-scroll">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i> 
+                                Benefits
+                            </h3>
+                            <ul class="space-y-2 text-gray-700">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                    <span>Competitive rates based on complexity</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                    <span>Weekly payments via secure methods</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                    <span>Flexible work hours and location</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                    <span>Performance bonuses and incentives</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                                    <span>Professional development opportunities</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                                <i class="fas fa-user-graduate text-blue-500 mr-2"></i> 
+                                Requirements
+                            </h3>
+                            <ul class="space-y-2 text-gray-700">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-blue-500 mt-1 mr-2"></i>
+                                    <span>Bachelor's degree or higher</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-blue-500 mt-1 mr-2"></i>
+                                    <span>Strong command of English language</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-blue-500 mt-1 mr-2"></i>
+                                    <span>Excellent research and writing skills</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-blue-500 mt-1 mr-2"></i>
+                                    <span>Attention to detail and meeting deadlines</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check text-blue-500 mt-1 mr-2"></i>
+                                    <span>Reliable internet connection</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        @auth
+                            <a href="{{ url('/home') }}" class="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition duration-300 shadow-lg hover:shadow-xl w-full md:w-auto">
+                                <i class="fas fa-tachometer-alt mr-2"></i> Go to Dashboard
+                            </a>
+                        @else
+                            <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition duration-300 shadow-lg hover:shadow-xl w-full md:w-auto">
+                                <i class="fas fa-user-plus mr-2"></i> Apply Now
+                            </a>
+                        @endauth
+                    </div>
+                </div>
+                
+                <div class="mt-12 text-center">
+                    @guest
+                        <p class="text-blue-100">Already have an account? <a href="{{ route('login') }}" class="text-white font-medium underline hover:text-yellow-300 transition duration-300">Sign in here</a></p>
+                    @endguest
+                </div>
+            </div>
+            
+            <!-- Background Pattern -->
+            <div class="absolute inset-0 overflow-hidden opacity-10">
+                <div class="absolute top-0 left-0 w-full h-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+                        <defs>
+                            <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse">
+                                <circle fill="white" cx="10" cy="10" r="1.5" />
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#dots)" />
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section id="faq" class="bg-white py-16 md:py-24 px-4 md:px-8">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16 animate-on-scroll">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">Find answers to common questions about working with Technical Writers.</p>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="bg-gray-50 rounded-xl p-6 md:p-8 shadow-md hover:shadow-lg transition-shadow duration-300 animate-on-scroll">
+                        <button class="flex justify-between items-center w-full text-left focus:outline-none faq-toggle">
+                            <h3 class="text-lg md:text-xl font-bold text-gray-900">How do I get started as a writer?</h3>
+                            <i class="fas fa-chevron-down text-indigo-600 transform transition-transform duration-300"></i>
+                        </button>
+                        <div class="mt-4 faq-content hidden">
+                            <p class="text-gray-600">
+                                To get started, create an account on our platform, complete your profile with your academic background and areas of expertise, and pass our qualification test. Once approved, you'll be able to browse and accept available orders that match your skills.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-xl p-6 md:p-8 shadow-md hover:shadow-lg transition-shadow duration-300 animate-on-scroll" style="animation-delay: 0.2s;">
+                        <button class="flex justify-between items-center w-full text-left focus:outline-none faq-toggle">
+                            <h3 class="text-lg md:text-xl font-bold text-gray-900">How and when do I get paid?</h3>
+                            <i class="fas fa-chevron-down text-indigo-600 transform transition-transform duration-300"></i>
+                        </button>
+                        <div class="mt-4 faq-content hidden">
+                            <p class="text-gray-600">
+                                Payments are processed weekly for all completed and approved orders. You can choose from multiple payment methods including bank transfer, PayPal, and mobile money services like M-Pesa. Payment processing typically takes 1-3 business days depending on your chosen method.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-xl p-6 md:p-8 shadow-md hover:shadow-lg transition-shadow duration-300 animate-on-scroll" style="animation-delay: 0.4s;">
+                        <button class="flex justify-between items-center w-full text-left focus:outline-none faq-toggle">
+                            <h3 class="text-lg md:text-xl font-bold text-gray-900">What types of writing assignments are available?</h3>
+                            <i class="fas fa-chevron-down text-indigo-600 transform transition-transform duration-300"></i>
+                        </button>
+                        <div class="mt-4 faq-content hidden">
+                            <p class="text-gray-600">
+                                Our platform offers a wide range of writing assignments including academic essays, research papers, case studies, literature reviews, technical writing, business reports, and more. Assignments span across various disciplines such as humanities, business, STEM fields, social sciences, and many others.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-xl p-6 md:p-8 shadow-md hover:shadow-lg transition-shadow duration-300 animate-on-scroll" style="animation-delay: 0.6s;">
+                        <button class="flex justify-between items-center w-full text-left focus:outline-none faq-toggle">
+                            <h3 class="text-lg md:text-xl font-bold text-gray-900">How is my performance evaluated?</h3>
+                            <i class="fas fa-chevron-down text-indigo-600 transform transition-transform duration-300"></i>
+                        </button>
+                        <div class="mt-4 faq-content hidden">
+                            <p class="text-gray-600">
+                                Your performance is evaluated based on several factors including quality of work, adherence to instructions, meeting deadlines, client satisfaction, and professionalism. Regular positive reviews and high ratings will improve your writer rank, giving you access to higher-paying assignments and special privileges.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-xl p-6 md:p-8 shadow-md hover:shadow-lg transition-shadow duration-300 animate-on-scroll" style="animation-delay: 0.8s;">
+                        <button class="flex justify-between items-center w-full text-left focus:outline-none faq-toggle">
+                            <h3 class="text-lg md:text-xl font-bold text-gray-900">Is there a minimum time commitment required?</h3>
+                            <i class="fas fa-chevron-down text-indigo-600 transform transition-transform duration-300"></i>
+                        </button>
+                        <div class="mt-4 faq-content hidden">
+                            <p class="text-gray-600">
+                                No, there's no minimum time commitment required. You can work as much or as little as you want. However, maintaining an active status by completing at least a few orders per month will help you build your reputation and keep your account in good standing.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action -->
+        <section class="bg-gradient-to-br from-gray-800 to-gray-900 py-16 px-4 md:px-8 text-center">
+            <div class="max-w-5xl mx-auto animate-on-scroll">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">Ready to Start Your Writing Journey?</h2>
+                <p class="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+                    Join thousands of writers who have found flexible, rewarding work with Technical Writers.
+                </p>
+                <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                    @auth
+                        <a href="{{ url('/home') }}" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-white hover:bg-gray-50 transition duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto">
+                            <i class="fas fa-tachometer-alt mr-2"></i> Go to Dashboard
+                        </a>
+                    @else
+                        <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-white hover:bg-gray-50 transition duration-300 shadow-lg hover:shadow-xl w-full sm:w-auto">
+                            <i class="fas fa-user-plus mr-2"></i> Create an Account
+                        </a>
+                        <a href="{{ route('login') }}" class="inline-flex items-center justify-center px-6 py-3 border border-white text-base font-medium rounded-md text-white hover:bg-white hover:text-indigo-700 transition duration-300 w-full sm:w-auto">
+                            <i class="fas fa-sign-in-alt mr-2"></i> Sign In
+                        </a>
+                    @endauth
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+<footer class="bg-gray-900 text-white py-12 px-4 md:px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+            <!-- Company Info -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Technical Writers</h3>
+                <p class="text-gray-400 mb-4">Connecting talented writers with clients seeking quality content.</p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Quick Links -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Quick Links</h3>
+                <ul class="space-y-2">
+                    <li><a href="#features" class="text-gray-400 hover:text-white transition-colors duration-300">How It Works</a></li>
+                    <li><a href="#testimonials" class="text-gray-400 hover:text-white transition-colors duration-300">Testimonials</a></li>
+                    <li><a href="#join-us" class="text-gray-400 hover:text-white transition-colors duration-300">Join Us</a></li>
+                    <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors duration-300">FAQ</a></li>
+                </ul>
+            </div>
+            
+            <!-- Resources -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Resources</h3>
+                <ul class="space-y-2">
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">Writer Guidelines</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">Blog</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">Knowledge Base</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">Writing Tools</a></li>
+                </ul>
+            </div>
+            
+            <!-- Contact -->
+            <div>
+                <h3 class="text-lg font-bold mb-4">Contact Us</h3>
+                <ul class="space-y-2">
+                    <li class="flex items-start">
+                        <i class="fas fa-envelope text-indigo-400 mt-1 mr-2"></i>
+                        <a href="mailto:support@technicalwriters.com" class="text-gray-400 hover:text-white transition-colors duration-300">support@technicalwriters.com</a>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-phone-alt text-indigo-400 mt-1 mr-2"></i>
+                        <a href="tel:+1234567890" class="text-gray-400 hover:text-white transition-colors duration-300">+1 (234) 567-890</a>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-map-marker-alt text-indigo-400 mt-1 mr-2"></i>
+                        <span class="text-gray-400">Nairobi, Kenya</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Bottom Footer -->
+        <div class="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
+            <p class="text-gray-400 text-center md:text-left mb-4 md:mb-0">
+                &copy; {{ date('Y') }} Technical Writers. All rights reserved.
+            </p>
+            <div class="flex space-x-6">
+                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 text-sm">Privacy Policy</a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 text-sm">Terms of Service</a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300 text-sm">Disclaimer</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Back to Top Button -->
+<button id="backToTop" class="fixed bottom-6 right-6 bg-indigo-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg transform transition-transform duration-300 scale-0 hover:bg-indigo-700 focus:outline-none">
+    <i class="fas fa-arrow-up"></i>
+</button>
+
+<!-- Mobile Menu Overlay -->
+<div id="mobile-menu-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
+<!-- Scripts -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mobile menu toggle with slide animation
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuBackdrop = document.getElementById('mobile-menu-backdrop');
+        const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+        let menuOpen = false;
+        
+        function toggleMobileMenu() {
+            if (menuOpen) {
+                // Close menu
+                mobileMenu.classList.add('mobile-menu-close');
+                mobileMenuOverlay.classList.add('hidden');
+                
+                setTimeout(() => {
+                    mobileMenu.classList.remove('mobile-menu-open');
+                    mobileMenu.classList.remove('mobile-menu-close');
+                    mobileMenu.classList.add('hidden');
+                }, 280);
+            } else {
+                // Open menu
+                mobileMenu.classList.remove('hidden');
+                mobileMenu.classList.add('mobile-menu-open');
+                mobileMenuOverlay.classList.remove('hidden');
+            }
+            menuOpen = !menuOpen;
+        }
+        
+        mobileMenuButton.addEventListener('click', toggleMobileMenu);
+        mobileMenuOverlay.addEventListener('click', toggleMobileMenu);
+        
+        // Close mobile menu when clicking on a link
+        const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+        mobileMenuLinks.forEach(link => {
+            link.addEventListener('click', toggleMobileMenu);
+        });
+        
+        // FAQ Toggles
+        const faqToggles = document.querySelectorAll('.faq-toggle');
+        
+        faqToggles.forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const content = this.nextElementSibling;
+                const icon = this.querySelector('i');
+                
+                content.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+                
+                // Close other FAQs
+                faqToggles.forEach(otherToggle => {
+                    if (otherToggle !== toggle) {
+                        const otherContent = otherToggle.nextElementSibling;
+                        const otherIcon = otherToggle.querySelector('i');
+                        
+                        otherContent.classList.add('hidden');
+                        otherIcon.classList.remove('rotate-180');
+                    }
+                });
+            });
+        });
+        
+        // Animation on scroll
+        const animateOnScroll = function() {
+            const elementsToAnimate = document.querySelectorAll('.animate-on-scroll');
+            
+            elementsToAnimate.forEach(element => {
+                const elementPosition = element.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                
+                if (elementPosition < windowHeight * 0.8) {
+                    element.classList.add('animate-fade-in');
+                }
+            });
+        };
+        
+        // Add animation class to elements that should animate on scroll
+        const sections = document.querySelectorAll('section > div, .grid > div');
+        sections.forEach(section => {
+            section.classList.add('animate-on-scroll');
+        });
+        
+        // Back to Top Button
+        const backToTopButton = document.getElementById('backToTop');
+        
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopButton.classList.replace('scale-0', 'scale-100');
+            } else {
+                backToTopButton.classList.replace('scale-100', 'scale-0');
+            }
+            
+            // Run animations on scroll
+            animateOnScroll();
+        });
+        
+        backToTopButton.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    const headerOffset = 80; // Account for fixed header
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Run once on page load
+        animateOnScroll();
+    });
+</script>
+</body>
 </html>
