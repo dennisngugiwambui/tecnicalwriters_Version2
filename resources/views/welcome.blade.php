@@ -113,7 +113,7 @@
                             @endauth
                         </div>
                     @endif
-                </nav>
+                </nav
                 
                 <!-- Mobile menu button -->
                 <div class="flex items-center md:hidden">
