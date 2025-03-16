@@ -122,7 +122,7 @@
                         <i class="fas fa-bars"></i>
                     </button>
                 </div>
-            </div>
+            </div
         </div>
         
         <!-- Mobile menu, show/hide based on menu state -->
