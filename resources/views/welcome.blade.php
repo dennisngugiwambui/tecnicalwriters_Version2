@@ -121,7 +121,7 @@
                         <span class="sr-only">Open main menu</span>
                         <i class="fas fa-bars"></i>
                     </button>
-                </div
+                </div>
             </div>
         </div>
         
