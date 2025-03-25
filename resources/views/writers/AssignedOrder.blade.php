@@ -48,16 +48,17 @@
         background-color: rgba(34, 197, 94, 0.05);
     }
     
-    /* Messages container styles */
+    /* Messages container styles - UPDATED for scrollable container */
     .messages-container {
-        height: 500px;
+        height: 420px;
         overflow-y: auto;
         scrollbar-width: thin;
         scrollbar-color: #e2e8f0 #f8fafc;
+        padding-right: 4px;
     }
     
     .messages-container::-webkit-scrollbar {
-        width: 6px;
+        width: 5px;
     }
     
     .messages-container::-webkit-scrollbar-track {
@@ -69,29 +70,34 @@
         border-radius: 3px;
     }
     
-    /* Message slider styles */
-    .message-slider {
-        height: 3px;
-        background-color: #22C55E;
-        margin-top: 12px;
-        margin-bottom: 12px;
-        border-radius: 1.5px;
+    /* Smaller font for messages */
+    .messages-container p {
+        font-size: 0.875rem;
+        line-height: 1.25rem;
     }
     
-    .message-slider-container {
-        padding: 8px 0;
-        position: relative;
-    }
-    
-    .message-slider-label {
-        position: absolute;
-        top: 4px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: white;
-        padding: 0 8px;
+    .messages-container .text-xs {
         font-size: 0.75rem;
-        color: #22C55E;
+    }
+    
+    /* Message date separator */
+    .message-date-separator {
+        display: flex;
+        align-items: center;
+        margin: 10px 0;
+    }
+    
+    .message-date-separator .line {
+        flex-grow: 1;
+        height: 1px;
+        background-color: #e2e8f0;
+    }
+    
+    .message-date-separator .date {
+        padding: 0 10px;
+        font-size: 0.75rem;
+        color: #94a3b8;
+        background-color: #f8fafc;
     }
 </style>
 
@@ -187,7 +193,7 @@
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-600">Deadline</span>
                                     <div class="flex items-center space-x-2">
-                                        <span class="text-gray-800">{{ \Carbon\Carbon::parse($order->deadline)->format('d M, h:i A') }}</span>
+                                        <span class="text-gray-800 timeRemaining">{{ \Carbon\Carbon::parse($order->deadline)->format('d M, h:i A') }}</span>
                                         <span id="deadline-countdown" class="countdown" data-deadline="{{ $order->deadline }}"></span>
                                         @if($order->status != 'DONE')
                                         <button 
@@ -397,13 +403,13 @@
                 <!-- Message Tabs Content -->
                 <div id="messages-panel" class="hidden" role="tabpanel">
                     <div class="flex space-x-4 mb-4 border-b">
-                        <button id="client-messages-tab" class="px-4 py-2 font-medium text-gray-600 border-b-2 border-green-500 focus:outline-none" onclick="switchMessageTab('client')">
+                        <button id="client-messages-tab" class="px-4 py-2 text-sm font-medium text-gray-600 border-b-2 border-blue-500 focus:outline-none" onclick="switchMessageTab('client')">
                             Client Messages
                             @if(isset($clientMessages) && $clientUnreadCount > 0)
                                 <span class="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $clientUnreadCount }}</span>
                             @endif
                         </button>
-                        <button id="support-messages-tab" class="px-4 py-2 font-medium text-gray-600 focus:outline-none" onclick="switchMessageTab('support')">
+                        <button id="support-messages-tab" class="px-4 py-2 text-sm font-medium text-gray-600 focus:outline-none" onclick="switchMessageTab('support')">
                             Support Messages
                             @if(isset($supportMessages) && $supportUnreadCount > 0)
                                 <span class="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $supportUnreadCount }}</span>
@@ -413,64 +419,72 @@
 
                     <!-- Client Messages Container -->
                     <div id="client-messages-container" class="flex flex-col h-[500px]">
-                        <div class="messages-container flex-1 overflow-y-auto mb-4 space-y-4 px-2">
+                        <div class="messages-container flex-1 overflow-y-auto mb-4 space-y-3 px-2">
                             @if(isset($clientMessages) && count($clientMessages) > 0)
                                 @foreach($clientMessages as $messageDate => $dailyMessages)
                                     <!-- Date Separator -->
-                                    <div class="message-slider-container">
-                                        <div class="message-slider"></div>
-                                        <div class="message-slider-label">{{ $messageDate }}</div>
+                                    <div class="relative flex items-center py-2">
+                                        <div class="flex-grow border-t border-gray-200"></div>
+                                        <span class="flex-shrink-0 mx-4 text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full">
+                                            {{ $messageDate }}
+                                        </span>
+                                        <div class="flex-grow border-t border-gray-200"></div>
                                     </div>
                                     
                                     @foreach($dailyMessages as $message)
                                         @if($message->user_id == Auth::id())
-                                            <!-- Writer Message -->
-                                            <div class="flex justify-end" id="message-{{ $message->id }}">
-                                                <div class="max-w-lg rounded-lg p-4 bg-blue-50">
-                                                    <p class="text-gray-700">{{ $message->message }}</p>
+                                            <!-- Writer Message (more compact) -->
+                                            <div class="flex justify-end items-start space-x-2" id="message-{{ $message->id }}">
+                                                <div class="max-w-xs sm:max-w-md rounded-lg p-2 bg-blue-50 shadow-sm">
+                                                    <p class="text-sm text-gray-700">{{ $message->message }}</p>
                                                     @if($message->files->count() > 0)
-                                                        <div class="mt-2 pt-2 border-t border-gray-200">
+                                                        <div class="mt-1 pt-1 border-t border-gray-200">
                                                             @foreach($message->files as $file)
                                                                 <div class="flex items-center text-xs">
-                                                                    <svg class="h-4 w-4 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                                    <svg class="h-3 w-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
                                                                     </svg>
-                                                                    <a href="{{ route('download', ['file_id' => $file->id]) }}" class="text-blue-600 hover:underline">{{ $file->name }}</a>
+                                                                    <a href="javascript:void(0)" onclick="downloadFile('{{ $file->id }}', '{{ $file->name }}')" class="text-blue-600 hover:underline">{{ $file->name }}</a>
                                                                     <span class="ml-1 text-gray-500">({{ formatFileSize($file->size) }})</span>
                                                                 </div>
                                                             @endforeach
                                                         </div>
                                                     @endif
-                                                    <div class="mt-2 flex justify-between items-center">
-                                                        <span class="text-xs text-gray-500">{{ Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
+                                                    <div class="mt-1 flex justify-between items-center">
+                                                        <span class="text-xs text-gray-400">{{ Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
                                                         <span class="text-xs {{ $message->read_at ? 'text-green-500' : 'text-gray-400' }}">
-                                                            {{ $message->read_at ? 'Seen' : 'Delivered' }}
+                                                            {{ $message->read_at ? 'Seen' : 'Sent' }}
                                                         </span>
                                                     </div>
                                                 </div>
+                                                <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-xs">
+                                                    <span class="text-blue-600 font-medium">W</span>
+                                                </div>
                                             </div>
                                         @else
-                                            <!-- Client Message -->
-                                            <div class="flex justify-start" id="message-{{ $message->id }}">
-                                                <div class="max-w-lg rounded-lg p-4 bg-gray-100">
-                                                    <div class="flex items-center mb-2">
-                                                        <span class="font-medium text-gray-800">Client</span>
-                                                        <span class="text-xs text-gray-500 ml-2">{{ Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
-                                                    </div>
-                                                    <p class="text-gray-700">{{ $message->message }}</p>
+                                            <!-- Client Message (more compact) -->
+                                            <div class="flex justify-start items-start space-x-2" id="message-{{ $message->id }}">
+                                                <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-xs">
+                                                    <span class="text-gray-600 font-medium">C</span>
+                                                </div>
+                                                <div class="max-w-xs sm:max-w-md rounded-lg p-2 bg-white shadow-sm">
+                                                    <p class="text-sm text-gray-700">{{ $message->message }}</p>
                                                     @if($message->files->count() > 0)
-                                                        <div class="mt-2 pt-2 border-t border-gray-200">
+                                                        <div class="mt-1 pt-1 border-t border-gray-200">
                                                             @foreach($message->files as $file)
                                                                 <div class="flex items-center text-xs">
-                                                                    <svg class="h-4 w-4 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                                    <svg class="h-3 w-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
                                                                     </svg>
-                                                                    <a href="{{ route('download', ['file_id' => $file->id]) }}" class="text-blue-600 hover:underline">{{ $file->name }}</a>
+                                                                    <a href="javascript:void(0)" onclick="downloadFile('{{ $file->id }}', '{{ $file->name }}')" class="text-blue-600 hover:underline">{{ $file->name }}</a>
                                                                     <span class="ml-1 text-gray-500">({{ formatFileSize($file->size) }})</span>
                                                                 </div>
                                                             @endforeach
                                                         </div>
                                                     @endif
+                                                    <div class="mt-1">
+                                                        <span class="text-xs text-gray-400">{{ Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         @endif
@@ -485,38 +499,37 @@
                         </div>
 
                         <!-- Message Input for Client -->
-                        <div class="border-t pt-4">
-                            <form id="clientMessageForm" class="flex items-center space-x-4">
+                        <div class="border-t pt-3 bg-white">
+                            <form id="clientMessageForm" class="flex items-center space-x-2">
                                 @csrf
                                 <input type="hidden" name="order_id" value="{{ $order->id }}">
                                 <input type="hidden" name="message_type" value="client">
                                 <div class="flex-1 relative">
                                     <textarea id="clientMessageContent" name="message" 
-                                        class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-200 focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 transition-all duration-200 resize-none"
+                                        class="w-full px-3 py-2 pr-8 text-sm rounded-lg border border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-200 resize-none"
                                         placeholder="Type your message to client..."
                                         rows="1"
                                         onkeydown="if(event.keyCode == 13 && !event.shiftKey) { event.preventDefault(); sendClientMessage(); }"></textarea>
                                     <button type="button" 
                                             class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
                                             onclick="document.getElementById('clientMessageAttachment').click()">
-                                        <i class="fas fa-paperclip"></i>
+                                        <i class="fas fa-paperclip text-sm"></i>
                                     </button>
                                     <input type="file" id="clientMessageAttachment" name="attachment" class="hidden">
                                 </div>
                                 <button type="button" 
                                         onclick="sendClientMessage()" 
-                                        class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center space-x-2">
-                                    <i class="fas fa-paper-plane"></i>
-                                    <span>Send</span>
+                                        class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center">
+                                    <i class="fas fa-paper-plane text-sm"></i>
                                 </button>
                             </form>
                             <div id="clientAttachmentPreview" class="hidden mt-2 p-2 bg-gray-50 rounded-lg flex items-center justify-between">
                                 <div class="flex items-center">
-                                    <i class="fas fa-file mr-2 text-gray-500"></i>
+                                    <i class="fas fa-file mr-2 text-gray-500 text-sm"></i>
                                     <span id="clientAttachmentName" class="text-sm text-gray-700 truncate"></span>
                                 </div>
                                 <button onclick="removeClientAttachment()" class="text-gray-400 hover:text-gray-600">
-                                    <i class="fas fa-times"></i>
+                                    <i class="fas fa-times text-sm"></i>
                                 </button>
                             </div>
                         </div>
@@ -524,64 +537,85 @@
 
                     <!-- Support Messages Container -->
                     <div id="support-messages-container" class="flex flex-col h-[500px] hidden">
-                        <div class="messages-container flex-1 overflow-y-auto mb-4 space-y-4 px-2">
+                        <div class="messages-container flex-1 overflow-y-auto mb-4 space-y-3 px-2">
                             @if(isset($supportMessages) && count($supportMessages) > 0)
                                 @foreach($supportMessages as $messageDate => $dailyMessages)
                                     <!-- Date Separator -->
-                                    <div class="message-slider-container">
-                                        <div class="message-slider"></div>
-                                        <div class="message-slider-label">{{ $messageDate }}</div>
+                                    <div class="relative flex items-center py-2">
+                                        <div class="flex-grow border-t border-gray-200"></div>
+                                        <span class="flex-shrink-0 mx-4 text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full">
+                                            {{ $messageDate }}
+                                        </span>
+                                        <div class="flex-grow border-t border-gray-200"></div>
                                     </div>
                                     
                                     @foreach($dailyMessages as $message)
                                         @if($message->user_id == Auth::id())
                                             <!-- Writer Message -->
-                                            <div class="flex justify-end" id="message-{{ $message->id }}">
-                                                <div class="max-w-lg rounded-lg p-4 bg-blue-50">
-                                                    <p class="text-gray-700">{{ $message->message }}</p>
+                                            <div class="flex justify-end items-start space-x-2" id="message-{{ $message->id }}">
+                                                <div class="max-w-xs sm:max-w-md rounded-lg p-2 bg-blue-50 shadow-sm">
+                                                    <p class="text-sm text-gray-700">{{ $message->message }}</p>
                                                     @if($message->files->count() > 0)
-                                                        <div class="mt-2 pt-2 border-t border-gray-200">
+                                                        <div class="mt-1 pt-1 border-t border-gray-200">
                                                             @foreach($message->files as $file)
                                                                 <div class="flex items-center text-xs">
-                                                                    <svg class="h-4 w-4 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                                    <svg class="h-3 w-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
                                                                     </svg>
-                                                                    <a href="{{ route('download', ['file_id' => $file->id]) }}" class="text-blue-600 hover:underline">{{ $file->name }}</a>
+                                                                    <a href="javascript:void(0)" onclick="downloadFile('{{ $file->id }}', '{{ $file->name }}')" class="text-blue-600 hover:underline">{{ $file->name }}</a>
                                                                     <span class="ml-1 text-gray-500">({{ formatFileSize($file->size) }})</span>
                                                                 </div>
                                                             @endforeach
                                                         </div>
                                                     @endif
-                                                    <div class="mt-2 flex justify-between items-center">
-                                                        <span class="text-xs text-gray-500">{{ Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
+                                                    <div class="mt-1 flex justify-between items-center">
+                                                        <span class="text-xs text-gray-400">{{ Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
                                                         <span class="text-xs {{ $message->read_at ? 'text-green-500' : 'text-gray-400' }}">
-                                                            {{ $message->read_at ? 'Seen' : 'Delivered' }}
+                                                            {{ $message->read_at ? 'Seen' : 'Sent' }}
                                                         </span>
+                                                    </div>
+                                                </div>
+                                                <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-xs">
+                                                    <span class="text-blue-600 font-medium">W</span>
+                                                </div>
+                                            </div>
+                                        @elseif($message->message_type == 'system')
+                                            <!-- System Message -->
+                                            <div class="flex justify-start items-start space-x-2" id="message-{{ $message->id }}">
+                                                <div class="w-6 h-6 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0 text-xs">
+                                                    <span class="text-yellow-600 font-medium">S</span>
+                                                </div>
+                                                <div class="max-w-xs sm:max-w-md rounded-lg p-2 bg-yellow-50 shadow-sm">
+                                                    <p class="text-sm text-gray-700">{{ $message->message }}</p>
+                                                    <div class="mt-1">
+                                                        <span class="text-xs text-gray-400">{{ Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         @else
                                             <!-- Support Message -->
-                                            <div class="flex justify-start" id="message-{{ $message->id }}">
-                                                <div class="max-w-lg rounded-lg p-4 bg-yellow-50">
-                                                    <div class="flex items-center mb-2">
-                                                        <span class="font-medium text-gray-800">Support</span>
-                                                        <span class="text-xs text-gray-500 ml-2">{{ Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
-                                                    </div>
-                                                    <p class="text-gray-700">{{ $message->message }}</p>
+                                            <div class="flex justify-start items-start space-x-2" id="message-{{ $message->id }}">
+                                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 text-xs">
+                                                    <span class="text-green-600 font-medium">S</span>
+                                                </div>
+                                                <div class="max-w-xs sm:max-w-md rounded-lg p-2 bg-green-50 shadow-sm">
+                                                    <p class="text-sm text-gray-700">{{ $message->message }}</p>
                                                     @if($message->files->count() > 0)
-                                                        <div class="mt-2 pt-2 border-t border-gray-200">
+                                                        <div class="mt-1 pt-1 border-t border-gray-200">
                                                             @foreach($message->files as $file)
                                                                 <div class="flex items-center text-xs">
-                                                                    <svg class="h-4 w-4 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                                    <svg class="h-3 w-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
                                                                     </svg>
-                                                                    <a href="{{ route('download', ['file_id' => $file->id]) }}" class="text-blue-600 hover:underline">{{ $file->name }}</a>
+                                                                    <a href="javascript:void(0)" onclick="downloadFile('{{ $file->id }}', '{{ $file->name }}')" class="text-blue-600 hover:underline">{{ $file->name }}</a>
                                                                     <span class="ml-1 text-gray-500">({{ formatFileSize($file->size) }})</span>
                                                                 </div>
                                                             @endforeach
                                                         </div>
                                                     @endif
+                                                    <div class="mt-1">
+                                                        <span class="text-xs text-gray-400">{{ Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         @endif
@@ -596,241 +630,45 @@
                         </div>
 
                         <!-- Message Input for Support -->
-                        <div class="border-t pt-4">
-                            <form id="supportMessageForm" class="flex items-center space-x-4">
+                        <div class="border-t pt-3 bg-white">
+                            <form id="supportMessageForm" class="flex items-center space-x-2">
                                 @csrf
                                 <input type="hidden" name="order_id" value="{{ $order->id }}">
                                 <input type="hidden" name="message_type" value="support">
                                 <div class="flex-1 relative">
                                     <textarea id="supportMessageContent" name="message" 
-                                        class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-200 focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 transition-all duration-200 resize-none"
+                                        class="w-full px-3 py-2 pr-8 text-sm rounded-lg border border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-200 resize-none"
                                         placeholder="Type your message to support..."
                                         rows="1"
                                         onkeydown="if(event.keyCode == 13 && !event.shiftKey) { event.preventDefault(); sendSupportMessage(); }"></textarea>
                                     <button type="button" 
                                             class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
                                             onclick="document.getElementById('supportMessageAttachment').click()">
-                                        <i class="fas fa-paperclip"></i>
+                                        <i class="fas fa-paperclip text-sm"></i>
                                     </button>
                                     <input type="file" id="supportMessageAttachment" name="attachment" class="hidden">
                                 </div>
                                 <button type="button" 
                                         onclick="sendSupportMessage()" 
-                                        class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center space-x-2">
-                                    <i class="fas fa-paper-plane"></i>
-                                    <span>Send</span>
+                                        class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center">
+                                    <i class="fas fa-paper-plane text-sm"></i>
                                 </button>
                             </form>
                             <div id="supportAttachmentPreview" class="hidden mt-2 p-2 bg-gray-50 rounded-lg flex items-center justify-between">
                                 <div class="flex items-center">
-                                    <i class="fas fa-file mr-2 text-gray-500"></i>
+                                    <i class="fas fa-file mr-2 text-gray-500 text-sm"></i>
                                     <span id="supportAttachmentName" class="text-sm text-gray-700 truncate"></span>
                                 </div>
                                 <button onclick="removeSupportAttachment()" class="text-gray-400 hover:text-gray-600">
-                                    <i class="fas fa-times"></i>
+                                    <i class="fas fa-times text-sm"></i>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-                
             </div>
         </div>
     </main>
-</div>
-
-<!-- Extension Dialog -->
-<div id="extensionDialog" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 extension-dialog">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 extension-dialog-content">
-        <div class="space-y-4">
-            <div class="flex items-center justify-between">
-                <span class="text-gray-800 font-medium">Deadline</span>
-                <span class="text-gray-800">{{ \Carbon\Carbon::parse($order->deadline)->format('d M, h:i A') }}</span>
-                <span id="extension-countdown" class="countdown" data-deadline="{{ $order->deadline }}"></span>
-            </div>
-            
-            <div>
-                <label class="block text-sm text-gray-600 mb-1">Extension time:</label>
-                <div class="relative">
-                    <select id="extensionTime" class="w-full px-3 py-2 border border-gray-200 rounded-lg appearance-none focus:outline-none focus:border-green-500">
-                        <option value="">--:--</option>
-                        <option value="1">1 hour</option>
-                        <option value="2">2 hours</option>
-                        <option value="3">3 hours</option>
-                        <option value="4">4 hours</option>
-                        <option value="6">6 hours</option>
-                        <option value="12">12 hours</option>
-                        <option value="24">24 hours</option>
-                    </select>
-                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                        <i class="fas fa-chevron-down text-gray-400"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-sm text-gray-600 mb-1">Extension reason comment</label>
-                <textarea 
-                    id="extensionReason"
-                    class="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-green-500"
-                    rows="4"
-                    placeholder="Enter your reason for extension..."></textarea>
-            </div>
-
-            <div class="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-                Please, update the customer about the progress and specify the reason for the extension request
-            </div>
-
-            <div class="flex justify-end space-x-3 mt-6">
-                <button 
-                    class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
-                    onclick="hideExtensionDialog()">
-                    Cancel
-                </button>
-                <button 
-                    class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200"
-                    onclick="submitExtension('{{ $order->id }}')">
-                    Extend
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Upload Modal with Multi-step Workflow -->
-<div id="uploadModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center hidden z-50 upload-modal">
-    <!-- Backdrop -->
-    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
-
-    <!-- Modal Container -->
-    <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
-        <!-- Modal Content -->
-        <div id="uploadModalContent" class="relative bg-white rounded-lg max-w-xl w-full mx-auto shadow-xl transform transition-all">
-            <!-- Step 1: File Selection -->
-            <div id="uploadStep1" class="block">
-                <!-- Modal Header -->
-                <div class="flex justify-between items-center p-6 border-b">
-                    <h3 class="text-lg font-medium text-gray-900">Upload files</h3>
-                    <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-
-                <!-- Modal Body -->
-                <div class="p-6">
-                    <p class="text-sm text-gray-600 mb-6">
-                        Please make sure to upload a video preview together with the completed order. Select description "Preview" for your video file. Maximum file size allowed: 99 MB.
-                    </p>
-
-                    <!-- File List -->
-                    <div id="uploadedFiles" class="space-y-3 mb-4"></div>
-
-                    <!-- Upload Zone -->
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-green-500 transition-colors duration-200"
-                         id="dropZone"
-                         ondrop="handleFileDrop(event)"
-                         ondragover="handleDragOver(event)"
-                         ondragleave="handleDragLeave(event)"
-                         onclick="document.getElementById('fileInput').click()">
-                        <input type="file" id="fileInput" class="hidden" multiple onchange="handleFileSelect(event)">
-                        <button type="button" class="text-green-500 font-medium">Choose file</button>
-                        <span class="text-gray-500 ml-2">or drag file</span>
-                    </div>
-
-                    <!-- Modal Footer -->
-                    <div class="mt-6 flex justify-end space-x-3">
-                        <button onclick="closeUploadModal()" 
-                                class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 rounded-md">
-                            Cancel
-                        </button>
-                        <button onclick="gotoVerificationStep()" 
-                                class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200">
-                            Continue
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 2: Verification Checklist -->
-            <div id="uploadStep2" class="hidden">
-                <!-- Modal Header -->
-                <div class="flex justify-between items-center p-6 border-b">
-                    <h3 class="text-lg font-medium text-gray-900">Upload files</h3>
-                    <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-
-                <!-- Modal Body -->
-                <div class="p-6">
-                    <h4 class="text-base font-medium text-gray-700 mb-3">Paper details</h4>
-                    
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Paper format</span>
-                            <span class="text-gray-800">{{ $order->paper_format ?: 'Not applicable' }}</span>
-                        </div>
-                        
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Pages</span>
-                            <div>
-                                <span class="text-gray-800">{{ $order->number_of_pages ?? 0 }} pages</span>
-                                <span class="text-gray-500 text-sm ml-1">(~{{ $order->number_of_pages ? $order->number_of_pages * 275 : 0 }} words)</span>
-                                <div class="text-xs text-gray-500">{{ $order->spacing ?: 'Double spaced' }}</div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Sources to be cited</span>
-                            <span class="text-gray-800">{{ $order->number_of_sources ?? 0 }}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <h4 class="text-base font-medium text-gray-700 mb-3">To be on the safe side, please, double-check whether:</h4>
-                        <div class="space-y-3">
-                            <label class="flex items-start">
-                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
-                                <span class="ml-2 text-gray-700">All order files are checked</span>
-                            </label>
-                            <label class="flex items-start">
-                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
-                                <span class="ml-2 text-gray-700">All order messages are thoroughly read</span>
-                            </label>
-                            <label class="flex items-start">
-                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
-                                <span class="ml-2 text-gray-700">All paper instructions are followed</span>
-                            </label>
-                            <label class="flex items-start">
-                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
-                                <span class="ml-2 text-gray-700">Number of sources is as requested</span>
-                            </label>
-                            <label class="flex items-start">
-                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
-                                <span class="ml-2 text-gray-700">Required formatting style is applied</span>
-                            </label>
-                        </div>
-                        
-                        <div class="mt-4 p-3 bg-gray-50 text-sm text-gray-600 rounded-lg">
-                            Plagiarism report will be available within 5-10 minutes in the Files section.
-                        </div>
-                    </div>
-
-                    <!-- Modal Footer -->
-                    <div class="mt-6 flex justify-end space-x-3">
-                        <button onclick="backToFileSelection()" 
-                                class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 rounded-md">
-                            Back
-                        </button>
-                        <button id="submitUploadBtn" onclick="startUpload()" 
-                                class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200">
-                            Submit
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Processing Modal (Step 3) -->
@@ -880,7 +718,7 @@
 </div>
 
 <!-- Toaster Notification -->
-<div id="toaster" class="fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
+<div id="toaster" class="fixed bottom-4 left-4 z-50 transform translate-y-full transition-transform duration-300 ease-in-out">
     <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded shadow-lg flex items-start max-w-sm">
         <div class="text-green-500 mr-3">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -1449,7 +1287,7 @@ function startUpload() {
     // Upload with progress tracking
     const xhr = new XMLHttpRequest();
     
-    xhr.open('POST', '/api/orders/upload-files', true);
+    xhr.open('POST', '/api/writer/order/upload-files', true);
     
     xhr.upload.onprogress = function(e) {
         if (e.lengthComputable) {
@@ -1616,17 +1454,19 @@ function updateOrderStatus(status) {
     }
 }
 
-// Download functions
+// Download functions - FIXED
 function downloadFile(fileId, fileName) {
-    fetch(`/api/files/${fileId}/download`, {
-        method: 'GET',
+    fetch(`/api/writer/file/download`, {
+        method: 'POST',
         headers: {
+            'Content-Type': 'application/json',
             'X-CSRF-TOKEN': csrfToken
-        }
+        },
+        body: JSON.stringify({ file_id: fileId })
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error('Download failed');
+            throw new Error('Download failed with status ' + response.status);
         }
         return response.blob();
     })
@@ -1642,10 +1482,11 @@ function downloadFile(fileId, fileName) {
     })
     .catch(error => {
         console.error('Download failed:', error);
-        showToaster('Error', 'Failed to download file', 'error');
+        showToaster('Error', 'Failed to download file: ' + error.message, 'error');
     });
 }
 
+// Download multiple files - FIXED
 function downloadSelectedFiles() {
     const selectedCheckboxes = document.querySelectorAll('.file-checkbox:checked');
     
@@ -1661,12 +1502,12 @@ function downloadSelectedFiles() {
         return;
     }
     
-    // For multiple files, create a request to get them as ZIP
+    // For multiple files, use batch download endpoint
     const fileIds = Array.from(selectedCheckboxes).map(checkbox => 
         checkbox.closest('.file-item').dataset.fileId
     );
     
-    fetch('/api/files/download-multiple', {
+    fetch('/api/writer/files/batch-download', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1676,7 +1517,7 @@ function downloadSelectedFiles() {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error('Download failed');
+            throw new Error('Batch download failed with status ' + response.status);
         }
         return response.blob();
     })
@@ -1684,19 +1525,68 @@ function downloadSelectedFiles() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `order-{{ $order->id }}-files.zip`;
+        a.download = 'order_files.zip';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
     })
     .catch(error => {
-        console.error('Download failed:', error);
-        showToaster('Error', 'Failed to download files', 'error');
+        console.error('Batch download failed:', error);
+        showToaster('Error', 'Failed to download files: ' + error.message, 'error');
     });
 }
 
-// Message Tab Switching
+// File checkboxes and bulk download functionality
+function initFileCheckboxes() {
+    const selectAllCheckbox = document.getElementById('selectAllFiles');
+    const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+    const bulkDownloadBtn = document.getElementById('bulk-download-btn');
+    
+    // Add event listeners to individual checkboxes
+    fileCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            const checkedCount = document.querySelectorAll('.file-checkbox:checked').length;
+            
+            // Update "select all" checkbox state
+            if (checkedCount === fileCheckboxes.length) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else if (checkedCount === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else {
+                selectAllCheckbox.indeterminate = true;
+            }
+            
+            // Show/hide bulk download button
+            if (checkedCount > 0) {
+                bulkDownloadBtn.classList.remove('hidden');
+            } else {
+                bulkDownloadBtn.classList.add('hidden');
+            }
+        });
+    });
+    
+    // Add event listener to "select all" checkbox
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', () => {
+            const isChecked = selectAllCheckbox.checked;
+            
+            fileCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            
+            if (isChecked && fileCheckboxes.length > 0) {
+                bulkDownloadBtn.classList.remove('hidden');
+            } else {
+                bulkDownloadBtn.classList.add('hidden');
+            }
+        });
+    }
+}
+
+// Message Tab Functions
 function switchMessageTab(tabName) {
     const clientTab = document.getElementById('client-messages-tab');
     const supportTab = document.getElementById('support-messages-tab');
@@ -1704,118 +1594,311 @@ function switchMessageTab(tabName) {
     const supportContainer = document.getElementById('support-messages-container');
     
     if (tabName === 'client') {
-        clientTab.classList.add('border-b-2', 'border-green-500');
-        supportTab.classList.remove('border-b-2', 'border-green-500');
+        clientTab.classList.add('border-b-2', 'border-blue-500');
+        supportTab.classList.remove('border-b-2', 'border-blue-500');
         clientContainer.classList.remove('hidden');
         supportContainer.classList.add('hidden');
         
         // Mark client messages as read
         markMessagesAsRead('client');
-        scrollToBottom('client');
     } else {
-        supportTab.classList.add('border-b-2', 'border-green-500');
-        clientTab.classList.remove('border-b-2', 'border-green-500');
+        supportTab.classList.add('border-b-2', 'border-blue-500');
+        clientTab.classList.remove('border-b-2', 'border-blue-500');
         supportContainer.classList.remove('hidden');
         clientContainer.classList.add('hidden');
         
         // Mark support messages as read
         markMessagesAsRead('support');
-        scrollToBottom('support');
+    }
+    
+    scrollToBottom(tabName);
+}
+
+// Mark messages as read
+function markMessagesAsRead(type = 'all') {
+    const orderId = '{{ $order->id }}';
+    
+    fetch('/api/writer/messages/mark-read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({ 
+            order_id: orderId,
+            message_type: type
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update unread message count badges
+            if (type === 'client' || type === 'all') {
+                const badge = document.querySelector('#client-messages-tab span');
+                if (badge) badge.remove();
+            }
+            
+            if (type === 'support' || type === 'all') {
+                const badge = document.querySelector('#support-messages-tab span');
+                if (badge) badge.remove();
+            }
+            
+            if (type === 'all') {
+                const tabBadge = document.querySelector('#messages-tab span');
+                if (tabBadge) tabBadge.remove();
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error marking messages as read:', error);
+    });
+}
+
+// Scroll message container to bottom
+function scrollToBottom(type = 'client') {
+    const container = type === 'client' 
+        ? document.querySelector('#client-messages-container .messages-container') 
+        : document.querySelector('#support-messages-container .messages-container');
+    
+    if (container) {
+        container.scrollTop = container.scrollHeight;
     }
 }
 
-// Send Client Message
+// Send client message
 function sendClientMessage() {
-    sendMessage('client', 
-        document.getElementById('clientMessageContent'),
-        document.getElementById('clientMessageAttachment'),
-        'clientAttachmentPreview');
-}
-
-// Send Support Message
-function sendSupportMessage() {
-    sendMessage('support',
-        document.getElementById('supportMessageContent'),
-        document.getElementById('supportMessageAttachment'),
-        'supportAttachmentPreview');
-}
-
-// Generic send message function
-function sendMessage(type, textarea, attachmentInput, previewId) {
-    const message = textarea.value.trim();
-    const attachment = attachmentInput.files[0];
+    const form = document.getElementById('clientMessageForm');
+    const messageContent = document.getElementById('clientMessageContent');
+    const attachment = document.getElementById('clientMessageAttachment');
     
-    if (!message && !attachment) {
+    if (messageContent.value.trim() === '' && attachment.files.length === 0) {
         showToaster('Error', 'Please enter a message or attach a file', 'error');
         return;
     }
     
-    const formData = new FormData();
-    formData.append('_token', csrfToken);
-    formData.append('message', message);
-    formData.append('message_type', type);
-    formData.append('order_id', '{{ $order->id }}');
+    const formData = new FormData(form);
     
-    if (attachment) {
-        formData.append('attachment', attachment);
-    }
+    // Show sending indicator
+    const container = document.querySelector('#client-messages-container .messages-container');
+    const sendingIndicator = document.createElement('div');
+    sendingIndicator.className = 'flex justify-end items-start space-x-2 sending-indicator';
+    sendingIndicator.innerHTML = `
+        <div class="max-w-xs sm:max-w-md rounded-lg p-2 bg-blue-50 shadow-sm opacity-50">
+            <p class="text-sm text-gray-700">${messageContent.value}</p>
+            <div class="mt-1">
+                <span class="text-xs text-gray-400">Sending...</span>
+            </div>
+        </div>
+        <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-xs">
+            <span class="text-blue-600 font-medium">W</span>
+        </div>
+    `;
     
-    // Disable textarea and button during send
-    textarea.disabled = true;
-    const sendButton = textarea.closest('form').querySelector('button[type="button"]');
-    sendButton.disabled = true;
+    container.appendChild(sendingIndicator);
+    scrollToBottom('client');
     
-    fetch('/api/orders/{{ $order->id }}/send-message', {
+    fetch('/api/writer/messages/send', {
         method: 'POST',
         body: formData
     })
     .then(response => response.json())
     .then(data => {
+        // Remove sending indicator
+        container.removeChild(sendingIndicator);
+        
         if (data.success) {
-            // Add new message to the messages container
-            addMessageToContainer(data.message, type);
+            // Add message to the container
+            const messageElement = document.createElement('div');
+            messageElement.className = 'flex justify-end items-start space-x-2';
+            messageElement.id = `message-${data.message.id}`;
+            
+            let attachmentHtml = '';
+            if (data.message.files && data.message.files.length > 0) {
+                attachmentHtml = `
+                    <div class="mt-1 pt-1 border-t border-gray-200">
+                        ${data.message.files.map(file => `
+                            <div class="flex items-center text-xs">
+                                <svg class="h-3 w-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                </svg>
+                                <a href="javascript:void(0)" onclick="downloadFile('${file.id}', '${file.name}')" class="text-blue-600 hover:underline">${file.name}</a>
+                                <span class="ml-1 text-gray-500">(${formatFileSize(file.size)})</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            const createdAt = new Date(data.message.created_at);
+            const formattedTime = createdAt.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit', 
+                hour12: true 
+            });
+            
+            messageElement.innerHTML = `
+                <div class="max-w-xs sm:max-w-md rounded-lg p-2 bg-blue-50 shadow-sm">
+                    <p class="text-sm text-gray-700">${data.message.message}</p>
+                    ${attachmentHtml}
+                    <div class="mt-1 flex justify-between items-center">
+                        <span class="text-xs text-gray-400">${formattedTime}</span>
+                        <span class="text-xs text-gray-400">Sent</span>
+                    </div>
+                </div>
+                <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-xs">
+                    <span class="text-blue-600 font-medium">W</span>
+                </div>
+            `;
+            
+            container.appendChild(messageElement);
+            scrollToBottom('client');
             
             // Clear input fields
-            textarea.value = '';
-            attachmentInput.value = '';
-            document.getElementById(previewId).classList.add('hidden');
-            
-            // Scroll to bottom
-            scrollToBottom(type);
+            messageContent.value = '';
+            attachment.value = '';
+            document.getElementById('clientAttachmentPreview').classList.add('hidden');
         } else {
             showToaster('Error', data.message || 'Failed to send message', 'error');
         }
     })
     .catch(error => {
-        console.error('Send message failed:', error);
+        console.error('Error sending message:', error);
         showToaster('Error', 'Something went wrong', 'error');
-    })
-    .finally(() => {
-        // Re-enable textarea and button
-        textarea.disabled = false;
-        sendButton.disabled = false;
+        
+        // Remove sending indicator
+        container.removeChild(sendingIndicator);
     });
 }
 
-// Setup file attachment previews
-document.getElementById('clientMessageAttachment').addEventListener('change', function(e) {
-    handleAttachmentPreview(e, 'clientAttachmentName', 'clientAttachmentPreview');
-});
-
-document.getElementById('supportMessageAttachment').addEventListener('change', function(e) {
-    handleAttachmentPreview(e, 'supportAttachmentName', 'supportAttachmentPreview');
-});
-
-function handleAttachmentPreview(e, nameElementId, previewId) {
-    const file = e.target.files[0];
-    if (file) {
-        const nameElement = document.getElementById(nameElementId);
-        const preview = document.getElementById(previewId);
-        
-        nameElement.textContent = file.name;
-        preview.classList.remove('hidden');
+// Send support message
+function sendSupportMessage() {
+    const form = document.getElementById('supportMessageForm');
+    const messageContent = document.getElementById('supportMessageContent');
+    const attachment = document.getElementById('supportMessageAttachment');
+    
+    if (messageContent.value.trim() === '' && attachment.files.length === 0) {
+        showToaster('Error', 'Please enter a message or attach a file', 'error');
+        return;
     }
+    
+    const formData = new FormData(form);
+    
+    // Show sending indicator
+    const container = document.querySelector('#support-messages-container .messages-container');
+    const sendingIndicator = document.createElement('div');
+    sendingIndicator.className = 'flex justify-end items-start space-x-2 sending-indicator';
+    sendingIndicator.innerHTML = `
+        <div class="max-w-xs sm:max-w-md rounded-lg p-2 bg-blue-50 shadow-sm opacity-50">
+            <p class="text-sm text-gray-700">${messageContent.value}</p>
+            <div class="mt-1">
+                <span class="text-xs text-gray-400">Sending...</span>
+            </div>
+        </div>
+        <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-xs">
+            <span class="text-blue-600 font-medium">W</span>
+        </div>
+    `;
+    
+    container.appendChild(sendingIndicator);
+    scrollToBottom('support');
+    
+    fetch('/api/writer/messages/send', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Remove sending indicator
+        container.removeChild(sendingIndicator);
+        
+        if (data.success) {
+            // Add message to the container
+            const messageElement = document.createElement('div');
+            messageElement.className = 'flex justify-end items-start space-x-2';
+            messageElement.id = `message-${data.message.id}`;
+            
+            let attachmentHtml = '';
+            if (data.message.files && data.message.files.length > 0) {
+                attachmentHtml = `
+                    <div class="mt-1 pt-1 border-t border-gray-200">
+                        ${data.message.files.map(file => `
+                            <div class="flex items-center text-xs">
+                                <svg class="h-3 w-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                </svg>
+                                <a href="javascript:void(0)" onclick="downloadFile('${file.id}', '${file.name}')" class="text-blue-600 hover:underline">${file.name}</a>
+                                <span class="ml-1 text-gray-500">(${formatFileSize(file.size)})</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            const createdAt = new Date(data.message.created_at);
+            const formattedTime = createdAt.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit', 
+                hour12: true 
+            });
+            
+            messageElement.innerHTML = `
+                <div class="max-w-xs sm:max-w-md rounded-lg p-2 bg-blue-50 shadow-sm">
+                    <p class="text-sm text-gray-700">${data.message.message}</p>
+                    ${attachmentHtml}
+                    <div class="mt-1 flex justify-between items-center">
+                        <span class="text-xs text-gray-400">${formattedTime}</span>
+                        <span class="text-xs text-gray-400">Sent</span>
+                    </div>
+                </div>
+                <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-xs">
+                    <span class="text-blue-600 font-medium">W</span>
+                </div>
+            `;
+            
+            container.appendChild(messageElement);
+            scrollToBottom('support');
+            
+            // Clear input fields
+            messageContent.value = '';
+            attachment.value = '';
+            document.getElementById('supportAttachmentPreview').classList.add('hidden');
+        } else {
+            showToaster('Error', data.message || 'Failed to send message', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error sending message:', error);
+        showToaster('Error', 'Something went wrong', 'error');
+        
+        // Remove sending indicator
+        container.removeChild(sendingIndicator);
+    });
 }
+
+// Message attachment preview functions
+document.getElementById('clientMessageAttachment').addEventListener('change', function() {
+    const preview = document.getElementById('clientAttachmentPreview');
+    const nameEl = document.getElementById('clientAttachmentName');
+    
+    if (this.files.length > 0) {
+        nameEl.textContent = this.files[0].name;
+        preview.classList.remove('hidden');
+    } else {
+        preview.classList.add('hidden');
+    }
+});
+
+document.getElementById('supportMessageAttachment').addEventListener('change', function() {
+    const preview = document.getElementById('supportAttachmentPreview');
+    const nameEl = document.getElementById('supportAttachmentName');
+    
+    if (this.files.length > 0) {
+        nameEl.textContent = this.files[0].name;
+        preview.classList.remove('hidden');
+    } else {
+        preview.classList.add('hidden');
+    }
+});
 
 function removeClientAttachment() {
     document.getElementById('clientMessageAttachment').value = '';
@@ -1827,269 +1910,58 @@ function removeSupportAttachment() {
     document.getElementById('supportAttachmentPreview').classList.add('hidden');
 }
 
-function scrollToBottom(type) {
-    const container = document.querySelector(`#${type}-messages-container .messages-container`);
-    if (container) {
-        container.scrollTop = container.scrollHeight;
-    }
-}
-
-function markMessagesAsRead(type) {
-    fetch(`/api/orders/{{ $order->id }}/mark-messages-read?type=${type}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        }
-    });
-}
-
-// Initialize on load
-document.addEventListener('DOMContentLoaded', function() {
-    // Start with client messages tab
-    switchMessageTab('client');
-    
-    // Set up textarea auto-resize
-    const textareas = document.querySelectorAll('textarea[id$="MessageContent"]');
-    textareas.forEach(textarea => {
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (Math.min(this.scrollHeight, 200)) + 'px';
-        });
-    });
-});
-function addMessageToContainer(message) {
-    const messagesContainer = document.getElementById('messages-container');
-    
-    // Check if we need to add a new date separator
-    const messageDate = new Date(message.created_at).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-    
-    const lastDateSeparator = messagesContainer.querySelector('.message-slider-container:last-of-type .message-slider-label');
-    
-    if (!lastDateSeparator || lastDateSeparator.textContent !== messageDate) {
-        const dateSeparator = document.createElement('div');
-        dateSeparator.className = 'message-slider-container';
-        dateSeparator.innerHTML = `
-            <div class="message-slider"></div>
-            <div class="message-slider-label">${messageDate}</div>
-        `;
-        messagesContainer.appendChild(dateSeparator);
-    }
-    
-    // Create message element
-    const messageElement = document.createElement('div');
-    messageElement.id = `message-${message.id}`;
-    
-    const formattedTime = new Date(message.created_at).toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-    });
-    
-    // Writer message
-    if (message.sender_type === 'WRITER') {
-        messageElement.className = 'flex justify-end';
-        messageElement.innerHTML = `
-            <div class="max-w-lg rounded-lg p-4 bg-blue-50">
-                <p class="text-gray-700">${message.content}</p>
-                <div class="mt-2 flex justify-between items-center">
-                    <span class="text-xs text-gray-500">${formattedTime}</span>
-                    <span class="text-xs text-gray-400">Delivered</span>
-                </div>
-            </div>
-        `;
-    } 
-    // Customer message
-    else if (message.sender_type === 'CUSTOMER') {
-        messageElement.className = 'flex justify-start';
-        messageElement.innerHTML = `
-            <div class="max-w-lg rounded-lg p-4 bg-gray-100">
-                <div class="flex items-center mb-2">
-                    <span class="font-medium text-gray-800">Client</span>
-                    <span class="text-xs text-gray-500 ml-2">${formattedTime}</span>
-                </div>
-                <p class="text-gray-700">${message.content}</p>
-            </div>
-        `;
-    }
-    // Support message
-    else if (message.sender_type === 'SUPPORT') {
-        messageElement.className = 'flex justify-start';
-        messageElement.innerHTML = `
-            <div class="max-w-lg rounded-lg p-4 bg-yellow-50">
-                <div class="flex items-center mb-2">
-                    <span class="font-medium text-gray-800">Support</span>
-                    <span class="text-xs text-gray-500 ml-2">${formattedTime}</span>
-                </div>
-                <p class="text-gray-700">${message.content}</p>
-            </div>
-        `;
-    }
-    
-    messagesContainer.appendChild(messageElement);
-}
-
-function scrollToBottom() {
-    const messagesContainer = document.getElementById('messages-container');
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-function markMessagesAsRead() {
-    fetch('/api/orders/{{ $order->id }}/mark-messages-read', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Update unread message count badge
-            const badge = document.querySelector('#messages-tab span.bg-red-500');
-            if (badge) {
-                badge.remove();
-            }
-            
-            // Update message delivery statuses
-            const messageStatuses = document.querySelectorAll('.flex.justify-end .text-gray-400');
-            messageStatuses.forEach(status => {
-                status.textContent = 'Seen';
-                status.classList.remove('text-gray-400');
-                status.classList.add('text-green-500');
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Mark messages as read failed:', error);
-    });
-}
-
-// Attachment handling
-function removeAttachment() {
-    document.getElementById('messageAttachment').value = '';
-    document.getElementById('attachment-preview').classList.add('hidden');
-}
-
-// File checkbox selection
-function initFileCheckboxes() {
-    const selectAllCheckbox = document.getElementById('selectAllFiles');
-    const fileCheckboxes = document.querySelectorAll('.file-checkbox');
-    const bulkDownloadBtn = document.getElementById('bulk-download-btn');
-    
-    // Hide download button if no checkboxes
-    if (fileCheckboxes.length === 0) {
-        if (bulkDownloadBtn) {
-            bulkDownloadBtn.classList.add('hidden');
-        }
-        return;
-    } else if (bulkDownloadBtn) {
-        bulkDownloadBtn.classList.remove('hidden');
-    }
-    
-    // Select all checkbox
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
-            fileCheckboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
-            });
-            
-            updateBulkDownloadButton();
-        });
-    }
-    
-    // Individual checkboxes
-    fileCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            updateSelectAllCheckbox();
-            updateBulkDownloadButton();
-        });
-    });
-}
-
-function updateSelectAllCheckbox() {
-    const selectAllCheckbox = document.getElementById('selectAllFiles');
-    const fileCheckboxes = document.querySelectorAll('.file-checkbox');
-    
-    if (selectAllCheckbox) {
-        selectAllCheckbox.checked = fileCheckboxes.length > 0 && 
-                                Array.from(fileCheckboxes).every(checkbox => checkbox.checked);
-        selectAllCheckbox.indeterminate = !selectAllCheckbox.checked && 
-                                     Array.from(fileCheckboxes).some(checkbox => checkbox.checked);
-    }
-}
-
-function updateBulkDownloadButton() {
-    const bulkDownloadBtn = document.getElementById('bulk-download-btn');
-    const anyChecked = document.querySelectorAll('.file-checkbox:checked').length > 0;
-    
-    if (bulkDownloadBtn) {
-        if (anyChecked) {
-            bulkDownloadBtn.classList.remove('hidden');
-        } else {
-            bulkDownloadBtn.classList.add('hidden');
-        }
-    }
-}
-
-// Toast notifications
+// Toaster notification function
 function showToaster(title, message, type = 'success') {
     const toaster = document.getElementById('toaster');
-    const titleElement = document.getElementById('toaster-title');
-    const messageElement = document.getElementById('toaster-message');
+    const toasterTitle = document.getElementById('toaster-title');
+    const toasterMessage = document.getElementById('toaster-message');
     
-    titleElement.textContent = title;
-    messageElement.textContent = message;
+    toasterTitle.textContent = title;
+    toasterMessage.textContent = message;
     
-    // Adjust colors based on type
-    const iconContainer = toaster.querySelector('div:first-child');
-    const borderElement = toaster.querySelector('div');
+    // Change toaster style based on type
+    const toasterContent = toaster.querySelector('div');
+    
+    // Reset classes first
+    toasterContent.className = 'p-4 rounded shadow-lg flex items-start max-w-sm';
+    const iconDiv = toasterContent.querySelector('div:first-child');
     
     if (type === 'success') {
-        iconContainer.className = 'text-green-500 mr-3';
-        borderElement.className = 'bg-green-50 border-l-4 border-green-500 p-4 rounded shadow-lg flex items-start max-w-sm';
-        titleElement.className = 'font-medium text-green-800';
-        messageElement.className = 'text-sm text-green-700 mt-1';
-        
-        // Check icon for success
-        iconContainer.innerHTML = `
+        toasterContent.classList.add('bg-green-50', 'border-l-4', 'border-green-500');
+        iconDiv.className = 'text-green-500 mr-3';
+        iconDiv.innerHTML = `
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
         `;
+        toasterTitle.className = 'font-medium text-green-800';
+        toasterMessage.className = 'text-sm text-green-700 mt-1';
     } else if (type === 'error') {
-        iconContainer.className = 'text-red-500 mr-3';
-        borderElement.className = 'bg-red-50 border-l-4 border-red-500 p-4 rounded shadow-lg flex items-start max-w-sm';
-        titleElement.className = 'font-medium text-red-800';
-        messageElement.className = 'text-sm text-red-700 mt-1';
-        
-        // X icon for error
-        iconContainer.innerHTML = `
+        toasterContent.classList.add('bg-red-50', 'border-l-4', 'border-red-500');
+        iconDiv.className = 'text-red-500 mr-3';
+        iconDiv.innerHTML = `
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
         `;
+        toasterTitle.className = 'font-medium text-red-800';
+        toasterMessage.className = 'text-sm text-red-700 mt-1';
     } else if (type === 'warning') {
-        iconContainer.className = 'text-yellow-500 mr-3';
-        borderElement.className = 'bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded shadow-lg flex items-start max-w-sm';
-        titleElement.className = 'font-medium text-yellow-800';
-        messageElement.className = 'text-sm text-yellow-700 mt-1';
-        
-        // Exclamation icon for warning
-        iconContainer.innerHTML = `
+        toasterContent.classList.add('bg-yellow-50', 'border-l-4', 'border-yellow-500');
+        iconDiv.className = 'text-yellow-500 mr-3';
+        iconDiv.innerHTML = `
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
             </svg>
         `;
+        toasterTitle.className = 'font-medium text-yellow-800';
+        toasterMessage.className = 'text-sm text-yellow-700 mt-1';
     }
     
+    // Show toaster
     toaster.classList.remove('translate-x-full');
     
-    // Auto hide after 5 seconds
+    // Auto-hide after delay
     setTimeout(() => {
         hideToaster();
     }, 5000);
@@ -2100,100 +1972,352 @@ function hideToaster() {
     toaster.classList.add('translate-x-full');
 }
 
-// Auto-resize textarea
-function setupTextareaAutoResize() {
-    const textarea = document.getElementById('messageContent');
-    if (textarea) {
+// Real-time message updates
+let messagePolling;
+
+function startMessagePolling() {
+    const orderId = '{{ $order->id }}';
+    
+    // Poll for new messages every 10 seconds
+    messagePolling = setInterval(() => {
+        fetch(`/api/writer/messages/check-new?order_id=${orderId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.has_new) {
+                // Update the message containers with new messages
+                if (data.client_messages && data.client_messages.length > 0) {
+                    updateMessagesContainer('client', data.client_messages);
+                }
+                
+                if (data.support_messages && data.support_messages.length > 0) {
+                    updateMessagesContainer('support', data.support_messages);
+                }
+                
+                // Update message counts
+                if (data.client_count > 0) {
+                    updateMessageCount('client', data.client_count);
+                }
+                
+                if (data.support_count > 0) {
+                    updateMessageCount('support', data.support_count);
+                }
+                
+                // Update tab badge
+                if ((data.client_count + data.support_count) > 0) {
+                    updateTabBadge(data.client_count + data.support_count);
+                }
+                
+                // If messages tab is active, mark as read
+                const messagesPanel = document.getElementById('messages-panel');
+                if (!messagesPanel.classList.contains('hidden')) {
+                    markMessagesAsRead();
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error checking for new messages:', error);
+        });
+    }, 10000);
+}
+
+function updateMessagesContainer(type, messages) {
+    const container = type === 'client' 
+        ? document.querySelector('#client-messages-container .messages-container') 
+        : document.querySelector('#support-messages-container .messages-container');
+    
+    if (!container) return;
+    
+    const currentTab = type === 'client' 
+        ? !document.getElementById('client-messages-container').classList.contains('hidden')
+        : !document.getElementById('support-messages-container').classList.contains('hidden');
+    
+    messages.forEach(message => {
+        // Skip if message already exists
+        if (document.getElementById(`message-${message.id}`)) {
+            return;
+        }
+        
+        // Create message element
+        const messageElement = document.createElement('div');
+        messageElement.id = `message-${message.id}`;
+        
+        if (message.user_id == '{{ Auth::id() }}') {
+            // Writer's own message (shouldn't happen with polling, but for consistency)
+            messageElement.className = 'flex justify-end items-start space-x-2';
+            
+            let attachmentHtml = '';
+            if (message.files && message.files.length > 0) {
+                attachmentHtml = `
+                    <div class="mt-1 pt-1 border-t border-gray-200">
+                        ${message.files.map(file => `
+                            <div class="flex items-center text-xs">
+                                <svg class="h-3 w-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                </svg>
+                                <a href="javascript:void(0)" onclick="downloadFile('${file.id}', '${file.name}')" class="text-blue-600 hover:underline">${file.name}</a>
+                                <span class="ml-1 text-gray-500">(${formatFileSize(file.size)})</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            const createdAt = new Date(message.created_at);
+            const formattedTime = createdAt.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit', 
+                hour12: true 
+            });
+            
+            messageElement.innerHTML = `
+                <div class="max-w-xs sm:max-w-md rounded-lg p-2 bg-blue-50 shadow-sm">
+                    <p class="text-sm text-gray-700">${message.message}</p>
+                    ${attachmentHtml}
+                    <div class="mt-1 flex justify-between items-center">
+                        <span class="text-xs text-gray-400">${formattedTime}</span>
+                        <span class="text-xs ${message.read_at ? 'text-green-500' : 'text-gray-400'}">
+                            ${message.read_at ? 'Seen' : 'Sent'}
+                        </span>
+                    </div>
+                </div>
+                <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-xs">
+                    <span class="text-blue-600 font-medium">W</span>
+                </div>
+            `;
+        } else if (type === 'client') {
+            // Client message
+            messageElement.className = 'flex justify-start items-start space-x-2';
+            
+            let attachmentHtml = '';
+            if (message.files && message.files.length > 0) {
+                attachmentHtml = `
+                    <div class="mt-1 pt-1 border-t border-gray-200">
+                        ${message.files.map(file => `
+                            <div class="flex items-center text-xs">
+                                <svg class="h-3 w-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                </svg>
+                                <a href="javascript:void(0)" onclick="downloadFile('${file.id}', '${file.name}')" class="text-blue-600 hover:underline">${file.name}</a>
+                                <span class="ml-1 text-gray-500">(${formatFileSize(file.size)})</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            const createdAt = new Date(message.created_at);
+            const formattedTime = createdAt.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit', 
+                hour12: true 
+            });
+            
+            messageElement.innerHTML = `
+                <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-xs">
+                    <span class="text-gray-600 font-medium">C</span>
+                </div>
+                <div class="max-w-xs sm:max-w-md rounded-lg p-2 bg-white shadow-sm">
+                    <p class="text-sm text-gray-700">${message.message}</p>
+                    ${attachmentHtml}
+                    <div class="mt-1">
+                        <span class="text-xs text-gray-400">${formattedTime}</span>
+                    </div>
+                </div>
+            `;
+        } else if (message.message_type === 'system') {
+            // System message
+            messageElement.className = 'flex justify-start items-start space-x-2';
+            
+            const createdAt = new Date(message.created_at);
+            const formattedTime = createdAt.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit', 
+                hour12: true 
+            });
+            
+            messageElement.innerHTML = `
+                <div class="w-6 h-6 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0 text-xs">
+                    <span class="text-yellow-600 font-medium">S</span>
+                </div>
+                <div class="max-w-xs sm:max-w-md rounded-lg p-2 bg-yellow-50 shadow-sm">
+                    <p class="text-sm text-gray-700">${message.message}</p>
+                    <div class="mt-1">
+                        <span class="text-xs text-gray-400">${formattedTime}</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Support message
+            messageElement.className = 'flex justify-start items-start space-x-2';
+            
+            let attachmentHtml = '';
+            if (message.files && message.files.length > 0) {
+                attachmentHtml = `
+                    <div class="mt-1 pt-1 border-t border-gray-200">
+                        ${message.files.map(file => `
+                            <div class="flex items-center text-xs">
+                                <svg class="h-3 w-3 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                </svg>
+                                <a href="javascript:void(0)" onclick="downloadFile('${file.id}', '${file.name}')" class="text-blue-600 hover:underline">${file.name}</a>
+                                <span class="ml-1 text-gray-500">(${formatFileSize(file.size)})</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            const createdAt = new Date(message.created_at);
+            const formattedTime = createdAt.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit', 
+                hour12: true 
+            });
+            
+            messageElement.innerHTML = `
+                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 text-xs">
+                    <span class="text-green-600 font-medium">S</span>
+                </div>
+                <div class="max-w-xs sm:max-w-md rounded-lg p-2 bg-green-50 shadow-sm">
+                    <p class="text-sm text-gray-700">${message.message}</p>
+                    ${attachmentHtml}
+                    <div class="mt-1">
+                        <span class="text-xs text-gray-400">${formattedTime}</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        container.appendChild(messageElement);
+    });
+    
+    // If current tab, scroll to bottom
+    if (currentTab) {
+        scrollToBottom(type);
+        
+        // Play notification sound if tab is active but container not in focus
+        if (!document.hasFocus()) {
+            playNotificationSound();
+        }
+    }
+}
+
+function updateMessageCount(type, count) {
+    const tab = type === 'client' 
+        ? document.getElementById('client-messages-tab')
+        : document.getElementById('support-messages-tab');
+    
+    let badge = tab.querySelector('span');
+    
+    if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full';
+        tab.appendChild(badge);
+    }
+    
+    badge.textContent = count;
+}
+
+function updateTabBadge(count) {
+    const tab = document.getElementById('messages-tab');
+    let badge = tab.querySelector('span');
+    
+    if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full';
+        tab.appendChild(badge);
+    }
+    
+    badge.textContent = count;
+}
+
+function playNotificationSound() {
+    const audio = new Audio('/sounds/notification.mp3');
+    audio.volume = 0.5;
+    audio.play().catch(e => {
+        // Browser may block autoplay
+        console.log('Notification sound blocked by browser');
+    });
+}
+
+// Function to update the time remaining dynamically
+function updateTimeRemaining() {
+    const now = new Date().getTime();
+    const timeDiff = deadlineTimestamp - now;
+    
+    if (timeDiff <= 0) {
+        document.getElementById('timeRemaining').textContent = '(Time expired)';
+        document.getElementById('timeRemaining').classList.remove('text-green-500');
+        document.getElementById('timeRemaining').classList.add('text-red-500');
+        return;
+    }
+    
+    // Calculate days, hours, minutes, seconds
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+    
+    let timeRemainingText = '(';
+    if (days > 0) {
+        timeRemainingText += `${days}d `;
+    }
+    if (hours > 0 || days > 0) {
+        timeRemainingText += `${hours}h `;
+    }
+    timeRemainingText += `${minutes}m ${seconds}s)`;
+    
+    document.getElementById('timeRemaining').textContent = timeRemainingText;
+}
+
+// Auto-resize text areas
+function initAutoResizeTextareas() {
+    const textareas = document.querySelectorAll('textarea');
+    
+    textareas.forEach(textarea => {
         textarea.addEventListener('input', function() {
             this.style.height = 'auto';
-            this.style.height = (Math.min(this.scrollHeight, 200)) + 'px';
+            const newHeight = Math.min(this.scrollHeight, 150);
+            this.style.height = newHeight + 'px';
         });
-    }
+    });
 }
 
-// Setup message attachment preview
-function setupMessageAttachment() {
-    const messageAttachment = document.getElementById('messageAttachment');
-    if (messageAttachment) {
-        messageAttachment.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const preview = document.getElementById('attachment-preview');
-                const nameElement = document.getElementById('attachment-name');
-                
-                nameElement.textContent = file.name;
-                preview.classList.remove('hidden');
-            }
-        });
-    }
-}
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    // Set initial tab
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tabs
     switchTab('instructions');
     
-    // Initialize countdown timer
+    // Start countdown updates
     updateCountdowns();
     setInterval(updateCountdowns, 60000); // Update every minute
     
-    // Initialize extension dialog close on outside click
-    const extensionDialog = document.getElementById('extensionDialog');
-    if (extensionDialog) {
-        extensionDialog.addEventListener('click', (e) => {
-            if (e.target === extensionDialog) {
-                hideExtensionDialog();
-            }
-        });
-    }
-    
-    // Add verification checkbox event listeners
-    const verificationCheckboxes = document.querySelectorAll('.verification-checkbox');
-    verificationCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', checkVerificationStatus);
-    });
-    
-    // Initialize modals to close on outside click
-    const modals = [
-        document.getElementById('uploadModal'),
-        document.getElementById('processingModal'),
-        document.getElementById('successModal'),
-        document.getElementById('errorModal')
-    ];
-    
-    modals.forEach(modal => {
-        if (modal) {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeUploadModal();
-                }
-            });
-        }
-    });
-    
-    // Handle escape key to close all modals
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            hideExtensionDialog();
-            closeUploadModal();
-            closeErrorModal();
-            
-            // Close any expanded instructions
-            const expandedInstructions = document.querySelector('.fixed.inset-0.bg-black.bg-opacity-50');
-            if (expandedInstructions) {
-                closeExpandedInstructions(expandedInstructions);
-            }
-        }
-    });
-    
-    // Initialize file selection behaviors
+    // Initialize file checkboxes
     initFileCheckboxes();
     
-    // Setup message textarea auto-resize
-    setupTextareaAutoResize();
+    // Initialize auto-resize for textareas
+    initAutoResizeTextareas();
     
-    // Setup message attachment handling
-    setupMessageAttachment();
+    // Start message polling
+    startMessagePolling();
+    
+    // Add event listener for tab visibility
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            // When tab becomes visible, mark messages as read if messages tab is active
+            const messagesPanel = document.getElementById('messages-panel');
+            if (!messagesPanel.classList.contains('hidden')) {
+                markMessagesAsRead();
+            }
+        }
+    });
+    
+    // Clean up when page unloads
+    window.addEventListener('beforeunload', function() {
+        clearInterval(messagePolling);
+    });
 });
+
 </script>
+
 @endsection

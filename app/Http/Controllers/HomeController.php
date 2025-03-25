@@ -1952,6 +1952,7 @@ class HomeController extends Controller
      * @param  int  $id
      * @return \Illuminate\Contracts\Support\Renderable
      */
+
     public function AssignedOrder($id = null)
     {
         // If no ID is provided, redirect to the current orders page
@@ -1959,54 +1960,67 @@ class HomeController extends Controller
             return redirect()->route('current');
         }
         
-        // Explicitly search by order ID and make sure it belongs to the authenticated writer
+        // Find order by ID without restricting to current writer
+        // This allows viewing reassigned orders' messages
         $order = Order::with(['client', 'files'])
             ->where('id', $id)
-            ->where('writer_id', Auth::id())
             ->first();
         
-        // If order not found or doesn't belong to this writer, redirect with error
+        // If order not found, redirect with error
         if (!$order) {
             return redirect()->route('current')
-                ->with('error', 'Order not found or you do not have permission to view it.');
+                ->with('error', 'Order not found.');
         }
         
+        // Check if current user can view this order
+        $isAssigned = $order->writer_id == Auth::id();
+        $isAdmin = in_array(Auth::user()->usertype, ['admin', 'support']);
+                  
+        if (!$isAssigned && !$isAdmin) {
+            return redirect()->route('current')
+                ->with('error', 'You do not have permission to view this order.');
+        }
+        
+        // Get ALL messages for this order
+        $allMessages = Message::where('order_id', $id)
+            ->with(['user', 'receiver', 'files'])
+            ->orderBy('created_at')
+            ->get();
+        
+        // Group client messages by date
+        $clientMessages = $allMessages
+            ->filter(function($message) {
+                return $message->message_type === 'client';
+            })
+            ->groupBy(function($message) {
+                return Carbon::parse($message->created_at)->format('F d, Y');
+            });
+        
+        // Group support and system messages by date
+        $supportMessages = $allMessages
+            ->filter(function($message) {
+                return in_array($message->message_type, ['admin', 'support', 'system']);
+            })
+            ->groupBy(function($message) {
+                return Carbon::parse($message->created_at)->format('F d, Y');
+            });
+        
         // Count client unread messages
-        $clientUnreadCount = Message::where('order_id', $order->id)
-            ->where('receiver_id', Auth::id())
+        $clientUnreadCount = $allMessages
             ->where('message_type', 'client')
+            ->where('receiver_id', Auth::id())
             ->whereNull('read_at')
             ->count();
             
-        // Count support unread messages
-        $supportUnreadCount = Message::where('order_id', $order->id)
+        // Count support and system unread messages
+        $supportUnreadCount = $allMessages
+            ->whereIn('message_type', ['admin', 'support', 'system'])
             ->where('receiver_id', Auth::id())
-            ->where('message_type', 'support')
             ->whereNull('read_at')
             ->count();
         
-        // Total unread messages (for the original tab display)
+        // Total unread messages for tab display
         $unreadMessages = $clientUnreadCount + $supportUnreadCount;
-        
-        // Get client messages
-        $clientMessages = Message::where('order_id', $order->id)
-            ->where('message_type', 'client')
-            ->with(['files', 'user', 'receiver'])
-            ->orderBy('created_at')
-            ->get()
-            ->groupBy(function($message) {
-                return Carbon::parse($message->created_at)->format('F d, Y');
-            });
-            
-        // Get support messages
-        $supportMessages = Message::where('order_id', $order->id)
-            ->where('message_type', 'support')
-            ->with(['files', 'user', 'receiver'])
-            ->orderBy('created_at')
-            ->get()
-            ->groupBy(function($message) {
-                return Carbon::parse($message->created_at)->format('F d, Y');
-            });
         
         return view('writers.AssignedOrder', [
             'order' => $order,
@@ -2016,6 +2030,193 @@ class HomeController extends Controller
             'supportUnreadCount' => $supportUnreadCount,
             'unreadMessages' => $unreadMessages
         ]);
+    }
+    
+    /**
+     * Send a message for an order
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $orderId
+     * @return \Illuminate\Http\Response
+     */
+    public function sendMessage(Request $request, $orderId)
+    {
+        $request->validate([
+            'message' => 'required|string|max:1000',
+            'message_type' => 'required|in:client,support',
+            'attachment' => 'nullable|file|max:10240',
+        ]);
+
+        try {
+            // Get the order
+            $order = Order::findOrFail($orderId);
+            
+            // Check if user can send a message for this order
+            $isAssigned = $order->writer_id == Auth::id();
+            $isAdmin = in_array(Auth::user()->usertype, ['admin', 'support']);
+            
+            // Verify this is a valid assigned order
+            $isValidAssignedOrder = in_array($order->status, [
+                Order::STATUS_CONFIRMED, 
+                Order::STATUS_UNCONFIRMED,
+                Order::STATUS_IN_PROGRESS,
+                Order::STATUS_DONE,
+                Order::STATUS_DELIVERED,
+                Order::STATUS_REVISION
+            ]) && $order->writer_id !== null;
+            
+            if (!$isAssigned && !$isAdmin) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You must be assigned to this order to send messages'
+                ], 403);
+            }
+            
+            // Check for forbidden keywords
+            $forbiddenKeywords = ['dollar', 'money', 'pay', 'shillings', 'cash', 'price', 'payment'];
+            $messageText = strtolower($request->message);
+            $foundKeywords = [];
+            
+            foreach ($forbiddenKeywords as $keyword) {
+                if (strpos($messageText, $keyword) !== false) {
+                    $foundKeywords[] = $keyword;
+                }
+            }
+            
+            if (!empty($foundKeywords)) {
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Your message contains prohibited keywords: ' . implode(', ', $foundKeywords)
+                    ], 400);
+                }
+                return back()->with('warning', 'Your message contains prohibited keywords: ' . implode(', ', $foundKeywords));
+            }
+            
+            // Create a new message
+            $message = new Message();
+            $message->order_id = $orderId;
+            $message->user_id = Auth::id();
+            $message->message = $request->message;
+            $message->message_type = $request->message_type;
+            $message->title = "Order #{$orderId} Message";
+            
+            // Set receiver based on message type
+            if ($request->message_type === 'client') {
+                $message->receiver_id = $order->client_id;
+            } else {
+                // For support messages, find an admin or support user
+                $supportUser = User::where('usertype', 'admin')
+                    ->orWhere('usertype', 'support')
+                    ->first();
+                    
+                if ($supportUser) {
+                    $message->receiver_id = $supportUser->id;
+                } else {
+                    throw new \Exception("No support staff available");
+                }
+            }
+            
+            $message->is_general = false;
+            $message->save();
+            
+            // Handle file attachment if present
+            if ($request->hasFile('attachment')) {
+                $file = $request->file('attachment');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs("order_messages/{$orderId}", $fileName, 'public');
+                
+                $fileModel = new File([
+                    'name' => $file->getClientOriginalName(),
+                    'original_name' => $file->getClientOriginalName(),
+                    'path' => $filePath,
+                    'size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                    'uploaded_by' => Auth::id(),
+                    'uploader_type' => 'WRITER',
+                    'fileable_id' => $message->id,
+                    'fileable_type' => get_class($message)
+                ]);
+                
+                $message->files()->save($fileModel);
+            }
+            
+            // Mark messages from the other side as read
+            if ($request->message_type === 'client') {
+                Message::where('order_id', $orderId)
+                    ->where('message_type', 'client')
+                    ->where('user_id', $order->client_id)
+                    ->whereNull('read_at')
+                    ->update(['read_at' => now()]);
+            } else {
+                Message::where('order_id', $orderId)
+                    ->whereIn('message_type', ['admin', 'support', 'system'])
+                    ->whereNotIn('user_id', [Auth::id()])
+                    ->whereNull('read_at')
+                    ->update(['read_at' => now()]);
+            }
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message->load('files', 'user', 'receiver')
+                ]);
+            }
+            
+            return back()->with('success', 'Message sent successfully');
+        } catch (\Exception $e) {
+            Log::error('Error sending message: ' . $e->getMessage());
+            
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to send message: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->with('error', 'Failed to send message: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Mark messages as read for an order
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function markMessagesRead(Request $request, $id)
+    {
+        try {
+            $messageType = $request->input('type', 'all');
+            
+            // Build query for marking messages as read
+            $query = Message::where('order_id', $id)
+                ->where('receiver_id', Auth::id())
+                ->whereNull('read_at');
+                
+            // Apply message type filter if specified
+            if ($messageType !== 'all') {
+                if ($messageType === 'client') {
+                    $query->where('message_type', 'client');
+                } else if ($messageType === 'support') {
+                    $query->whereIn('message_type', ['admin', 'support', 'system']);
+                }
+            }
+            
+            // Mark matching messages as read
+            $query->update(['read_at' => now()]);
+            
+            return response()->json([
+                'success' => true
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error marking messages as read: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to mark messages as read'
+            ], 500);
+        }
     }
 
     /**
@@ -2080,13 +2281,13 @@ class HomeController extends Controller
     }
 
     /**
-     * Send a message for an order
+     * Send a message for an available order
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $orderId
      * @return \Illuminate\Http\Response
      */
-    public function sendMessage(Request $request, $orderId)
+    private function sendAvailableOrderMessage(Request $request, $orderId)
     {
         $request->validate([
             'message' => 'required|string|max:1000',
@@ -2375,36 +2576,7 @@ class HomeController extends Controller
      * @param int $id
      * @return \Illuminate\Http\Response
      */
-    public function markMessagesRead(Request $request, $id)
-    {
-        try {
-            $messageType = $request->input('type', 'all');
-            
-            // Build query for marking messages as read
-            $query = Message::where('order_id', $id)
-                ->where('receiver_id', Auth::id())
-                ->whereNull('read_at');
-                
-            // Apply message type filter if specified
-            if ($messageType !== 'all') {
-                $query->where('message_type', $messageType);
-            }
-            
-            // Mark matching messages as read
-            $query->update(['read_at' => now()]);
-            
-            return response()->json([
-                'success' => true
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error marking messages as read: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to mark messages as read'
-            ], 500);
-        }
-    }
+    
 
     /**
      * Upload files for an order and mark it as DONE if completed
