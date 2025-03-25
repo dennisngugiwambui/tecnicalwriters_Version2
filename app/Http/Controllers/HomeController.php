@@ -18,8 +18,6 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\WriterProfile; 
 use Illuminate\Support\Facades\DB;
 
-
-
 class HomeController extends Controller
 {
     /**
@@ -32,7 +30,6 @@ class HomeController extends Controller
         $this->middleware(function ($request, $next) {
             if (Auth::check()) {
                 $user = Auth::user();
-
                   
                 // Check user status for redirection
                 if ($user->usertype === 'writer') {
@@ -108,43 +105,43 @@ class HomeController extends Controller
     }
 
     /**
- * Show the application dashboard.
- *
- * @return \Illuminate\Contracts\Support\Renderable
- */
-public function index()
-{
-    $user = Auth::user();
-    
-    // Get IDs of orders the user has already bid on
-    $biddedOrderIds = Bid::where('user_id', Auth::id())->pluck('order_id');
-    
-    // Get available orders excluding those the user has already bid on
-    $availableOrders = Order::where('status', Order::STATUS_AVAILABLE)
-        ->whereNotIn('id', $biddedOrderIds)
-        ->with(['files', 'client', 'bids'])
-        ->latest()
-        ->get();
-    
-    // Get unique disciplines from available orders
-    $disciplines = $availableOrders->pluck('discipline')->unique()->filter()->values();
-    
-    // Get writer profile for subjects
-    $writerProfile = WriterProfile::where('user_id', $user->id)->first();
-    $userSubjects = $writerProfile ? $writerProfile->subjects : [];
-    
-    // Get all available subjects from the system
-    $allSubjects = [
-        'English Literature', 'History', 'Mathematics', 'Physics', 'Chemistry', 
-        'Biology', 'Computer Science', 'Economics', 'Business Studies', 'Psychology', 
-        'Sociology', 'Political Science', 'Philosophy', 'Law', 'Medicine', 
-        'Engineering', 'Architecture', 'Art & Design', 'Music', 'Film Studies',
-        'Media Studies', 'Communications', 'Journalism', 'Marketing', 'Management', 
-        'Finance', 'Accounting', 'Nursing', 'Education', 'Social Work'
-    ];
-    
-    return view('writers.index', compact('availableOrders', 'disciplines', 'userSubjects', 'allSubjects'));
-}
+     * Show the application dashboard.
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+    public function index()
+    {
+        $user = Auth::user();
+        
+        // Get IDs of orders the user has already bid on
+        $biddedOrderIds = Bid::where('user_id', Auth::id())->pluck('order_id');
+        
+        // Get available orders excluding those the user has already bid on
+        $availableOrders = Order::where('status', Order::STATUS_AVAILABLE)
+            ->whereNotIn('id', $biddedOrderIds)
+            ->with(['files', 'client', 'bids'])
+            ->latest()
+            ->get();
+        
+        // Get unique disciplines from available orders
+        $disciplines = $availableOrders->pluck('discipline')->unique()->filter()->values();
+        
+        // Get writer profile for subjects
+        $writerProfile = WriterProfile::where('user_id', $user->id)->first();
+        $userSubjects = $writerProfile ? $writerProfile->subjects : [];
+        
+        // Get all available subjects from the system
+        $allSubjects = [
+            'English Literature', 'History', 'Mathematics', 'Physics', 'Chemistry', 
+            'Biology', 'Computer Science', 'Economics', 'Business Studies', 'Psychology', 
+            'Sociology', 'Political Science', 'Philosophy', 'Law', 'Medicine', 
+            'Engineering', 'Architecture', 'Art & Design', 'Music', 'Film Studies',
+            'Media Studies', 'Communications', 'Journalism', 'Marketing', 'Management', 
+            'Finance', 'Accounting', 'Nursing', 'Education', 'Social Work'
+        ];
+        
+        return view('writers.index', compact('availableOrders', 'disciplines', 'userSubjects', 'allSubjects'));
+    }
 
     /**
      * Display current orders - split between active (CONFIRMED/UNCONFIRMED) and completed (DONE/DELIVERED)
@@ -318,6 +315,7 @@ public function index()
         // Pass data to view
         return view('writers.finished', compact('completedOrders', 'totalEarnings'));
     }
+    
     /**
      * Display orders that are on dispute
      *
@@ -401,6 +399,7 @@ public function index()
             return redirect()->route('login')->with('error', 'Please login to view messages');
         }
     }
+    
     /**
      * View a specific message thread
      *
@@ -419,11 +418,31 @@ public function index()
             $orderId = $parts[1];
             $order = Order::findOrFail($orderId);
             
-            // Get all messages for this order
-            $messages = Message::where('order_id', $orderId)
+            // Get client messages for this order
+            $clientMessages = Message::where('order_id', $orderId)
+                ->where('message_type', 'client')
                 ->with(['user', 'receiver', 'files'])
                 ->orderBy('created_at')
                 ->get();
+                
+            // Get support messages for this order
+            $supportMessages = Message::where('order_id', $orderId)
+                ->where('message_type', 'support')
+                ->with(['user', 'receiver', 'files'])
+                ->orderBy('created_at')
+                ->get();
+            
+            // Count unread client messages
+            $clientUnreadCount = $clientMessages
+                ->where('receiver_id', $user->id)
+                ->whereNull('read_at')
+                ->count();
+                
+            // Count unread support messages
+            $supportUnreadCount = $supportMessages
+                ->where('receiver_id', $user->id)
+                ->whereNull('read_at')
+                ->count();
             
             // Mark unread messages as read
             Message::where('order_id', $orderId)
@@ -431,25 +450,13 @@ public function index()
                 ->whereNull('read_at')
                 ->update(['read_at' => now()]);
                 
-            $otherUser = $messages->count() > 0 ? 
-                ($messages->first()->user_id == $user->id 
-                    ? User::find($messages->first()->receiver_id)
-                    : User::find($messages->first()->user_id)) : null;
+            // Determine other user (client or support)
+            $clientUser = User::find($order->client_id);
+            $supportUser = User::where('usertype', 'admin')
+                ->orWhere('usertype', 'support')
+                ->first();
             
-            if (!$otherUser && $order) {
-                // If no messages yet, find the other user based on order information
-                if ($order->writer_id == $user->id) {
-                    // If current user is the writer, other user is the client
-                    $otherUser = User::find($order->client_id);
-                } else {
-                    // Otherwise, get a support user
-                    $otherUser = User::where('usertype', 'admin')
-                        ->orWhere('usertype', 'support')
-                        ->first();
-                }
-            }
-            
-            // Get message threads for the main messages view
+            // Get message threads for the main messages view (sidebar)
             $messageThreads = Message::where(function($query) use ($user) {
                     $query->where('user_id', $user->id)
                         ->orWhere('receiver_id', $user->id);
@@ -501,7 +508,19 @@ public function index()
                 ->select('id', 'title')
                 ->get();
             
-            return view('writers.messages', compact('messageThreads', 'userOrders', 'users', 'messages', 'order', 'otherUser', 'type'));
+            return view('writers.messages', compact(
+                'messageThreads', 
+                'userOrders', 
+                'users', 
+                'clientMessages', 
+                'supportMessages', 
+                'order', 
+                'clientUser', 
+                'supportUser',
+                'clientUnreadCount',
+                'supportUnreadCount', 
+                'type'
+            ));
         } else {
             // This is a general message thread
             $title = $parts[1];
@@ -590,8 +609,7 @@ public function index()
         }
     }
 
-
-        /**
+    /**
      * Get messages list for AJAX updates without reloading the page
      *
      * @return \Illuminate\Http\Response
@@ -712,6 +730,7 @@ public function index()
             'count' => $messageThreads->count()
         ]);
     }
+    
     /**
      * Send a new message
      *
@@ -758,15 +777,21 @@ public function index()
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $index => $file) {
                 $fileName = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('message_attachments/' . $message->id, $fileName);
+                $filePath = $file->storeAs('message_attachments/' . $message->id, $fileName, 'public');
                 $fileSize = $file->getSize();
+                $mimeType = $file->getMimeType();
                 
                 $fileModel = new File([
                     'name' => $file->getClientOriginalName(),
+                    'original_name' => $file->getClientOriginalName(),
                     'path' => $filePath,
                     'size' => $fileSize,
+                    'mime_type' => $mimeType,
                     'uploaded_by' => Auth::id(),
-                    'description' => $request->input('attachment_descriptions.' . $index, null)
+                    'uploader_type' => 'WRITER',
+                    'description' => $request->input('attachment_descriptions.' . $index, null),
+                    'fileable_id' => $message->id,
+                    'fileable_type' => get_class($message)
                 ]);
                 
                 $message->files()->save($fileModel);
@@ -820,27 +845,38 @@ public function index()
             $orderId = $parts[1];
             $order = Order::findOrFail($orderId);
             
-            // Check if user can reply (should not be assigned to another writer)
-            if ($order->writer_id && $order->writer_id != $user->id && $user->usertype !== 'admin' && $user->usertype !== 'support') {
+            // Check if user can reply (should be assigned or have placed a bid)
+            $isAssigned = $order->writer_id == $user->id;
+            $hasBid = Bid::where('order_id', $orderId)->where('user_id', $user->id)->exists();
+            
+            if (!$isAssigned && !$hasBid && $user->usertype !== 'admin' && $user->usertype !== 'support') {
                 if ($request->ajax()) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'This order is assigned to another writer.'
+                        'message' => 'You cannot send messages for this order.'
                     ], 403);
                 }
-                return back()->with('error', 'This order is assigned to another writer.');
+                return back()->with('error', 'You cannot send messages for this order.');
             }
             
-            // Get the previous message to determine the receiver
-            $previousMessage = Message::where('order_id', $orderId)
-                ->orderBy('created_at', 'desc')
-                ->first();
-                
-            $receiverId = $previousMessage ? 
-                ($previousMessage->user_id == $user->id 
-                    ? $previousMessage->receiver_id 
-                    : $previousMessage->user_id) :
-                ($order->client_id); // Default to client if no previous messages
+            // Determine receiver based on message type
+            $receiverId = null;
+            $messageType = $request->message_type ?? 'client'; // Default to client if not specified
+            
+            if ($messageType === 'client') {
+                $receiverId = $order->client_id;
+            } else {
+                // Find a support or admin user
+                $supportUser = User::where('usertype', 'admin')
+                    ->orWhere('usertype', 'support')
+                    ->first();
+                    
+                if ($supportUser) {
+                    $receiverId = $supportUser->id;
+                } else {
+                    throw new \Exception("No support staff available to receive the message");
+                }
+            }
                 
             // Create the reply
             $message = new Message();
@@ -849,12 +885,17 @@ public function index()
             $message->order_id = $orderId;
             $message->is_general = false;
             $message->message = $request->message;
-            $message->message_type = User::find($receiverId)->usertype === 'client' ? 'client' : 'support';
+            $message->message_type = $messageType;
+            $message->title = "Order #" . $orderId . " Message";
             $message->save();
         } else {
             // This is a general message
             $title = $parts[1];
             $otherUserId = $parts[2];
+            
+            // Determine message type based on receiver
+            $receiver = User::find($otherUserId);
+            $messageType = $receiver->usertype === 'client' ? 'client' : 'support';
             
             // Create the reply
             $message = new Message();
@@ -863,7 +904,7 @@ public function index()
             $message->title = $title;
             $message->is_general = true;
             $message->message = $request->message;
-            $message->message_type = User::find($otherUserId)->usertype === 'client' ? 'client' : 'support';
+            $message->message_type = $messageType;
             $message->save();
         }
         
@@ -871,15 +912,21 @@ public function index()
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $index => $file) {
                 $fileName = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('message_attachments/' . $message->id, $fileName);
+                $filePath = $file->storeAs('message_attachments/' . $message->id, $fileName, 'public');
                 $fileSize = $file->getSize();
+                $mimeType = $file->getMimeType();
                 
                 $fileModel = new File([
                     'name' => $file->getClientOriginalName(),
+                    'original_name' => $file->getClientOriginalName(),
                     'path' => $filePath,
                     'size' => $fileSize,
+                    'mime_type' => $mimeType,
                     'uploaded_by' => Auth::id(),
-                    'description' => $request->input('attachment_descriptions.' . $index, null)
+                    'uploader_type' => 'WRITER',
+                    'description' => $request->input('attachment_descriptions.' . $index, null),
+                    'fileable_id' => $message->id,
+                    'fileable_type' => get_class($message)
                 ]);
                 
                 $message->files()->save($fileModel);
@@ -889,7 +936,7 @@ public function index()
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Reply sent successfully!'
+                'message' => $message->load('files')
             ]);
         }
         
@@ -986,8 +1033,7 @@ public function index()
         ));
     }
 
-
-        /**
+    /**
      * Request withdrawal of earnings
      *
      * @param  \Illuminate\Http\Request  $request
@@ -1186,7 +1232,6 @@ public function index()
         ]);
     }
 
-
     /**
      * Display user profile page
      *
@@ -1202,8 +1247,14 @@ public function index()
         return view('writers.profile', [
             'user' => $user
         ]);
-        
     }
+    
+    /**
+     * Update user profile
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function ProfileUpdate(Request $request)
     {
         $user = Auth::user();
@@ -1294,7 +1345,7 @@ public function index()
         }
     }
 
-      /**
+    /**
      * Update the user's status.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -1364,8 +1415,8 @@ public function index()
                 $fileName = uniqid('profile_') . '.' . $file->getClientOriginalExtension();
                 
                 // Delete previous file if exists
-                if ($profile->profile_picture && \Storage::exists('public/profiles/' . $profile->profile_picture)) {
-                    \Storage::delete('public/profiles/' . $profile->profile_picture);
+                if ($profile->profile_picture && Storage::exists('public/profiles/' . $profile->profile_picture)) {
+                    Storage::delete('public/profiles/' . $profile->profile_picture);
                 }
                 
                 // Store new file
@@ -1379,7 +1430,7 @@ public function index()
                 $profile->save();
                 
                 // Also update user's profile picture field if it exists
-                if (in_array('profile_picture', $user->getFillable())) {
+                if (in_array('profile_picture', $user->fillable)) {
                     $user->profile_picture = $fileName;
                     $user->save();
                 }
@@ -1387,7 +1438,7 @@ public function index()
                 return response()->json([
                     'success' => true,
                     'message' => 'Profile picture uploaded successfully',
-                    'file_path' => \Storage::url('public/profiles/' . $fileName)
+                    'file_path' => Storage::url('public/profiles/' . $fileName)
                 ]);
             }
             
@@ -1406,11 +1457,6 @@ public function index()
         }
     }
 
-    /**
-     * Display user statistics page
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
-     */
     /**
      * Display user statistics dashboard
      *
@@ -1908,34 +1954,67 @@ public function index()
      */
     public function AssignedOrder($id = null)
     {
+        // If no ID is provided, redirect to the current orders page
         if (!$id) {
-            // Use default ID if none provided
-            $id = 201394828;
+            return redirect()->route('current');
         }
         
-        $order = Order::with(['customer', 'files'])
+        // Explicitly search by order ID and make sure it belongs to the authenticated writer
+        $order = Order::with(['client', 'files'])
             ->where('id', $id)
             ->where('writer_id', Auth::id())
-            ->firstOrFail();
+            ->first();
         
-        // Count unread messages
-        $unreadMessages = Message::where('order_id', $order->id)
+        // If order not found or doesn't belong to this writer, redirect with error
+        if (!$order) {
+            return redirect()->route('current')
+                ->with('error', 'Order not found or you do not have permission to view it.');
+        }
+        
+        // Count client unread messages
+        $clientUnreadCount = Message::where('order_id', $order->id)
             ->where('receiver_id', Auth::id())
+            ->where('message_type', 'client')
+            ->whereNull('read_at')
+            ->count();
+            
+        // Count support unread messages
+        $supportUnreadCount = Message::where('order_id', $order->id)
+            ->where('receiver_id', Auth::id())
+            ->where('message_type', 'support')
             ->whereNull('read_at')
             ->count();
         
-        // Get messages grouped by date
-        $messages = Message::where('order_id', $order->id)
+        // Total unread messages (for the original tab display)
+        $unreadMessages = $clientUnreadCount + $supportUnreadCount;
+        
+        // Get client messages
+        $clientMessages = Message::where('order_id', $order->id)
+            ->where('message_type', 'client')
+            ->with(['files', 'user', 'receiver'])
+            ->orderBy('created_at')
+            ->get()
+            ->groupBy(function($message) {
+                return Carbon::parse($message->created_at)->format('F d, Y');
+            });
+            
+        // Get support messages
+        $supportMessages = Message::where('order_id', $order->id)
+            ->where('message_type', 'support')
+            ->with(['files', 'user', 'receiver'])
             ->orderBy('created_at')
             ->get()
             ->groupBy(function($message) {
                 return Carbon::parse($message->created_at)->format('F d, Y');
             });
         
-        return view('writers.assigned-order-details', [
+        return view('writers.AssignedOrder', [
             'order' => $order,
-            'unreadMessages' => $unreadMessages,
-            'messages' => $messages
+            'clientMessages' => $clientMessages,
+            'supportMessages' => $supportMessages,
+            'clientUnreadCount' => $clientUnreadCount,
+            'supportUnreadCount' => $supportUnreadCount,
+            'unreadMessages' => $unreadMessages
         ]);
     }
 
@@ -2091,14 +2170,20 @@ public function index()
             if ($request->hasFile('attachment')) {
                 $file = $request->file('attachment');
                 $fileName = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs('order_messages/' . $orderId, $fileName);
+                $filePath = $file->storeAs('order_messages/' . $orderId, $fileName, 'public');
                 $fileSize = $file->getSize();
+                $mimeType = $file->getMimeType();
                 
                 $fileModel = new File([
                     'name' => $file->getClientOriginalName(),
+                    'original_name' => $file->getClientOriginalName(),
                     'path' => $filePath,
                     'size' => $fileSize,
+                    'mime_type' => $mimeType,
                     'uploaded_by' => Auth::id(),
+                    'uploader_type' => 'WRITER',
+                    'fileable_id' => $message->id,
+                    'fileable_type' => get_class($message)
                 ]);
                 
                 $message->files()->save($fileModel);
@@ -2124,12 +2209,14 @@ public function index()
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => $message
+                    'message' => $message->load('files', 'user', 'receiver')
                 ]);
             }
             
             return back()->with('success', 'Message sent successfully');
         } catch (\Exception $e) {
+            Log::error('Error sending message: ' . $e->getMessage());
+            
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
@@ -2147,12 +2234,12 @@ public function index()
      * @param  int  $orderId
      * @return \Illuminate\Http\Response
      */
-
     public function submitBid(Request $request, $orderId)
     {
         // Validate request
         $request->validate([
             'amount' => 'required|numeric|min:0',
+            'cover_letter' => 'nullable|string|max:1000'
         ]);
 
         try {
@@ -2193,6 +2280,8 @@ public function index()
                 'message' => 'Your bid has been placed successfully'
             ]);
         } catch (\Exception $e) {
+            Log::error('Error submitting bid: ' . $e->getMessage());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to place bid: ' . $e->getMessage()
@@ -2211,28 +2300,19 @@ public function index()
         $request->validate([
             'file_id' => 'required|exists:files,id',
         ]);
-
+    
         $file = File::findOrFail($request->file_id);
         
-        // Check if user has permission to download the file
-        // For order files, check if the order is available or assigned to this writer
-        if ($file->fileable_type === 'App\Models\Order') {
-            $order = Order::find($file->fileable_id);
-            
-            if (!$order || 
-                ($order->status !== Order::STATUS_AVAILABLE && 
-                $order->writer_id !== Auth::id() && 
-                Auth::user()->usertype !== 'admin')) {
-                abort(403, 'You do not have permission to download this file');
-            }
-        }
-
+        // Log file path for debugging
+        Log::info('Attempting to download file: ' . $file->path);
+        
         // Check if file exists in storage
-        if (!Storage::exists($file->path)) {
-            abort(404, 'File not found in storage');
+        if (!Storage::disk('public')->exists($file->path)) {
+            Log::error('File not found in storage: ' . $file->path);
+            return back()->with('error', 'File not found in storage');
         }
-
-        return Storage::download($file->path, $file->name);
+    
+        return Storage::disk('public')->download($file->path, $file->name ?? 'download');
     }
 
     /**
@@ -2258,34 +2338,23 @@ public function index()
         // For multiple files, create a zip
         $zip = new ZipArchive();
         $zipName = 'order_files_' . time() . '.zip';
-        $zipPath = storage_path('app/temp/' . $zipName);
+        $zipPath = storage_path('app/public/temp/' . $zipName);
         
         // Create temp directory if it doesn't exist
-        if (!Storage::exists('temp')) {
-            Storage::makeDirectory('temp');
+        if (!Storage::disk('public')->exists('temp')) {
+            Storage::disk('public')->makeDirectory('temp');
         }
 
         if ($zip->open($zipPath, ZipArchive::CREATE) !== true) {
-            abort(500, 'Cannot create zip file');
+            return response()->json(['error' => 'Cannot create zip file'], 500);
         }
 
         $files = File::whereIn('id', $fileIds)->get();
         
         foreach ($files as $file) {
-            // Verify permission for each file
-            if ($file->fileable_type === 'App\Models\Order') {
-                $order = Order::find($file->fileable_id);
-                
-                if (!$order || 
-                    ($order->status !== Order::STATUS_AVAILABLE && 
-                    $order->writer_id !== Auth::id() && 
-                    Auth::user()->usertype !== 'admin')) {
-                    continue; // Skip files without permission
-                }
-            }
-            
-            if (Storage::exists($file->path)) {
-                $fileContent = Storage::get($file->path);
+            // Verify the file exists
+            if (Storage::disk('public')->exists($file->path)) {
+                $fileContent = Storage::disk('public')->get($file->path);
                 // Generate a unique name to avoid conflicts
                 $fileNameInZip = Str::slug(pathinfo($file->name, PATHINFO_FILENAME)) . '_' . 
                                 substr(md5($file->id), 0, 6) . '.' . 
@@ -2309,10 +2378,20 @@ public function index()
     public function markMessagesRead(Request $request, $id)
     {
         try {
-            Message::where('order_id', $id)
+            $messageType = $request->input('type', 'all');
+            
+            // Build query for marking messages as read
+            $query = Message::where('order_id', $id)
                 ->where('receiver_id', Auth::id())
-                ->whereNull('read_at')
-                ->update(['read_at' => now()]);
+                ->whereNull('read_at');
+                
+            // Apply message type filter if specified
+            if ($messageType !== 'all') {
+                $query->where('message_type', $messageType);
+            }
+            
+            // Mark matching messages as read
+            $query->update(['read_at' => now()]);
             
             return response()->json([
                 'success' => true
@@ -2332,7 +2411,7 @@ public function index()
      * 
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
-     */
+     */  
     public function uploadFiles(Request $request)
     {
         $request->validate([
@@ -2360,50 +2439,42 @@ public function index()
                 $mimeType = $file->getMimeType();
                 
                 // Generate unique filename
-                $filename = $order->order_number . '_' . uniqid() . '.' . $extension;
+                $filename = $order->id . '_' . uniqid() . '.' . $extension;
                 
-                // Store file in storage
+                // Store file in public storage for accessibility
                 $path = $file->storeAs('order_files', $filename, 'public');
                 
                 // Get description
                 $description = isset($request->descriptions[$index]) ? $request->descriptions[$index] : null;
                 
-                // Check if this file is marked as "completed"
+                // Check if this is a completed file
                 if ($description === 'completed') {
                     $hasCompletedFile = true;
                 }
                 
-                // Create file record
+                // Create file record with more complete information
                 $fileRecord = File::create([
-                    'order_id' => $order->id,
-                    'path' => $path,
+                    'name' => $originalName,
                     'original_name' => $originalName,
-                    'mime_type' => $mimeType,
+                    'path' => $path,
                     'size' => $size,
-                    'description' => $description,
-                    'uploaded_by' => Auth::id()
+                    'mime_type' => $mimeType,
+                    'fileable_id' => $order->id,
+                    'fileable_type' => get_class($order),
+                    'uploaded_by' => Auth::id(),
+                    'uploader_type' => 'WRITER',
+                    'description' => $description
                 ]);
                 
                 $uploadedFiles[] = $fileRecord;
             }
             
-            // If a completed file was uploaded and order is CONFIRMED or ON_REVISION, mark order as DONE
+            // Update order status if a completed file was uploaded
             $statusChanged = false;
-            if ($hasCompletedFile && in_array($order->status, [Order::STATUS_CONFIRMED, Order::STATUS_REVISION])) {
+            if ($hasCompletedFile && !in_array($order->status, [Order::STATUS_DONE, Order::STATUS_DELIVERED])) {
                 $order->status = Order::STATUS_DONE;
                 $order->save();
                 $statusChanged = true;
-                
-                // Create system message
-                Message::create([
-                    'order_id' => $order->id,
-                    'message' => "Writer has marked this order as completed.",
-                    'user_id' => Auth::id(),
-                    'receiver_id' => $order->client_id,
-                    'is_general' => false,
-                    'message_type' => 'client',
-                    'read_at' => null
-                ]);
             }
             
             return response()->json([

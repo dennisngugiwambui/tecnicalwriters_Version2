@@ -1,88 +1,16 @@
-Here's the complete AssignedOrderDetails blade view code:
-
-```php
 @extends('writers.app')
 @section('content')
 
 <style>
-    /* Center modal styles */
-    .modal-container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 50;
-        padding: 1rem;
-        background: rgba(0, 0, 0, 0.5);
+    /* Custom styles for assigned order page */
+    .countdown {
+        font-variant-numeric: tabular-nums;
     }
-
-    .modal-content {
-        width: 100%;
-        max-width: 42rem;
-        max-height: 90vh;
-        overflow-y: auto;
-        background: white;
-        border-radius: 0.5rem;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        animation: fadeIn 0.3s ease-out;
+    
+    .countdown-warning {
+        color: #EF4444;
     }
-
-    /* Loading spinner */
-    .spinner {
-        border: 3px solid #f3f3f3;
-        border-top: 3px solid #22C55E;
-        border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    .tab-slider {
-        position: absolute;
-        bottom: -1px;
-        height: 2px;
-        background-color: #22C55E;
-        transition: all 0.3s ease;
-    }
-
-    .description-dropdown {
-        max-height: 200px;
-        overflow-y: auto;
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.5rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        z-index: 50;
-    }
-
-    .description-dropdown.show {
-        display: block;
-    }
-
-    .file-upload-zone {
-        border: 2px dashed #e5e7eb;
-        transition: all 0.3s ease;
-    }
-
-    .file-upload-zone.drag-over {
-        border-color: #22C55E;
-        background-color: rgba(34, 197, 94, 0.05);
-    }
-
+    
     .copy-tooltip {
         position: absolute;
         bottom: 100%;
@@ -97,47 +25,27 @@ Here's the complete AssignedOrderDetails blade view code:
         transition: opacity 0.2s ease;
         pointer-events: none;
     }
-
+    
     .copy-tooltip.show {
         opacity: 1;
     }
-
-    /* Extension Dialog Styles */
-    .extension-dialog {
-        backdrop-filter: blur(4px);
+    
+    .tab-slider {
+        position: absolute;
+        bottom: -1px;
+        height: 2px;
+        background-color: #22C55E;
+        transition: all 0.3s ease;
     }
-
-    .extension-dialog-content {
-        animation: slideIn 0.3s ease-out;
+    
+    .file-upload-zone {
+        border: 2px dashed #e5e7eb;
+        transition: all 0.3s ease;
     }
-
-    @keyframes slideIn {
-        from {
-            transform: translateY(-10px);
-            opacity: 0;
-        }
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-
-    /* Upload Modal Styles */
-    .upload-modal {
-        backdrop-filter: blur(4px);
-    }
-
-    .upload-modal-content {
-        animation: fadeIn 0.3s ease-out;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
+    
+    .file-upload-zone.drag-over {
+        border-color: #22C55E;
+        background-color: rgba(34, 197, 94, 0.05);
     }
     
     /* Messages container styles */
@@ -185,15 +93,6 @@ Here's the complete AssignedOrderDetails blade view code:
         font-size: 0.75rem;
         color: #22C55E;
     }
-
-    /* Time countdown styles */
-    .countdown {
-        font-variant-numeric: tabular-nums;
-    }
-    
-    .countdown-warning {
-        color: #EF4444;
-    }
 </style>
 
 <div class="flex h-full pt-20 px-6 lg:px-8">
@@ -207,7 +106,7 @@ Here's the complete AssignedOrderDetails blade view code:
                             <i class="fas fa-file-alt text-green-500 text-xl"></i>
                         </div>
                         <div>
-                            <h1 class="text-xl font-semibold text-gray-800">Order #{{ $order->order_number }}</h1>
+                            <h1 class="text-xl font-semibold text-gray-800">Order #{{ $order->id }}</h1>
                             <div class="flex items-center text-sm text-gray-500">
                                 <div class="w-2 h-2 rounded-full 
                                     @if($order->status == 'DONE') bg-green-500
@@ -219,11 +118,11 @@ Here's the complete AssignedOrderDetails blade view code:
                         </div>
                     </div>
                     <div class="flex items-center space-x-6">
-                        <span class="text-2xl font-semibold text-gray-800">${{ number_format($order->amount, 2) }}</span>
+                        <span class="text-2xl font-semibold text-gray-800">${{ number_format($order->price, 2) }}</span>
                         <div class="flex items-center border-l pl-6">
                             <div class="flex flex-col items-end">
                                 <span class="text-sm font-medium text-gray-600">Customer</span>
-                                <span class="text-sm text-gray-500">{{ $order->customer->name }}</span>
+                                <span class="text-sm text-gray-500">N/A</span>
                             </div>
                         </div>
                     </div>
@@ -301,64 +200,6 @@ Here's the complete AssignedOrderDetails blade view code:
                                 </div>
                             </div>
 
-                            <!-- Extension Dialog -->
-                            <div id="extensionDialog" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 extension-dialog">
-                                <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 extension-dialog-content">
-                                    <div class="space-y-4">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-gray-800 font-medium">Deadline</span>
-                                            <span class="text-gray-800">{{ \Carbon\Carbon::parse($order->deadline)->format('d M, h:i A') }}</span>
-                                            <span id="extension-countdown" class="countdown" data-deadline="{{ $order->deadline }}"></span>
-                                        </div>
-                                        
-                                        <div>
-                                            <label class="block text-sm text-gray-600 mb-1">Extension time:</label>
-                                            <div class="relative">
-                                                <select id="extensionTime" class="w-full px-3 py-2 border border-gray-200 rounded-lg appearance-none focus:outline-none focus:border-green-500">
-                                                    <option value="">--:--</option>
-                                                    <option value="1">1 hour</option>
-                                                    <option value="2">2 hours</option>
-                                                    <option value="3">3 hours</option>
-                                                    <option value="4">4 hours</option>
-                                                    <option value="6">6 hours</option>
-                                                    <option value="12">12 hours</option>
-                                                    <option value="24">24 hours</option>
-                                                </select>
-                                                <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                                                    <i class="fas fa-chevron-down text-gray-400"></i>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-sm text-gray-600 mb-1">Extension reason comment</label>
-                                            <textarea 
-                                                id="extensionReason"
-                                                class="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-green-500"
-                                                rows="4"
-                                                placeholder="Enter your reason for extension..."></textarea>
-                                        </div>
-
-                                        <div class="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-                                            Please, update the customer about the progress and specify the reason for the extension request
-                                        </div>
-
-                                        <div class="flex justify-end space-x-3 mt-6">
-                                            <button 
-                                                class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
-                                                onclick="hideExtensionDialog()">
-                                                Cancel
-                                            </button>
-                                            <button 
-                                                class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200"
-                                                onclick="submitExtension('{{ $order->id }}')">
-                                                Extend
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                             <!-- Screening Deadline -->
                             <div class="p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-100">
                                 <div class="flex justify-between items-center">
@@ -381,13 +222,17 @@ Here's the complete AssignedOrderDetails blade view code:
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-600">Task size</span>
                                     <div class="flex items-center space-x-2">
-                                        <span class="text-gray-800">{{ ucfirst(strtolower($order->size)) }}</span>
+                                        <span class="text-gray-800">{{ ucfirst(strtolower($order->task_size)) }}</span>
                                         <div class="group relative">
                                             <i class="fas fa-info-circle text-gray-400 cursor-help"></i>
                                             <div class="absolute bottom-full right-0 mb-2 w-48 p-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                                                {{ $order->size === 'LARGE' ? 'Large tasks require more time' : 
-                                                   $order->size === 'MEDIUM' ? 'Medium tasks require moderate time' : 
-                                                   'Small tasks require less time' }}
+                                                @if($order->size === 'LARGE')
+                                                    Large tasks require more time
+                                                @elseif($order->size === 'MEDIUM')
+                                                    Medium tasks require moderate time
+                                                @else
+                                                    Small tasks require less time
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -398,7 +243,7 @@ Here's the complete AssignedOrderDetails blade view code:
                             <div class="p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-100">
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-600">Type of service</span>
-                                    <span class="text-gray-800">{{ $order->service_type }}</span>
+                                    <span class="text-gray-800">{{ $order->type_of_service }}</span>
                                 </div>
                             </div>
 
@@ -549,311 +394,522 @@ Here's the complete AssignedOrderDetails blade view code:
                     </div>
                 </div>
 
-                <!-- Upload Modal with Multi-step Workflow -->
-                <div id="uploadModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center hidden z-50 upload-modal">
-                    <!-- Backdrop -->
-                    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+                <!-- Message Tabs Content -->
+                <div id="messages-panel" class="hidden" role="tabpanel">
+                    <div class="flex space-x-4 mb-4 border-b">
+                        <button id="client-messages-tab" class="px-4 py-2 font-medium text-gray-600 border-b-2 border-green-500 focus:outline-none" onclick="switchMessageTab('client')">
+                            Client Messages
+                            @if(isset($clientMessages) && $clientUnreadCount > 0)
+                                <span class="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $clientUnreadCount }}</span>
+                            @endif
+                        </button>
+                        <button id="support-messages-tab" class="px-4 py-2 font-medium text-gray-600 focus:outline-none" onclick="switchMessageTab('support')">
+                            Support Messages
+                            @if(isset($supportMessages) && $supportUnreadCount > 0)
+                                <span class="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $supportUnreadCount }}</span>
+                            @endif
+                        </button>
+                    </div>
 
-                    <!-- Modal Container -->
-                    <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
-                        <!-- Modal Content -->
-                        <div id="uploadModalContent" class="relative bg-white rounded-lg max-w-xl w-full mx-auto shadow-xl transform transition-all">
-                            <!-- Step 1: File Selection -->
-                            <div id="uploadStep1" class="block">
-                                <!-- Modal Header -->
-                                <div class="flex justify-between items-center p-6 border-b">
-                                    <h3 class="text-lg font-medium text-gray-900">Upload files</h3>
-                                    <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-
-                                <!-- Modal Body -->
-                                <div class="p-6">
-                                    <p class="text-sm text-gray-600 mb-6">
-                                        Please make sure to upload a video preview together with the completed order. Select description "Preview" for your video file. Maximum file size allowed: 99 MB.
-                                    </p>
-
-                                    <!-- File List -->
-                                    <div id="uploadedFiles" class="space-y-3 mb-4"></div>
-
-                                    <!-- Upload Zone -->
-                                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-green-500 transition-colors duration-200"
-                                        id="dropZone"
-                                        ondrop="handleFileDrop(event)"
-                                        ondragover="handleDragOver(event)"
-                                        ondragleave="handleDragLeave(event)"
-                                        onclick="document.getElementById('fileInput').click()">
-                                        <input type="file" id="fileInput" class="hidden" multiple onchange="handleFileSelect(event)">
-                                        <button type="button" class="text-green-500 font-medium">Choose file</button>
-                                        <span class="text-gray-500 ml-2">or drag file</span>
+                    <!-- Client Messages Container -->
+                    <div id="client-messages-container" class="flex flex-col h-[500px]">
+                        <div class="messages-container flex-1 overflow-y-auto mb-4 space-y-4 px-2">
+                            @if(isset($clientMessages) && count($clientMessages) > 0)
+                                @foreach($clientMessages as $messageDate => $dailyMessages)
+                                    <!-- Date Separator -->
+                                    <div class="message-slider-container">
+                                        <div class="message-slider"></div>
+                                        <div class="message-slider-label">{{ $messageDate }}</div>
                                     </div>
-
-                                    <!-- Modal Footer -->
-                                    <div class="mt-6 flex justify-end space-x-3">
-                                        <button onclick="closeUploadModal()" 
-                                                class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 rounded-md">
-                                            Cancel
-                                        </button>
-                                        <button onclick="gotoVerificationStep()" 
-                                                class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200">
-                                            Continue
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Step 2: Verification Checklist -->
-                            <div id="uploadStep2" class="hidden">
-                                <!-- Modal Header -->
-                                <div class="flex justify-between items-center p-6 border-b">
-                                    <h3 class="text-lg font-medium text-gray-900">Upload files</h3>
-                                    <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-
-                                <!-- Modal Body -->
-                                <div class="p-6">
-                                    <h4 class="text-base font-medium text-gray-700 mb-3">Paper details</h4>
                                     
-                                    <div class="space-y-4">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-gray-600">Paper format</span>
-                                            <span class="text-gray-800">{{ $order->paper_format ?: 'Not applicable' }}</span>
-                                        </div>
-                                        
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-gray-600">Pages</span>
-                                            <div>
-                                                <span class="text-gray-800">{{ $order->number_of_pages ?? 0 }} pages</span>
-                                                <span class="text-gray-800">{{ $order->number_of_pages ?? 0 }} pages</span>
-                                               <span class="text-gray-500 text-sm ml-1">(~{{ $order->number_of_pages ? $order->number_of_pages * 275 : 0 }} words)</span>
-                                               <div class="text-xs text-gray-500">{{ $order->spacing ?: 'Double spaced' }}</div>
-                                           </div>
-                                       </div>
-                                       
-                                       <div class="flex justify-between items-center">
-                                           <span class="text-gray-600">Sources to be cited</span>
-                                           <span class="text-gray-800">{{ $order->number_of_sources ?? 0 }}</span>
-                                       </div>
-                                   </div>
-                                   
-                                   <div class="mt-6">
-                                       <h4 class="text-base font-medium text-gray-700 mb-3">To be on the safe side, please, double-check whether:</h4>
-                                       <div class="space-y-3">
-                                           <label class="flex items-start">
-                                               <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
-                                               <span class="ml-2 text-gray-700">All order files are checked</span>
-                                           </label>
-                                           <label class="flex items-start">
-                                               <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
-                                               <span class="ml-2 text-gray-700">All order messages are thoroughly read</span>
-                                           </label>
-                                           <label class="flex items-start">
-                                               <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
-                                               <span class="ml-2 text-gray-700">All paper instructions are followed</span>
-                                           </label>
-                                           <label class="flex items-start">
-                                               <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
-                                               <span class="ml-2 text-gray-700">Number of sources is as requested</span>
-                                           </label>
-                                           <label class="flex items-start">
-                                               <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
-                                               <span class="ml-2 text-gray-700">Required formatting style is applied</span>
-                                           </label>
-                                       </div>
-                                       
-                                       <div class="mt-4 p-3 bg-gray-50 text-sm text-gray-600 rounded-lg">
-                                           Plagiarism report will be available within 5-10 minutes in the Files section.
-                                       </div>
-                                   </div>
+                                    @foreach($dailyMessages as $message)
+                                        @if($message->user_id == Auth::id())
+                                            <!-- Writer Message -->
+                                            <div class="flex justify-end" id="message-{{ $message->id }}">
+                                                <div class="max-w-lg rounded-lg p-4 bg-blue-50">
+                                                    <p class="text-gray-700">{{ $message->message }}</p>
+                                                    @if($message->files->count() > 0)
+                                                        <div class="mt-2 pt-2 border-t border-gray-200">
+                                                            @foreach($message->files as $file)
+                                                                <div class="flex items-center text-xs">
+                                                                    <svg class="h-4 w-4 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                                                    </svg>
+                                                                    <a href="{{ route('download', ['file_id' => $file->id]) }}" class="text-blue-600 hover:underline">{{ $file->name }}</a>
+                                                                    <span class="ml-1 text-gray-500">({{ formatFileSize($file->size) }})</span>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
+                                                    <div class="mt-2 flex justify-between items-center">
+                                                        <span class="text-xs text-gray-500">{{ Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
+                                                        <span class="text-xs {{ $message->read_at ? 'text-green-500' : 'text-gray-400' }}">
+                                                            {{ $message->read_at ? 'Seen' : 'Delivered' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <!-- Client Message -->
+                                            <div class="flex justify-start" id="message-{{ $message->id }}">
+                                                <div class="max-w-lg rounded-lg p-4 bg-gray-100">
+                                                    <div class="flex items-center mb-2">
+                                                        <span class="font-medium text-gray-800">Client</span>
+                                                        <span class="text-xs text-gray-500 ml-2">{{ Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
+                                                    </div>
+                                                    <p class="text-gray-700">{{ $message->message }}</p>
+                                                    @if($message->files->count() > 0)
+                                                        <div class="mt-2 pt-2 border-t border-gray-200">
+                                                            @foreach($message->files as $file)
+                                                                <div class="flex items-center text-xs">
+                                                                    <svg class="h-4 w-4 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                                                    </svg>
+                                                                    <a href="{{ route('download', ['file_id' => $file->id]) }}" class="text-blue-600 hover:underline">{{ $file->name }}</a>
+                                                                    <span class="ml-1 text-gray-500">({{ formatFileSize($file->size) }})</span>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                @endforeach
+                            @else
+                                <div class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-comment-dots text-gray-300 text-4xl mb-3"></i>
+                                    <p>No client messages yet</p>
+                                </div>
+                            @endif
+                        </div>
 
-                                   <!-- Modal Footer -->
-                                   <div class="mt-6 flex justify-end space-x-3">
-                                       <button onclick="backToFileSelection()" 
-                                               class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 rounded-md">
-                                           Back
-                                       </button>
-                                       <button id="submitUploadBtn" onclick="startUpload()" 
-                                               class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200">
-                                           Submit
-                                       </button>
-                                   </div>
-                               </div>
-                           </div>
-                       </div>
-                   </div>
-               </div>
+                        <!-- Message Input for Client -->
+                        <div class="border-t pt-4">
+                            <form id="clientMessageForm" class="flex items-center space-x-4">
+                                @csrf
+                                <input type="hidden" name="order_id" value="{{ $order->id }}">
+                                <input type="hidden" name="message_type" value="client">
+                                <div class="flex-1 relative">
+                                    <textarea id="clientMessageContent" name="message" 
+                                        class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-200 focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 transition-all duration-200 resize-none"
+                                        placeholder="Type your message to client..."
+                                        rows="1"
+                                        onkeydown="if(event.keyCode == 13 && !event.shiftKey) { event.preventDefault(); sendClientMessage(); }"></textarea>
+                                    <button type="button" 
+                                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                                            onclick="document.getElementById('clientMessageAttachment').click()">
+                                        <i class="fas fa-paperclip"></i>
+                                    </button>
+                                    <input type="file" id="clientMessageAttachment" name="attachment" class="hidden">
+                                </div>
+                                <button type="button" 
+                                        onclick="sendClientMessage()" 
+                                        class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center space-x-2">
+                                    <i class="fas fa-paper-plane"></i>
+                                    <span>Send</span>
+                                </button>
+                            </form>
+                            <div id="clientAttachmentPreview" class="hidden mt-2 p-2 bg-gray-50 rounded-lg flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file mr-2 text-gray-500"></i>
+                                    <span id="clientAttachmentName" class="text-sm text-gray-700 truncate"></span>
+                                </div>
+                                <button onclick="removeClientAttachment()" class="text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-               <!-- Messages Panel -->
-               <div id="messages-panel" class="hidden" role="tabpanel">
-                   <div class="flex flex-col h-[600px]">
-                       <div id="messages-container" class="messages-container flex-1 overflow-y-auto mb-4 space-y-4 px-2">
-                           @foreach($messages as $messageDate => $dailyMessages)
-                               <!-- Date Separator -->
-                               <div class="message-slider-container">
-                                   <div class="message-slider"></div>
-                                   <div class="message-slider-label">{{ $messageDate }}</div>
-                               </div>
-                               
-                               @foreach($dailyMessages as $message)
-                                   @if($message->sender_type === 'WRITER')
-                                       <!-- Writer Message -->
-                                       <div class="flex justify-end" id="message-{{ $message->id }}">
-                                           <div class="max-w-lg rounded-lg p-4 bg-blue-50">
-                                               <p class="text-gray-700">{{ $message->content }}</p>
-                                               <div class="mt-2 flex justify-between items-center">
-                                                   <span class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
-                                                   <span class="text-xs {{ $message->is_read ? 'text-green-500' : 'text-gray-400' }}">
-                                                       {{ $message->is_read ? 'Seen' : 'Delivered' }}
-                                                   </span>
-                                               </div>
-                                           </div>
-                                       </div>
-                                   @elseif($message->sender_type === 'CUSTOMER')
-                                       <!-- Customer Message -->
-                                       <div class="flex justify-start" id="message-{{ $message->id }}">
-                                           <div class="max-w-lg rounded-lg p-4 bg-gray-100">
-                                               <div class="flex items-center mb-2">
-                                                   <span class="font-medium text-gray-800">Client</span>
-                                                   <span class="text-xs text-gray-500 ml-2">{{ \Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
-                                               </div>
-                                               <p class="text-gray-700">{{ $message->content }}</p>
-                                           </div>
-                                       </div>
-                                   @elseif($message->sender_type === 'SUPPORT')
-                                       <!-- Support Message -->
-                                       <div class="flex justify-start" id="message-{{ $message->id }}">
-                                           <div class="max-w-lg rounded-lg p-4 bg-yellow-50">
-                                               <div class="flex items-center mb-2">
-                                                   <span class="font-medium text-gray-800">Support</span>
-                                                   <span class="text-xs text-gray-500 ml-2">{{ \Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
-                                               </div>
-                                               <p class="text-gray-700">{{ $message->content }}</p>
-                                           </div>
-                                       </div>
-                                   @endif
-                               @endforeach
-                           @endforeach
-                           
-                           @if(count($messages) === 0)
-                               <div class="text-center py-8 text-gray-500">
-                                   <i class="fas fa-comment-dots text-gray-300 text-4xl mb-3"></i>
-                                   <p>No messages yet</p>
-                               </div>
-                           @endif
-                       </div>
+                    <!-- Support Messages Container -->
+                    <div id="support-messages-container" class="flex flex-col h-[500px] hidden">
+                        <div class="messages-container flex-1 overflow-y-auto mb-4 space-y-4 px-2">
+                            @if(isset($supportMessages) && count($supportMessages) > 0)
+                                @foreach($supportMessages as $messageDate => $dailyMessages)
+                                    <!-- Date Separator -->
+                                    <div class="message-slider-container">
+                                        <div class="message-slider"></div>
+                                        <div class="message-slider-label">{{ $messageDate }}</div>
+                                    </div>
+                                    
+                                    @foreach($dailyMessages as $message)
+                                        @if($message->user_id == Auth::id())
+                                            <!-- Writer Message -->
+                                            <div class="flex justify-end" id="message-{{ $message->id }}">
+                                                <div class="max-w-lg rounded-lg p-4 bg-blue-50">
+                                                    <p class="text-gray-700">{{ $message->message }}</p>
+                                                    @if($message->files->count() > 0)
+                                                        <div class="mt-2 pt-2 border-t border-gray-200">
+                                                            @foreach($message->files as $file)
+                                                                <div class="flex items-center text-xs">
+                                                                    <svg class="h-4 w-4 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                                                    </svg>
+                                                                    <a href="{{ route('download', ['file_id' => $file->id]) }}" class="text-blue-600 hover:underline">{{ $file->name }}</a>
+                                                                    <span class="ml-1 text-gray-500">({{ formatFileSize($file->size) }})</span>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
+                                                    <div class="mt-2 flex justify-between items-center">
+                                                        <span class="text-xs text-gray-500">{{ Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
+                                                        <span class="text-xs {{ $message->read_at ? 'text-green-500' : 'text-gray-400' }}">
+                                                            {{ $message->read_at ? 'Seen' : 'Delivered' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <!-- Support Message -->
+                                            <div class="flex justify-start" id="message-{{ $message->id }}">
+                                                <div class="max-w-lg rounded-lg p-4 bg-yellow-50">
+                                                    <div class="flex items-center mb-2">
+                                                        <span class="font-medium text-gray-800">Support</span>
+                                                        <span class="text-xs text-gray-500 ml-2">{{ Carbon\Carbon::parse($message->created_at)->format('h:i A') }}</span>
+                                                    </div>
+                                                    <p class="text-gray-700">{{ $message->message }}</p>
+                                                    @if($message->files->count() > 0)
+                                                        <div class="mt-2 pt-2 border-t border-gray-200">
+                                                            @foreach($message->files as $file)
+                                                                <div class="flex items-center text-xs">
+                                                                    <svg class="h-4 w-4 text-gray-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                                                    </svg>
+                                                                    <a href="{{ route('download', ['file_id' => $file->id]) }}" class="text-blue-600 hover:underline">{{ $file->name }}</a>
+                                                                    <span class="ml-1 text-gray-500">({{ formatFileSize($file->size) }})</span>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                @endforeach
+                            @else
+                                <div class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-comment-dots text-gray-300 text-4xl mb-3"></i>
+                                    <p>No support messages yet</p>
+                                </div>
+                            @endif
+                        </div>
 
-                       <!-- Message Input Section -->
-                       <div class="border-t pt-4">
-                           <form id="messageForm" class="flex items-center space-x-4">
-                               @csrf
-                               <input type="hidden" name="order_id" value="{{ $order->id }}">
-                               <div class="flex-1 relative">
-                                   <textarea id="messageContent" name="content" 
-                                          class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-200 focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 transition-all duration-200 resize-none"
-                                          placeholder="Type your message..."
-                                          rows="1"
-                                          onkeydown="if(event.keyCode == 13 && !event.shiftKey) { event.preventDefault(); sendMessage(); }"></textarea>
-                                   <button type="button" 
-                                           class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                                           onclick="document.getElementById('messageAttachment').click()">
-                                       <i class="fas fa-paperclip"></i>
-                                   </button>
-                                   <input type="file" id="messageAttachment" name="attachment" class="hidden">
-                               </div>
-                               <button type="button" 
-                                       onclick="sendMessage()" 
-                                       class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center space-x-2">
-                                   <i class="fas fa-paper-plane"></i>
-                                   <span>Send</span>
-                               </button>
-                           </form>
-                           <div id="attachment-preview" class="hidden mt-2 p-2 bg-gray-50 rounded-lg flex items-center justify-between">
-                               <div class="flex items-center">
-                                   <i class="fas fa-file mr-2 text-gray-500"></i>
-                                   <span id="attachment-name" class="text-sm text-gray-700 truncate"></span>
-                               </div>
-                               <button onclick="removeAttachment()" class="text-gray-400 hover:text-gray-600">
-                                   <i class="fas fa-times"></i>
-                               </button>
-                           </div>
-                       </div>
-                   </div>
-               </div>
-           </div>
-       </div>
-   </div>
+                        <!-- Message Input for Support -->
+                        <div class="border-t pt-4">
+                            <form id="supportMessageForm" class="flex items-center space-x-4">
+                                @csrf
+                                <input type="hidden" name="order_id" value="{{ $order->id }}">
+                                <input type="hidden" name="message_type" value="support">
+                                <div class="flex-1 relative">
+                                    <textarea id="supportMessageContent" name="message" 
+                                        class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-200 focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 transition-all duration-200 resize-none"
+                                        placeholder="Type your message to support..."
+                                        rows="1"
+                                        onkeydown="if(event.keyCode == 13 && !event.shiftKey) { event.preventDefault(); sendSupportMessage(); }"></textarea>
+                                    <button type="button" 
+                                            class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                                            onclick="document.getElementById('supportMessageAttachment').click()">
+                                        <i class="fas fa-paperclip"></i>
+                                    </button>
+                                    <input type="file" id="supportMessageAttachment" name="attachment" class="hidden">
+                                </div>
+                                <button type="button" 
+                                        onclick="sendSupportMessage()" 
+                                        class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center space-x-2">
+                                    <i class="fas fa-paper-plane"></i>
+                                    <span>Send</span>
+                                </button>
+                            </form>
+                            <div id="supportAttachmentPreview" class="hidden mt-2 p-2 bg-gray-50 rounded-lg flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file mr-2 text-gray-500"></i>
+                                    <span id="supportAttachmentName" class="text-sm text-gray-700 truncate"></span>
+                                </div>
+                                <button onclick="removeSupportAttachment()" class="text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </main>
 </div>
-</main>
+
+<!-- Extension Dialog -->
+<div id="extensionDialog" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 extension-dialog">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 extension-dialog-content">
+        <div class="space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-gray-800 font-medium">Deadline</span>
+                <span class="text-gray-800">{{ \Carbon\Carbon::parse($order->deadline)->format('d M, h:i A') }}</span>
+                <span id="extension-countdown" class="countdown" data-deadline="{{ $order->deadline }}"></span>
+            </div>
+            
+            <div>
+                <label class="block text-sm text-gray-600 mb-1">Extension time:</label>
+                <div class="relative">
+                    <select id="extensionTime" class="w-full px-3 py-2 border border-gray-200 rounded-lg appearance-none focus:outline-none focus:border-green-500">
+                        <option value="">--:--</option>
+                        <option value="1">1 hour</option>
+                        <option value="2">2 hours</option>
+                        <option value="3">3 hours</option>
+                        <option value="4">4 hours</option>
+                        <option value="6">6 hours</option>
+                        <option value="12">12 hours</option>
+                        <option value="24">24 hours</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                        <i class="fas fa-chevron-down text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm text-gray-600 mb-1">Extension reason comment</label>
+                <textarea 
+                    id="extensionReason"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-green-500"
+                    rows="4"
+                    placeholder="Enter your reason for extension..."></textarea>
+            </div>
+
+            <div class="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                Please, update the customer about the progress and specify the reason for the extension request
+            </div>
+
+            <div class="flex justify-end space-x-3 mt-6">
+                <button 
+                    class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                    onclick="hideExtensionDialog()">
+                    Cancel
+                </button>
+                <button 
+                    class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200"
+                    onclick="submitExtension('{{ $order->id }}')">
+                    Extend
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Modal with Multi-step Workflow -->
+<div id="uploadModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center hidden z-50 upload-modal">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+
+    <!-- Modal Container -->
+    <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+        <!-- Modal Content -->
+        <div id="uploadModalContent" class="relative bg-white rounded-lg max-w-xl w-full mx-auto shadow-xl transform transition-all">
+            <!-- Step 1: File Selection -->
+            <div id="uploadStep1" class="block">
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 class="text-lg font-medium text-gray-900">Upload files</h3>
+                    <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6">
+                    <p class="text-sm text-gray-600 mb-6">
+                        Please make sure to upload a video preview together with the completed order. Select description "Preview" for your video file. Maximum file size allowed: 99 MB.
+                    </p>
+
+                    <!-- File List -->
+                    <div id="uploadedFiles" class="space-y-3 mb-4"></div>
+
+                    <!-- Upload Zone -->
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-green-500 transition-colors duration-200"
+                         id="dropZone"
+                         ondrop="handleFileDrop(event)"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         onclick="document.getElementById('fileInput').click()">
+                        <input type="file" id="fileInput" class="hidden" multiple onchange="handleFileSelect(event)">
+                        <button type="button" class="text-green-500 font-medium">Choose file</button>
+                        <span class="text-gray-500 ml-2">or drag file</span>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button onclick="closeUploadModal()" 
+                                class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 rounded-md">
+                            Cancel
+                        </button>
+                        <button onclick="gotoVerificationStep()" 
+                                class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200">
+                            Continue
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Verification Checklist -->
+            <div id="uploadStep2" class="hidden">
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 class="text-lg font-medium text-gray-900">Upload files</h3>
+                    <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6">
+                    <h4 class="text-base font-medium text-gray-700 mb-3">Paper details</h4>
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Paper format</span>
+                            <span class="text-gray-800">{{ $order->paper_format ?: 'Not applicable' }}</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Pages</span>
+                            <div>
+                                <span class="text-gray-800">{{ $order->number_of_pages ?? 0 }} pages</span>
+                                <span class="text-gray-500 text-sm ml-1">(~{{ $order->number_of_pages ? $order->number_of_pages * 275 : 0 }} words)</span>
+                                <div class="text-xs text-gray-500">{{ $order->spacing ?: 'Double spaced' }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Sources to be cited</span>
+                            <span class="text-gray-800">{{ $order->number_of_sources ?? 0 }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <h4 class="text-base font-medium text-gray-700 mb-3">To be on the safe side, please, double-check whether:</h4>
+                        <div class="space-y-3">
+                            <label class="flex items-start">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
+                                <span class="ml-2 text-gray-700">All order files are checked</span>
+                            </label>
+                            <label class="flex items-start">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
+                                <span class="ml-2 text-gray-700">All order messages are thoroughly read</span>
+                            </label>
+                            <label class="flex items-start">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
+                                <span class="ml-2 text-gray-700">All paper instructions are followed</span>
+                            </label>
+                            <label class="flex items-start">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
+                                <span class="ml-2 text-gray-700">Number of sources is as requested</span>
+                            </label>
+                            <label class="flex items-start">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 mt-0.5 verification-checkbox">
+                                <span class="ml-2 text-gray-700">Required formatting style is applied</span>
+                            </label>
+                        </div>
+                        
+                        <div class="mt-4 p-3 bg-gray-50 text-sm text-gray-600 rounded-lg">
+                            Plagiarism report will be available within 5-10 minutes in the Files section.
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button onclick="backToFileSelection()" 
+                                class="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 rounded-md">
+                            Back
+                        </button>
+                        <button id="submitUploadBtn" onclick="startUpload()" 
+                                class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200">
+                            Submit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Processing Modal (Step 3) -->
 <div id="processingModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
-   <div class="bg-white rounded-lg p-8 max-w-md w-full">
-       <h3 class="text-lg font-medium text-gray-700 text-center mb-6">Processing...</h3>
-       <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-           <div id="uploadProgressBar" class="bg-green-500 h-2.5 rounded-full" style="width: 0%"></div>
-       </div>
-   </div>
+    <div class="bg-white rounded-lg p-8 max-w-md w-full">
+        <h3 class="text-lg font-medium text-gray-700 text-center mb-6">Processing...</h3>
+        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+            <div id="uploadProgressBar" class="bg-green-500 h-2.5 rounded-full" style="width: 0%"></div>
+        </div>
+    </div>
 </div>
 
 <!-- Success Modal (Step 4) -->
 <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
-   <div class="bg-white rounded-lg p-8 max-w-md w-full text-center">
-       <div class="w-16 h-16 mx-auto mb-4 bg-green-50 rounded-full flex items-center justify-center">
-           <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-           </svg>
-       </div>
-       <h3 class="text-xl font-medium text-gray-700">Success</h3>
-       <p class="text-gray-500 mt-2">Your files have been uploaded successfully</p>
-       <div class="mt-6">
-           <button onclick="closeSuccessModal()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200">
-               Close
-           </button>
-       </div>
-   </div>
+    <div class="bg-white rounded-lg p-8 max-w-md w-full text-center">
+        <div class="w-16 h-16 mx-auto mb-4 bg-green-50 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+        <h3 class="text-xl font-medium text-gray-700">Success</h3>
+        <p class="text-gray-500 mt-2">Your files have been uploaded successfully</p>
+        <div class="mt-6">
+            <button onclick="closeSuccessModal()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200">
+                Close
+            </button>
+        </div>
+    </div>
 </div>
 
 <!-- Error Modal -->
 <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
-   <div class="bg-white rounded-lg p-8 max-w-md w-full text-center">
-       <div class="w-16 h-16 mx-auto mb-4 bg-red-50 rounded-full flex items-center justify-center">
-           <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-           </svg>
-       </div>
-       <h3 class="text-xl font-medium text-gray-700">Error</h3>
-       <p id="error-message" class="text-gray-500 mt-2">Something went wrong with the upload.</p>
-       <div class="mt-6">
-           <button onclick="closeErrorModal()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200">
-               Close
-           </button>
-       </div>
-   </div>
+    <div class="bg-white rounded-lg p-8 max-w-md w-full text-center">
+        <div class="w-16 h-16 mx-auto mb-4 bg-red-50 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </div>
+        <h3 class="text-xl font-medium text-gray-700">Error</h3>
+        <p id="error-message" class="text-gray-500 mt-2">Something went wrong with the upload.</p>
+        <div class="mt-6">
+            <button onclick="closeErrorModal()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200">
+                Close
+            </button>
+        </div>
+    </div>
 </div>
 
 <!-- Toaster Notification -->
 <div id="toaster" class="fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
-   <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded shadow-lg flex items-start max-w-sm">
-       <div class="text-green-500 mr-3">
-           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-           </svg>
-       </div>
-       <div>
-           <p class="font-medium text-green-800" id="toaster-title">Success!</p>
-           <p class="text-sm text-green-700 mt-1" id="toaster-message">Your files have been uploaded successfully.</p>
-       </div>
-       <button onclick="hideToaster()" class="ml-auto text-green-500 hover:text-green-700">
-           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-           </svg>
-       </button>
-   </div>
+    <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded shadow-lg flex items-start max-w-sm">
+        <div class="text-green-500 mr-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+        <div>
+            <p class="font-medium text-green-800" id="toaster-title">Success!</p>
+            <p class="text-sm text-green-700 mt-1" id="toaster-message">Your files have been uploaded successfully.</p>
+        </div>
+        <button onclick="hideToaster()" class="ml-auto text-green-500 hover:text-green-700">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
 </div>
+
+@php
+function formatFileSize($bytes)
+{
+    if ($bytes === 0) return '0 Bytes';
+    
+    $sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    $i = floor(log($bytes, 1024));
+    
+    return round($bytes / pow(1024, $i), 2) . ' ' . $sizes[$i];
+}
+@endphp
 
 <script>
 // Global variables
@@ -863,426 +919,452 @@ let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('
 
 // Tab Switching
 function switchTab(tabName) {
-   const tabs = document.querySelectorAll('[role="tab"]');
-   const panels = document.querySelectorAll('[role="tabpanel"]');
-   const slider = document.getElementById('tab-slider');
+    const tabs = document.querySelectorAll('[role="tab"]');
+    const panels = document.querySelectorAll('[role="tabpanel"]');
+    const slider = document.getElementById('tab-slider');
 
-   tabs.forEach(tab => {
-       const isSelected = tab.id === `${tabName}-tab`;
-       tab.setAttribute('aria-selected', isSelected);
-       tab.classList.toggle('text-green-600', isSelected);
-       tab.classList.toggle('text-gray-500', !isSelected);
+    tabs.forEach(tab => {
+        const isSelected = tab.id === `${tabName}-tab`;
+        tab.setAttribute('aria-selected', isSelected);
+        tab.classList.toggle('text-green-600', isSelected);
+        tab.classList.toggle('text-gray-500', !isSelected);
 
-       if (isSelected) {
-           const width = tab.dataset.width;
-           slider.style.width = `${width}px`;
-           slider.style.left = `${tab.offsetLeft}px`;
-       }
-   });
+        if (isSelected) {
+            const width = tab.dataset.width;
+            slider.style.width = `${width}px`;
+            slider.style.left = `${tab.offsetLeft}px`;
+        }
+    });
 
-   panels.forEach(panel => {
-       panel.classList.toggle('hidden', panel.id !== `${tabName}-panel`);
-   });
-   
-   // Mark messages as read if messages tab is opened
-   if (tabName === 'messages') {
-       markMessagesAsRead();
-       scrollToBottom();
-   }
+    panels.forEach(panel => {
+        panel.classList.toggle('hidden', panel.id !== `${tabName}-panel`);
+    });
+    
+    // Mark messages as read if messages tab is opened
+    if (tabName === 'messages') {
+        markMessagesAsRead();
+        scrollToBottom();
+    }
 }
 
 // Deadline Countdown
 function updateCountdowns() {
-   const now = new Date();
-   
-   // Update main deadline
-   const deadlineElement = document.getElementById('deadline-countdown');
-   if (deadlineElement) {
-       const deadline = new Date(deadlineElement.dataset.deadline);
-       updateCountdownDisplay(deadlineElement, deadline, now);
-   }
-   
-   // Update extension dialog deadline
-   const extensionElement = document.getElementById('extension-countdown');
-   if (extensionElement) {
-       const deadline = new Date(extensionElement.dataset.deadline);
-       updateCountdownDisplay(extensionElement, deadline, now);
-   }
-   
-   // Update screening deadline
-   const screeningElement = document.getElementById('screening-countdown');
-   if (screeningElement) {
-       const deadline = new Date(screeningElement.dataset.deadline);
-       updateCountdownDisplay(screeningElement, deadline, now);
-   }
+    const now = new Date();
+    
+    // Update main deadline
+    const deadlineElement = document.getElementById('deadline-countdown');
+    if (deadlineElement) {
+        const deadline = new Date(deadlineElement.dataset.deadline);
+        updateCountdownDisplay(deadlineElement, deadline, now);
+    }
+    
+    // Update extension dialog deadline
+    const extensionElement = document.getElementById('extension-countdown');
+    if (extensionElement) {
+        const deadline = new Date(extensionElement.dataset.deadline);
+        updateCountdownDisplay(extensionElement, deadline, now);
+    }
+    
+    // Update screening deadline
+    const screeningElement = document.getElementById('screening-countdown');
+    if (screeningElement) {
+        const deadline = new Date(screeningElement.dataset.deadline);
+        updateCountdownDisplay(screeningElement, deadline, now);
+    }
+}
+
+function formatTimeRemaining(diff) {
+    if (diff <= 0) {
+        // Past deadline - show as negative time
+        diff = Math.abs(diff);
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+        if (days > 0) {
+            return `(-${days}d ${hours}h)`;
+        } else if (hours > 0) {
+            return `(-${hours}h ${minutes}m)`;
+        } else {
+            return `(-${minutes}m)`;
+        }
+    } else {
+        // Before deadline - show as positive time
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+        if (days > 0) {
+            return `(${days}d ${hours}h)`;
+        } else if (hours > 0) {
+            return `(${hours}h ${minutes}m)`;
+        } else {
+            return `(${minutes}m)`;
+        }
+    }
 }
 
 function updateCountdownDisplay(element, deadline, now) {
-   const diff = deadline - now;
-   
-   if (diff <= 0) {
-       // Past deadline
-       const hours = Math.floor(Math.abs(diff) / (1000 * 60 * 60));
-       element.textContent = `(-${hours}h)`;
-       element.classList.add('countdown-warning');
-   } else {
-       // Before deadline
-       const hours = Math.floor(diff / (1000 * 60 * 60));
-       element.textContent = `(${hours}h)`;
-       element.classList.remove('countdown-warning');
-   }
+    const diff = deadline - now;
+    
+    element.textContent = formatTimeRemaining(diff);
+    
+    if (diff <= 0) {
+        element.classList.add('countdown-warning');
+    } else {
+        element.classList.remove('countdown-warning');
+    }
 }
 
 // Extension Dialog Functions
 function showExtensionDialog() {
-   const dialog = document.getElementById('extensionDialog');
-   dialog.classList.remove('hidden');
-   document.body.style.overflow = 'hidden';
+    const dialog = document.getElementById('extensionDialog');
+    dialog.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
 }
 
 function hideExtensionDialog() {
-   const dialog = document.getElementById('extensionDialog');
-   dialog.classList.add('hidden');
-   document.body.style.overflow = 'auto';
+    const dialog = document.getElementById('extensionDialog');
+    dialog.classList.add('hidden');
+    document.body.style.overflow = 'auto';
 }
 
 function submitExtension(orderId) {
-   const time = document.getElementById('extensionTime').value;
-   const reason = document.getElementById('extensionReason').value;
+    const time = document.getElementById('extensionTime').value;
+    const reason = document.getElementById('extensionReason').value;
 
-   if (!time || !reason.trim()) {
-       showToaster('Error', 'Please fill in all fields', 'error');
-       return;
-   }
+    if (!time || !reason.trim()) {
+        showToaster('Error', 'Please fill in all fields', 'error');
+        return;
+    }
 
-   // Send extension request to server
-   fetch('/api/orders/' + orderId + '/extend', {
-       method: 'POST',
-       headers: {
-           'Content-Type': 'application/json',
-           'X-CSRF-TOKEN': csrfToken
-       },
-       body: JSON.stringify({
-           extension_hours: time,
-           reason: reason
-       })
-   })
-   .then(response => response.json())
-   .then(data => {
-       if (data.success) {
-           hideExtensionDialog();
-           
-           // Update deadline display
-           const deadlineElement = document.getElementById('deadline-countdown');
-           if (deadlineElement) {
-               deadlineElement.dataset.deadline = data.new_deadline;
-           }
-           const extensionElement = document.getElementById('extension-countdown');
-           if (extensionElement) {
-               extensionElement.dataset.deadline = data.new_deadline;
-           }
-           
-           showToaster('Success', 'Deadline extended successfully', 'success');
-       } else {
-           showToaster('Error', data.message || 'Failed to extend deadline', 'error');
-       }
-   })
-   .catch(error => {
-       console.error('Extension request failed:', error);
-       showToaster('Error', 'Something went wrong', 'error');
-   });
+    // Send extension request to server
+    fetch('/api/orders/' + orderId + '/extend', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({
+            extension_hours: time,
+            reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            hideExtensionDialog();
+            
+            // Update deadline display
+            const deadlineElement = document.getElementById('deadline-countdown');
+            if (deadlineElement) {
+                deadlineElement.dataset.deadline = data.new_deadline;
+            }
+            const extensionElement = document.getElementById('extension-countdown');
+            if (extensionElement) {
+                extensionElement.dataset.deadline = data.new_deadline;
+            }
+            
+            showToaster('Success', 'Deadline extended successfully', 'success');
+        } else {
+            showToaster('Error', data.message || 'Failed to extend deadline', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Extension request failed:', error);
+        showToaster('Error', 'Something went wrong', 'error');
+    });
 }
 
 // Copy Instructions Function
 async function copyInstructions() {
-   const instructions = document.querySelector('.prose p')?.textContent;
-   const customerComments = document.querySelector('.bg-cyan-50 p')?.textContent;
-   
-   if (!instructions) return;
+    const instructions = document.querySelector('.prose p')?.textContent;
+    const customerComments = document.querySelector('.bg-cyan-50 p')?.textContent;
+    
+    if (!instructions) return;
 
-   const textToCopy = `Instructions:\n${instructions.trim()}\n\n${customerComments ? 'Customer Comments:\n' + customerComments.trim() : ''}`;
+    const textToCopy = `Instructions:\n${instructions.trim()}\n\n${customerComments ? 'Customer Comments:\n' + customerComments.trim() : ''}`;
 
-   try {
-       await navigator.clipboard.writeText(textToCopy);
-       showCopyTooltip('Copied!');
-   } catch (err) {
-       console.error('Failed to copy:', err);
-       showCopyTooltip('Failed to copy');
-   }
+    try {
+        await navigator.clipboard.writeText(textToCopy);
+        showCopyTooltip('Copied!');
+    } catch (err) {
+        console.error('Failed to copy:', err);
+        showCopyTooltip('Failed to copy');
+    }
 }
 
 function showCopyTooltip(message) {
-   const copyButton = document.querySelector('.fa-copy').parentElement;
-   const tooltip = document.createElement('div');
-   tooltip.className = 'copy-tooltip';
-   tooltip.textContent = message;
-   
-   copyButton.appendChild(tooltip);
-   setTimeout(() => tooltip.classList.add('show'), 10);
-   
-   setTimeout(() => {
-       tooltip.classList.remove('show');
-       setTimeout(() => tooltip.remove(), 200);
-   }, 2000);
+    const copyButton = document.querySelector('.fa-copy').parentElement;
+    const tooltip = document.createElement('div');
+    tooltip.className = 'copy-tooltip';
+    tooltip.textContent = message;
+    
+    copyButton.appendChild(tooltip);
+    setTimeout(() => tooltip.classList.add('show'), 10);
+    
+    setTimeout(() => {
+        tooltip.classList.remove('show');
+        setTimeout(() => tooltip.remove(), 200);
+    }, 2000);
 }
 
 // Expand Instructions Function
 function expandInstructions() {
-   // Implementation for expanding instructions in a full-screen modal
-   const modal = document.createElement('div');
-   modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-   modal.style.backdropFilter = 'blur(4px)';
-   
-   const content = document.createElement('div');
-   content.className = 'bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6';
-   
-   const header = document.createElement('div');
-   header.className = 'flex justify-between items-center mb-4';
-   header.innerHTML = `
-       <h3 class="text-xl font-semibold text-gray-800">Paper Instructions</h3>
-       <button class="text-gray-400 hover:text-gray-600">
-           <i class="fas fa-times"></i>
-       </button>
-   `;
-   
-   const body = document.createElement('div');
-   body.className = 'prose max-w-none';
-   body.innerHTML = document.querySelector('.prose').innerHTML;
-   
-   // Add customer comments if they exist
-   const customerComments = document.querySelector('.bg-cyan-50');
-   if (customerComments) {
-       const commentsDiv = document.createElement('div');
-       commentsDiv.className = 'mt-6';
-       commentsDiv.innerHTML = customerComments.outerHTML;
-       body.appendChild(commentsDiv);
-   }
-   
-   content.appendChild(header);
-   content.appendChild(body);
-   modal.appendChild(content);
-   
-   document.body.appendChild(modal);
-   document.body.style.overflow = 'hidden';
-   
-   // Close modal when clicking backdrop or close button
-   modal.addEventListener('click', (e) => {
-       if (e.target === modal) {
-           closeExpandedInstructions(modal);
-       }
-   });
-   
-   header.querySelector('button').addEventListener('click', () => {
-       closeExpandedInstructions(modal);
-   });
-   
-   // Close on escape key
-   document.addEventListener('keydown', function escapeClose(e) {
-       if (e.key === 'Escape') {
-           closeExpandedInstructions(modal);
-           document.removeEventListener('keydown', escapeClose);
-       }
-   });
+    // Implementation for expanding instructions in a full-screen modal
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.style.backdropFilter = 'blur(4px)';
+    
+    const content = document.createElement('div');
+    content.className = 'bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6';
+    
+    const header = document.createElement('div');
+    header.className = 'flex justify-between items-center mb-4';
+    header.innerHTML = `
+        <h3 class="text-xl font-semibold text-gray-800">Paper Instructions</h3>
+        <button class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    const body = document.createElement('div');
+    body.className = 'prose max-w-none';
+    body.innerHTML = document.querySelector('.prose').innerHTML;
+    
+    // Add customer comments if they exist
+    const customerComments = document.querySelector('.bg-cyan-50');
+    if (customerComments) {
+        const commentsDiv = document.createElement('div');
+        commentsDiv.className = 'mt-6';
+        commentsDiv.innerHTML = customerComments.outerHTML;
+        body.appendChild(commentsDiv);
+    }
+    
+    content.appendChild(header);
+    content.appendChild(body);
+    modal.appendChild(content);
+    
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+    
+    // Close modal when clicking backdrop or close button
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeExpandedInstructions(modal);
+        }
+    });
+    
+    header.querySelector('button').addEventListener('click', () => {
+        closeExpandedInstructions(modal);
+    });
+    
+    // Close on escape key
+    document.addEventListener('keydown', function escapeClose(e) {
+        if (e.key === 'Escape') {
+            closeExpandedInstructions(modal);
+            document.removeEventListener('keydown', escapeClose);
+        }
+    });
 }
 
 function closeExpandedInstructions(modal) {
-   modal.remove();
-   document.body.style.overflow = '';
+    modal.remove();
+    document.body.style.overflow = '';
 }
 
 // Reassign Order Function
 function reassignOrder(orderId) {
-   if (!confirm('Are you sure you want to reassign this order?')) {
-       return;
-   }
-   
-   fetch('/api/orders/' + orderId + '/reassign', {
-       method: 'POST',
-       headers: {
-           'Content-Type': 'application/json',
-           'X-CSRF-TOKEN': csrfToken
-       }
-   })
-   .then(response => response.json())
-   .then(data => {
-       if (data.success) {
-           showToaster('Success', 'Order has been reassigned successfully', 'success');
-           // Redirect to orders list after short delay
-           setTimeout(() => {
-               window.location.href = '/writer/orders';
-           }, 2000);
-       } else {
-           showToaster('Error', data.message || 'Failed to reassign order', 'error');
-       }
-   })
-   .catch(error => {
-       console.error('Reassign request failed:', error);
-       showToaster('Error', 'Something went wrong', 'error');
-   });
+    if (!confirm('Are you sure you want to reassign this order?')) {
+        return;
+    }
+    
+    fetch('/api/orders/' + orderId + '/reassign', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToaster('Success', 'Order has been reassigned successfully', 'success');
+            // Redirect to orders list after short delay
+            setTimeout(() => {
+                window.location.href = '/writer/orders';
+            }, 2000);
+        } else {
+            showToaster('Error', data.message || 'Failed to reassign order', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Reassign request failed:', error);
+        showToaster('Error', 'Something went wrong', 'error');
+    });
 }
 
 // File Upload Functions
 function showUploadModal() {
-   document.getElementById('uploadModal').classList.remove('hidden');
-   document.getElementById('uploadStep1').classList.remove('hidden');
-   document.getElementById('uploadStep2').classList.add('hidden');
-   document.body.style.overflow = 'hidden';
-   resetUpload();
+    document.getElementById('uploadModal').classList.remove('hidden');
+    document.getElementById('uploadStep1').classList.remove('hidden');
+    document.getElementById('uploadStep2').classList.add('hidden');
+    document.body.style.overflow = 'hidden';
+    resetUpload();
 }
 
 function closeUploadModal() {
-   document.getElementById('uploadModal').classList.add('hidden');
-   document.getElementById('processingModal').classList.add('hidden');
-   document.getElementById('successModal').classList.add('hidden');
-   document.getElementById('errorModal').classList.add('hidden');
-   document.body.style.overflow = '';
-   resetUpload();
+    document.getElementById('uploadModal').classList.add('hidden');
+    document.getElementById('processingModal').classList.add('hidden');
+    document.getElementById('successModal').classList.add('hidden');
+    document.getElementById('errorModal').classList.add('hidden');
+    document.body.style.overflow = '';
+    resetUpload();
 }
 
 function resetUpload() {
-   uploadedFiles.clear();
-   document.getElementById('uploadedFiles').innerHTML = '';
-   if (document.getElementById('fileInput')) {
-       document.getElementById('fileInput').value = '';
-   }
-   
-   // Reset verification checkboxes
-   const checkboxes = document.querySelectorAll('.verification-checkbox');
-   checkboxes.forEach(checkbox => {
-       checkbox.checked = false;
-   });
-   
-   allCheckboxesChecked = false;
+    uploadedFiles.clear();
+    document.getElementById('uploadedFiles').innerHTML = '';
+    if (document.getElementById('fileInput')) {
+        document.getElementById('fileInput').value = '';
+    }
+    
+    // Reset verification checkboxes
+    const checkboxes = document.querySelectorAll('.verification-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    allCheckboxesChecked = false;
 }
 
 function handleFileSelect(event) {
-   const files = event.target.files;
-   addFiles(files);
+    const files = event.target.files;
+    addFiles(files);
 }
 
 function handleFileDrop(event) {
-   event.preventDefault();
-   const dropZone = document.getElementById('dropZone');
-   dropZone.classList.remove('drag-over');
-   dropZone.classList.remove('border-green-500');
-   const files = event.dataTransfer.files;
-   addFiles(files);
+    event.preventDefault();
+    const dropZone = document.getElementById('dropZone');
+    dropZone.classList.remove('drag-over');
+    dropZone.classList.remove('border-green-500');
+    const files = event.dataTransfer.files;
+    addFiles(files);
 }
 
 function handleDragOver(event) {
-   event.preventDefault();
-   const dropZone = document.getElementById('dropZone');
-   dropZone.classList.add('drag-over');
-   dropZone.classList.add('border-green-500');
+    event.preventDefault();
+    const dropZone = document.getElementById('dropZone');
+    dropZone.classList.add('drag-over');
+    dropZone.classList.add('border-green-500');
 }
 
 function handleDragLeave(event) {
-   event.preventDefault();
-   const dropZone = document.getElementById('dropZone');
-   dropZone.classList.remove('drag-over');
-   dropZone.classList.remove('border-green-500');
+    event.preventDefault();
+    const dropZone = document.getElementById('dropZone');
+    dropZone.classList.remove('drag-over');
+    dropZone.classList.remove('border-green-500');
 }
 
 function addFiles(files) {
-   const uploadedFilesContainer = document.getElementById('uploadedFiles');
-   
-   if (files.length === 0) return;
-   
-   // Check file size limit (99 MB = 99 * 1024 * 1024 bytes)
-   const maxSize = 99 * 1024 * 1024;
-   for (let i = 0; i < files.length; i++) {
-       if (files[i].size > maxSize) {
-           showToaster('Error', `File ${files[i].name} exceeds the maximum size limit of 99 MB`, 'error');
-           return;
-       }
-   }
-   
-   Array.from(files).forEach(file => {
-       const fileId = Math.random().toString(36).substr(2, 9);
-       uploadedFiles.set(fileId, { file, description: '' });
-       
-       const fileElement = createFileElement(file, fileId);
-       uploadedFilesContainer.appendChild(fileElement);
-   });
+    const uploadedFilesContainer = document.getElementById('uploadedFiles');
+    
+    if (files.length === 0) return;
+    
+    // Check file size limit (99 MB = 99 * 1024 * 1024 bytes)
+    const maxSize = 99 * 1024 * 1024;
+    for (let i = 0; i < files.length; i++) {
+        if (files[i].size > maxSize) {
+            showToaster('Error', `File ${files[i].name} exceeds the maximum size limit of 99 MB`, 'error');
+            return;
+        }
+    }
+    
+    Array.from(files).forEach(file => {
+        const fileId = Math.random().toString(36).substr(2, 9);
+        uploadedFiles.set(fileId, { file, description: '' });
+        
+        const fileElement = createFileElement(file, fileId);
+        uploadedFilesContainer.appendChild(fileElement);
+    });
 }
 
 function createFileElement(file, fileId) {
-   const div = document.createElement('div');
-   div.className = 'flex items-center space-x-4 border rounded-lg p-4';
-   div.innerHTML = `
-       <input type="text" class="flex-grow text-gray-700 bg-transparent outline-none" 
-              value="${file.name}" readonly>
-       <div class="relative inline-block">
-           <input type="text" 
-                  class="px-3 py-2 border rounded-lg text-sm w-40"
-                  placeholder="Description"
-                  readonly
-                  onclick="toggleDescriptionDropdown('${fileId}')"
-                  data-file-id="${fileId}">
-           <div id="dropdown-${fileId}" class="hidden absolute z-10 mt-1 w-full bg-white border rounded-lg shadow-lg">
-               <div class="py-1">
-                   <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                           onclick="selectDescription('${fileId}', 'completed')">completed</button>
-                   <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                           onclick="selectDescription('${fileId}', 'sources')">sources</button>
-                   <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                           onclick="selectDescription('${fileId}', 'file with corrections')">file with corrections</button>
-                   <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                           onclick="selectDescription('${fileId}', 'preview')">preview</button>
-               </div>
-           </div>
-       </div>
-       <button onclick="removeFile('${fileId}')" class="text-gray-400 hover:text-gray-600">
-           <i class="fas fa-trash"></i>
-       </button>
-   `;
-   return div;
+    const div = document.createElement('div');
+    div.className = 'flex items-center space-x-4 border rounded-lg p-4';
+    div.innerHTML = `
+        <input type="text" class="flex-grow text-gray-700 bg-transparent outline-none" 
+               value="${file.name}" readonly>
+        <div class="relative inline-block">
+            <input type="text" 
+                   class="px-3 py-2 border rounded-lg text-sm w-40"
+                   placeholder="Description"
+                   readonly
+                   onclick="toggleDescriptionDropdown('${fileId}')"
+                   data-file-id="${fileId}">
+            <div id="dropdown-${fileId}" class="hidden absolute z-10 mt-1 w-full bg-white border rounded-lg shadow-lg">
+                <div class="py-1">
+                    <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                            onclick="selectDescription('${fileId}', 'completed')">completed</button>
+                    <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onclick="selectDescription('${fileId}', 'sources')">sources</button>
+                    <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onclick="selectDescription('${fileId}', 'file with corrections')">file with corrections</button>
+                    <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onclick="selectDescription('${fileId}', 'preview')">preview</button>
+                </div>
+            </div>
+        </div>
+        <button onclick="removeFile('${fileId}')" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    return div;
 }
 
 function toggleDescriptionDropdown(fileId) {
-   const dropdown = document.getElementById(`dropdown-${fileId}`);
-   const allDropdowns = document.querySelectorAll('[id^="dropdown-"]');
-   
-   // Close all other dropdowns
-   allDropdowns.forEach(d => {
-       if (d.id !== `dropdown-${fileId}`) {
-           d.classList.add('hidden');
-       }
-   });
-   
-   dropdown.classList.toggle('hidden');
+    const dropdown = document.getElementById(`dropdown-${fileId}`);
+    const allDropdowns = document.querySelectorAll('[id^="dropdown-"]');
+    
+    // Close all other dropdowns
+    allDropdowns.forEach(d => {
+        if (d.id !== `dropdown-${fileId}`) {
+            d.classList.add('hidden');
+        }
+    });
+    
+    dropdown.classList.toggle('hidden');
 
-   // Close when clicking outside
-   document.addEventListener('click', function closeDropdown(e) {
-       const isDropdownClick = e.target.closest(`#dropdown-${fileId}`);
-       const isInputClick = e.target.dataset && e.target.dataset.fileId === fileId;
-       
-       if (!isDropdownClick && !isInputClick) {
-           dropdown.classList.add('hidden');
-           document.removeEventListener('click', closeDropdown);
-       }
-   });
+    // Close when clicking outside
+    document.addEventListener('click', function closeDropdown(e) {
+        const isDropdownClick = e.target.closest(`#dropdown-${fileId}`);
+        const isInputClick = e.target.dataset && e.target.dataset.fileId === fileId;
+        
+        if (!isDropdownClick && !isInputClick) {
+            dropdown.classList.add('hidden');
+            document.removeEventListener('click', closeDropdown);
+        }
+    });
 }
 
 function selectDescription(fileId, description) {
-   const input = document.querySelector(`input[data-file-id="${fileId}"]`);
-   input.value = description;
-   document.getElementById(`dropdown-${fileId}`).classList.add('hidden');
-   
-   const fileData = uploadedFiles.get(fileId);
-   if (fileData) {
-       fileData.description = description;
-       uploadedFiles.set(fileId, fileData);
-   }
+    const input = document.querySelector(`input[data-file-id="${fileId}"]`);
+    input.value = description;
+    document.getElementById(`dropdown-${fileId}`).classList.add('hidden');
+    
+    const fileData = uploadedFiles.get(fileId);
+    if (fileData) {
+        fileData.description = description;
+        uploadedFiles.set(fileId, fileData);
+    }
 }
 
 function removeFile(fileId) {
-   uploadedFiles.delete(fileId);
-   const fileElement = document.querySelector(`input[data-file-id="${fileId}"]`).closest('.flex');
-   fileElement.remove();
+    uploadedFiles.delete(fileId);
+    const fileElement = document.querySelector(`input[data-file-id="${fileId}"]`).closest('.flex');
+    fileElement.remove();
 }
 
-```javascript
 function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -1502,7 +1584,7 @@ function refreshFilesList(files) {
 
 function updateOrderStatus(status) {
     // Update status indicator
-    const statusDot = document.querySelector('.order-header .w-2.h-2.rounded-full');
+    const statusDot = document.querySelector('.w-2.h-2.rounded-full');
     const statusText = statusDot.nextElementSibling;
     
     switch(status) {
@@ -1602,7 +1684,7 @@ function downloadSelectedFiles() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `order-{{ $order->order_number }}-files.zip`;
+        a.download = `order-{{ $order->id }}-files.zip`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -1614,33 +1696,76 @@ function downloadSelectedFiles() {
     });
 }
 
-// Messaging functions
-function sendMessage() {
-    const messageContent = document.getElementById('messageContent').value.trim();
-    const attachment = document.getElementById('messageAttachment').files[0];
+// Message Tab Switching
+function switchMessageTab(tabName) {
+    const clientTab = document.getElementById('client-messages-tab');
+    const supportTab = document.getElementById('support-messages-tab');
+    const clientContainer = document.getElementById('client-messages-container');
+    const supportContainer = document.getElementById('support-messages-container');
     
-    if (!messageContent && !attachment) {
+    if (tabName === 'client') {
+        clientTab.classList.add('border-b-2', 'border-green-500');
+        supportTab.classList.remove('border-b-2', 'border-green-500');
+        clientContainer.classList.remove('hidden');
+        supportContainer.classList.add('hidden');
+        
+        // Mark client messages as read
+        markMessagesAsRead('client');
+        scrollToBottom('client');
+    } else {
+        supportTab.classList.add('border-b-2', 'border-green-500');
+        clientTab.classList.remove('border-b-2', 'border-green-500');
+        supportContainer.classList.remove('hidden');
+        clientContainer.classList.add('hidden');
+        
+        // Mark support messages as read
+        markMessagesAsRead('support');
+        scrollToBottom('support');
+    }
+}
+
+// Send Client Message
+function sendClientMessage() {
+    sendMessage('client', 
+        document.getElementById('clientMessageContent'),
+        document.getElementById('clientMessageAttachment'),
+        'clientAttachmentPreview');
+}
+
+// Send Support Message
+function sendSupportMessage() {
+    sendMessage('support',
+        document.getElementById('supportMessageContent'),
+        document.getElementById('supportMessageAttachment'),
+        'supportAttachmentPreview');
+}
+
+// Generic send message function
+function sendMessage(type, textarea, attachmentInput, previewId) {
+    const message = textarea.value.trim();
+    const attachment = attachmentInput.files[0];
+    
+    if (!message && !attachment) {
         showToaster('Error', 'Please enter a message or attach a file', 'error');
         return;
     }
     
-    const formData = new FormData(document.getElementById('messageForm'));
+    const formData = new FormData();
+    formData.append('_token', csrfToken);
+    formData.append('message', message);
+    formData.append('message_type', type);
+    formData.append('order_id', '{{ $order->id }}');
     
     if (attachment) {
-        // Check file size (max 20MB)
-        if (attachment.size > 20 * 1024 * 1024) {
-            showToaster('Error', 'Attached file is too large (max 20MB)', 'error');
-            return;
-        }
+        formData.append('attachment', attachment);
     }
     
     // Disable textarea and button during send
-    const textarea = document.getElementById('messageContent');
-    const sendButton = document.querySelector('button[onclick="sendMessage()"]');
     textarea.disabled = true;
+    const sendButton = textarea.closest('form').querySelector('button[type="button"]');
     sendButton.disabled = true;
     
-    fetch('/api/messages/send', {
+    fetch('/api/orders/{{ $order->id }}/send-message', {
         method: 'POST',
         body: formData
     })
@@ -1648,15 +1773,15 @@ function sendMessage() {
     .then(data => {
         if (data.success) {
             // Add new message to the messages container
-            addMessageToContainer(data.message);
+            addMessageToContainer(data.message, type);
             
             // Clear input fields
             textarea.value = '';
-            document.getElementById('messageAttachment').value = '';
-            removeAttachment();
+            attachmentInput.value = '';
+            document.getElementById(previewId).classList.add('hidden');
             
             // Scroll to bottom
-            scrollToBottom();
+            scrollToBottom(type);
         } else {
             showToaster('Error', data.message || 'Failed to send message', 'error');
         }
@@ -1672,6 +1797,67 @@ function sendMessage() {
     });
 }
 
+// Setup file attachment previews
+document.getElementById('clientMessageAttachment').addEventListener('change', function(e) {
+    handleAttachmentPreview(e, 'clientAttachmentName', 'clientAttachmentPreview');
+});
+
+document.getElementById('supportMessageAttachment').addEventListener('change', function(e) {
+    handleAttachmentPreview(e, 'supportAttachmentName', 'supportAttachmentPreview');
+});
+
+function handleAttachmentPreview(e, nameElementId, previewId) {
+    const file = e.target.files[0];
+    if (file) {
+        const nameElement = document.getElementById(nameElementId);
+        const preview = document.getElementById(previewId);
+        
+        nameElement.textContent = file.name;
+        preview.classList.remove('hidden');
+    }
+}
+
+function removeClientAttachment() {
+    document.getElementById('clientMessageAttachment').value = '';
+    document.getElementById('clientAttachmentPreview').classList.add('hidden');
+}
+
+function removeSupportAttachment() {
+    document.getElementById('supportMessageAttachment').value = '';
+    document.getElementById('supportAttachmentPreview').classList.add('hidden');
+}
+
+function scrollToBottom(type) {
+    const container = document.querySelector(`#${type}-messages-container .messages-container`);
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+function markMessagesAsRead(type) {
+    fetch(`/api/orders/{{ $order->id }}/mark-messages-read?type=${type}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        }
+    });
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', function() {
+    // Start with client messages tab
+    switchMessageTab('client');
+    
+    // Set up textarea auto-resize
+    const textareas = document.querySelectorAll('textarea[id$="MessageContent"]');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (Math.min(this.scrollHeight, 200)) + 'px';
+        });
+    });
+});
 function addMessageToContainer(message) {
     const messagesContainer = document.getElementById('messages-container');
     
@@ -1764,7 +1950,7 @@ function markMessagesAsRead() {
     .then(data => {
         if (data.success) {
             // Update unread message count badge
-            const badge = document.querySelector('#messages-tab span');
+            const badge = document.querySelector('#messages-tab span.bg-red-500');
             if (badge) {
                 badge.remove();
             }
@@ -1784,17 +1970,6 @@ function markMessagesAsRead() {
 }
 
 // Attachment handling
-document.getElementById('messageAttachment').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const preview = document.getElementById('attachment-preview');
-        const nameElement = document.getElementById('attachment-name');
-        
-        nameElement.textContent = file.name;
-        preview.classList.remove('hidden');
-    }
-});
-
 function removeAttachment() {
     document.getElementById('messageAttachment').value = '';
     document.getElementById('attachment-preview').classList.add('hidden');
@@ -1808,20 +1983,24 @@ function initFileCheckboxes() {
     
     // Hide download button if no checkboxes
     if (fileCheckboxes.length === 0) {
-        bulkDownloadBtn.classList.add('hidden');
+        if (bulkDownloadBtn) {
+            bulkDownloadBtn.classList.add('hidden');
+        }
         return;
-    } else {
+    } else if (bulkDownloadBtn) {
         bulkDownloadBtn.classList.remove('hidden');
     }
     
     // Select all checkbox
-    selectAllCheckbox.addEventListener('change', function() {
-        fileCheckboxes.forEach(checkbox => {
-            checkbox.checked = this.checked;
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            fileCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            
+            updateBulkDownloadButton();
         });
-        
-        updateBulkDownloadButton();
-    });
+    }
     
     // Individual checkboxes
     fileCheckboxes.forEach(checkbox => {
@@ -1836,20 +2015,24 @@ function updateSelectAllCheckbox() {
     const selectAllCheckbox = document.getElementById('selectAllFiles');
     const fileCheckboxes = document.querySelectorAll('.file-checkbox');
     
-    selectAllCheckbox.checked = fileCheckboxes.length > 0 && 
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = fileCheckboxes.length > 0 && 
                                 Array.from(fileCheckboxes).every(checkbox => checkbox.checked);
-    selectAllCheckbox.indeterminate = !selectAllCheckbox.checked && 
+        selectAllCheckbox.indeterminate = !selectAllCheckbox.checked && 
                                      Array.from(fileCheckboxes).some(checkbox => checkbox.checked);
+    }
 }
 
 function updateBulkDownloadButton() {
     const bulkDownloadBtn = document.getElementById('bulk-download-btn');
     const anyChecked = document.querySelectorAll('.file-checkbox:checked').length > 0;
     
-    if (anyChecked) {
-        bulkDownloadBtn.classList.remove('hidden');
-    } else {
-        bulkDownloadBtn.classList.add('hidden');
+    if (bulkDownloadBtn) {
+        if (anyChecked) {
+            bulkDownloadBtn.classList.remove('hidden');
+        } else {
+            bulkDownloadBtn.classList.add('hidden');
+        }
     }
 }
 
@@ -1871,13 +2054,20 @@ function showToaster(title, message, type = 'success') {
         borderElement.className = 'bg-green-50 border-l-4 border-green-500 p-4 rounded shadow-lg flex items-start max-w-sm';
         titleElement.className = 'font-medium text-green-800';
         messageElement.className = 'text-sm text-green-700 mt-1';
+        
+        // Check icon for success
+        iconContainer.innerHTML = `
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        `;
     } else if (type === 'error') {
         iconContainer.className = 'text-red-500 mr-3';
         borderElement.className = 'bg-red-50 border-l-4 border-red-500 p-4 rounded shadow-lg flex items-start max-w-sm';
         titleElement.className = 'font-medium text-red-800';
         messageElement.className = 'text-sm text-red-700 mt-1';
         
-        // Change icon to X for error
+        // X icon for error
         iconContainer.innerHTML = `
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -1889,7 +2079,7 @@ function showToaster(title, message, type = 'success') {
         titleElement.className = 'font-medium text-yellow-800';
         messageElement.className = 'text-sm text-yellow-700 mt-1';
         
-        // Change icon to exclamation for warning
+        // Exclamation icon for warning
         iconContainer.innerHTML = `
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
@@ -1911,12 +2101,31 @@ function hideToaster() {
 }
 
 // Auto-resize textarea
-const textarea = document.getElementById('messageContent');
-if (textarea) {
-    textarea.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = (Math.min(this.scrollHeight, 200)) + 'px';
-    });
+function setupTextareaAutoResize() {
+    const textarea = document.getElementById('messageContent');
+    if (textarea) {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (Math.min(this.scrollHeight, 200)) + 'px';
+        });
+    }
+}
+
+// Setup message attachment preview
+function setupMessageAttachment() {
+    const messageAttachment = document.getElementById('messageAttachment');
+    if (messageAttachment) {
+        messageAttachment.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const preview = document.getElementById('attachment-preview');
+                const nameElement = document.getElementById('attachment-name');
+                
+                nameElement.textContent = file.name;
+                preview.classList.remove('hidden');
+            }
+        });
+    }
 }
 
 // Initialize
@@ -1979,6 +2188,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize file selection behaviors
     initFileCheckboxes();
+    
+    // Setup message textarea auto-resize
+    setupTextareaAutoResize();
+    
+    // Setup message attachment handling
+    setupMessageAttachment();
 });
 </script>
 @endsection

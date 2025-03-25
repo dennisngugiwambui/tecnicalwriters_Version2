@@ -183,7 +183,7 @@
                 <div class="relative group" id="profileDropdown">
                     <button class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50" id="profileButton">
                         <div class="flex flex-col text-right">
-                            <span class="text-sm font-medium text-gray-700">Philip</span>
+                            <span class="text-sm font-medium text-gray-700">{{ auth()->user()->name }}</span>
                             <span class="text-xs text-gray-500">Looking for orders</span>
                         </div>
                         <div class="ml-2">

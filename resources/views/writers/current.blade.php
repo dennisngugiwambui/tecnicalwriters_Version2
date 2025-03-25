@@ -146,7 +146,7 @@
         
         @if(count($activeOrders) > 0)
             @foreach($activeOrders as $order)
-                <a href="{{ route('assigned', ['id' => $order->id]) }}" class="border rounded-lg p-4 pt-2 mb-2 bg-gray-50 hover-scale order-card">
+            <a href="{{ route('assigned', ['id' => $order->id]) }}" class="border rounded-lg p-4 pt-2 mb-2 bg-gray-50 hover-scale order-card">
                     <div>
                         <div class="text-blue-600 font-semibold text-lg">#{{ $order->order_number }}</div>
                         <div class="status-{{ strtolower($order->status) }}">{{ $order->status }}</div>

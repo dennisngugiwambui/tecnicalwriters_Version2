@@ -65,7 +65,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/writer/order/{id}/message', [HomeController::class, 'sendMessage'])->name('writer.message.send');
     Route::post('/writer/order/upload-files', [HomeController::class, 'uploadFiles'])->name('writer.order.upload');
     Route::post('/writer/order/{id}/mark-messages-read', [HomeController::class, 'markMessagesRead'])->name('writer.order.mark-messages-read');
-    Route::get('/order/{id?}', [HomeController::class, 'AssignedOrder'])->name('assigned');
+    Route::get('/writer/order/{id}', [HomeController::class, 'AssignedOrder'])->name('assigned');
     
     // Message routes
     Route::post('/writer/messages/send', [HomeController::class, 'sendNewMessage'])->name('writer.message.sendNew');
