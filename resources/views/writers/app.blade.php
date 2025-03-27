@@ -14,6 +14,7 @@
 
     <!-- Include helper functions -->
     @php
+        // Define human_filesize function
         if (!function_exists('human_filesize')) {
             function human_filesize($bytes, $precision = 2) {
                 if ($bytes === null) {
@@ -27,6 +28,11 @@
                 return round($bytes, $precision) . ' ' . $units[$pow];
             }
         }
+        
+        // Make function available in views
+        View::share('human_filesize', function($bytes, $precision = 2) {
+            return human_filesize($bytes, $precision);
+        });
     @endphp
     
     <style>
@@ -35,7 +41,7 @@
             to { transform: translateY(0); opacity: 1; }
         }
         .select2-container .select2-selection--single {
-            block-size: 38px !important;
+            height: 38px !important;
             border-radius: 4px !important;
             border: 1px solid #e5e7eb !important;
             display: flex !important;
@@ -43,20 +49,20 @@
             padding: 0 10px !important;
         }
         .select2-container--default .select2-selection--single .select2-selection__arrow {
-            block-size: 36px !important;
+            height: 36px !important;
         }
         .select2-dropdown {
             border: 1px solid #e5e7eb !important;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
         }
         .filter-section-enter {
-            max-block-size: 0;
+            max-height: 0;
             opacity: 0;
             transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
             overflow: hidden;
         }
         .filter-section-enter.show {
-            max-block-size: 500px;
+            max-height: 500px;
             opacity: 1;
         }
         .animate-slide-in {
@@ -78,13 +84,13 @@
             backdrop-filter: blur(4px);
         }
         .select2-container .select2-selection--single {
-            block-size: 42px !important;
+            height: 42px !important;
             padding: 8px !important;
             border-radius: 0.5rem !important;
             border: 1px solid #e5e7eb !important;
         }
         .select2-container--default .select2-selection--single .select2-selection__arrow {
-            block-size: 42px !important;
+            height: 42px !important;
         }
         .select2-dropdown {
             border-radius: 0.5rem !important;
@@ -96,25 +102,25 @@
             padding: 0.5rem !important;
         }
         .filter-section-mobile {
-            max-block-size: 0;
+            max-height: 0;
             opacity: 0;
-            transition: max-block-size 0.5s ease-out, opacity 0.3s ease-out;
+            transition: max-height 0.5s ease-out, opacity 0.3s ease-out;
             overflow: hidden;
         }
         .filter-section-mobile.show {
-            max-block-size: 500px;
+            max-height: 500px;
             opacity: 1;
         }
         .dropdown-menu {
             position: absolute;
-            inset-inline-end: 0;
-            inset-block-start: 100%;
+            right: 0;
+            top: 100%;
             background-color: white;
             border-radius: 0.375rem;
             border: 1px solid #e5e7eb;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             z-index: 50;
-            min-inline-size: 12rem;
+            min-width: 12rem;
             display: none;
         }
         .dropdown-menu.show {
@@ -128,7 +134,7 @@
             display: flex;
             align-items: center;
             padding: 0.75rem 1rem;
-            margin-block-end: 0.25rem;
+            margin-bottom: 0.25rem;
             border-radius: 0.375rem;
             transition: all 0.2s;
         }
@@ -140,7 +146,7 @@
             font-weight: 500;
         }
         .menu-icon {
-            margin-inline-end: 0.75rem;
+            margin-right: 0.75rem;
         }
         .orders-counter {
             background-color: #f3f4f6;
@@ -148,7 +154,7 @@
             border-radius: 9999px;
             font-size: 0.75rem;
             padding: 0.125rem 0.375rem;
-            margin-inline-start: auto;
+            margin-left: auto;
         }
         .tab-link.active {
             color: #10B981;
