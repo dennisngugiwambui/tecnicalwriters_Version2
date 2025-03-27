@@ -4,27 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'TechnicalWriters') - Freelancer Platform</title>
+    <title>@yield('title', 'TechnicalWriters')</title>
     
     <!-- Styles -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <link rel="icon" type="image/jpeg" href="{{ asset('writers/technicalwriters2.jpg') }}">
-    
-    <!-- Define human_filesize function inside the template for immediate availability -->
+
+    <!-- Include helper functions -->
     @php
         if (!function_exists('human_filesize')) {
             function human_filesize($bytes, $precision = 2) {
                 if ($bytes === null) {
                     return 'N/A';
                 }
-                $units = ['B', 'KB', 'MB', 'GB', 'TB']; 
-                $bytes = max($bytes, 0); 
-                $pow = floor(($bytes ? log($bytes) : 0) / log(1024)); 
-                $pow = min($pow, count($units) - 1); 
+                $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+                $bytes = max($bytes, 0);
+                $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+                $pow = min($pow, count($units) - 1);
                 $bytes /= pow(1024, $pow);
-                return round($bytes, $precision) . ' ' . $units[$pow]; 
+                return round($bytes, $precision) . ' ' . $units[$pow];
             }
         }
     @endphp
@@ -105,7 +105,6 @@
             max-block-size: 500px;
             opacity: 1;
         }
-
         .dropdown-menu {
             position: absolute;
             inset-inline-end: 0;
@@ -121,7 +120,6 @@
         .dropdown-menu.show {
             display: block;
         }
-
         .sidebar-overlay {
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
@@ -152,6 +150,23 @@
             padding: 0.125rem 0.375rem;
             margin-inline-start: auto;
         }
+        .tab-link.active {
+            color: #10B981;
+            border-color: #10B981;
+        }
+        .tab-link:not(.active) {
+            color: #6B7280;
+            border-color: transparent;
+        }
+        .message-tab.active {
+            color: #10B981;
+            border-color: #10B981;
+        }
+        .message-tab:not(.active) {
+            color: #6B7280;
+            border-color: transparent;
+        }
+        
         /* Toast notification */
         .toast-notification {
             position: fixed;
@@ -164,16 +179,6 @@
         .toast-notification.show {
             transform: translateX(0);
         }
-        /* Flash message animation */
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateY(-20px); }
-            10% { opacity: 1; transform: translateY(0); }
-            90% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-20px); }
-        }
-        .flash-message {
-            animation: fadeInOut 5s forwards;
-        }
     </style>
     
     @stack('styles')
@@ -185,7 +190,7 @@
             <div class="flex justify-between h-16">
                 <!-- Left side - Logo -->
                 <div class="flex items-center">
-                    <button id="menuToggle" class="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100">
+                    <button id="menuToggle" class="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100" onclick="toggleSidebar()">
                         <i class="fas fa-bars"></i>
                     </button>
                     <a href="{{ route('home') }}" class="flex items-center space-x-2 ml-2 lg:ml-0">
@@ -218,7 +223,7 @@
                         <button class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50" id="profileButton">
                             <div class="flex flex-col text-right">
                                 <span class="text-sm font-medium text-gray-700">{{ auth()->user()->name ?? 'Guest' }}</span>
-                                <span class="text-xs text-gray-500">{{ auth()->user() ? 'Looking for orders' : 'Login' }}</span>
+                                <span class="text-xs text-gray-500">Looking for orders</span>
                             </div>
                             <div class="ml-2">
                                 <i class="fas fa-circle text-green-500 animate-pulse" style="font-size: 0.75rem;"></i>
@@ -228,19 +233,14 @@
                         <!-- Dropdown Menu -->
                         <div class="dropdown-menu" id="userDropdown">
                             <div class="py-1">
-                                @auth
-                                    <a href="{{ route('profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
-                                    <div class="border-t border-gray-200 my-1"></div>
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                            Logout
-                                        </button>
-                                    </form>
-                                @else
-                                    <a href="{{ route('login') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Login</a>
-                                    <a href="{{ route('register') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Register</a>
-                                @endauth
+                                <a href="{{ route('profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                                <div class="border-t border-gray-200 my-1"></div>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        Logout
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -250,7 +250,7 @@
     </nav>
 
     <!-- Sidebar Overlay - for mobile view -->
-    <div id="sidebarOverlay" class="fixed inset-0 z-40 hidden lg:hidden sidebar-overlay"></div>
+    <div id="sidebarOverlay" class="fixed inset-0 z-40 hidden lg:hidden sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <!-- Sidebar -->
     <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-white shadow-md transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40 mt-16 overflow-y-auto">
@@ -334,7 +334,7 @@
     <div class="lg:ml-64 pt-16 min-h-screen">
         <!-- Display flash messages -->
         @if(session('success'))
-            <div class="flash-message bg-green-100 border-l-4 border-green-500 text-green-700 p-4 m-4">
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 m-4">
                 <div class="flex">
                     <div class="flex-shrink-0">
                         <i class="fas fa-check-circle"></i>
@@ -347,7 +347,7 @@
         @endif
 
         @if(session('error'))
-            <div class="flash-message bg-red-100 border-l-4 border-red-500 text-red-700 p-4 m-4">
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 m-4">
                 <div class="flex">
                     <div class="flex-shrink-0">
                         <i class="fas fa-times-circle"></i>
@@ -360,7 +360,7 @@
         @endif
 
         @if(session('warning'))
-            <div class="flash-message bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 m-4">
+            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 m-4">
                 <div class="flex">
                     <div class="flex-shrink-0">
                         <i class="fas fa-exclamation-triangle"></i>
@@ -372,21 +372,6 @@
             </div>
         @endif
 
-        <!-- Toast notification -->
-        @if(session('toast'))
-        <div id="toast" class="toast-notification">
-            <div class="bg-white border-l-4 border-green-500 shadow-lg rounded-lg overflow-hidden">
-                <div class="px-4 py-2 bg-green-500">
-                    <h3 class="text-white font-medium">{{ session('toast.title') ?? 'Notification' }}</h3>
-                </div>
-                <div class="p-4">
-                    <p class="text-gray-700">{{ session('toast.message') }}</p>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        <!-- Page Content -->
         @yield('content')
     </div>
 
@@ -403,17 +388,6 @@
             if (sidebar && overlay) {
                 sidebar.classList.toggle('-translate-x-full');
                 overlay.classList.toggle('hidden');
-            }
-        }
-        
-        // Show toast notification
-        function showToast() {
-            const toast = document.getElementById('toast');
-            if (toast) {
-                toast.classList.add('show');
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 5000);
             }
         }
         
@@ -458,14 +432,9 @@
                     allowClear: true
                 });
             }
-            
-            // Show toast notification if available
-            @if(session('toast'))
-            showToast();
-            @endif
         });
     </script>
     
-    @stack('scripts')
+    @yield('scripts')
 </body>
 </html>
