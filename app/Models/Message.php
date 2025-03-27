@@ -8,12 +8,13 @@ class Message extends Model
 {
     protected $fillable = [
         'order_id', 'user_id', 'receiver_id', 'title', 'message', 
-        'message_type', 'read_at', 'is_general'
+        'message_type', 'read_at', 'is_general', 'requires_action'
     ];
     
     protected $casts = [
         'read_at' => 'datetime',
         'is_general' => 'boolean',
+        'requires_action' => 'boolean'
     ];
     
     public function order()
@@ -64,6 +65,12 @@ class Message extends Model
         return $this->receiver_id == Auth::id();
     }
     
+    // Check if message requires action
+    public function requiresAction()
+    {
+        return $this->requires_action && $this->isForCurrentUser();
+    }
+    
     // Get the appropriate CSS classes based on message sender
     public function getSenderInitial()
     {
@@ -102,6 +109,11 @@ class Message extends Model
     public function getMessageBubbleClasses()
     {
         $baseClasses = 'max-w-lg rounded-lg p-4';
+        
+        // Add special styling for messages requiring action
+        if ($this->requires_action) {
+            return $baseClasses . ' bg-yellow-50 border border-yellow-200';
+        }
         
         if ($this->isSentByCurrentUser()) {
             return $baseClasses . ' bg-blue-50';

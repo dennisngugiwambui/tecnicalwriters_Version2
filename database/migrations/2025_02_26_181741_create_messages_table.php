@@ -20,6 +20,7 @@ return new class extends Migration
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
             $table->text('message');
             $table->string('message_type')->default('client');
+            $table->boolean('requires_action')->default(false)->after('message_type');
             $table->boolean('is_general')->default(false);
             $table->timestamp('read_at')->nullable();
             $table->timestamps();

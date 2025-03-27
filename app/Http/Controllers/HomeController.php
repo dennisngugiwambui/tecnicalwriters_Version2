@@ -1946,18 +1946,37 @@ class HomeController extends Controller
         ]);
     }
     
+      /**
+     * Helper function to format file size in human-readable format
+     *
+     * @param int $bytes
+     * @param int $precision
+     * @return string
+     */
+    private function humanFilesize($bytes, $precision = 2) 
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB']; 
+    
+        $bytes = max($bytes, 0); 
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024)); 
+        $pow = min($pow, count($units) - 1); 
+    
+        $bytes /= pow(1024, $pow);
+    
+        return round($bytes, $precision) . ' ' . $units[$pow]; 
+    }
+
     /**
      * Display assigned order details
      *
      * @param  int  $id
      * @return \Illuminate\Contracts\Support\Renderable
      */
-
-    public function AssignedOrder($id = null)
+    public function assignedOrder($id = null)
     {
         // If no ID is provided, redirect to the current orders page
         if (!$id) {
-            return redirect()->route('current');
+            return redirect()->route('writer.current');
         }
         
         // Find order by ID without restricting to current writer
@@ -1968,7 +1987,7 @@ class HomeController extends Controller
         
         // If order not found, redirect with error
         if (!$order) {
-            return redirect()->route('current')
+            return redirect()->route('writer.current')
                 ->with('error', 'Order not found.');
         }
         
@@ -1977,7 +1996,7 @@ class HomeController extends Controller
         $isAdmin = in_array(Auth::user()->usertype, ['admin', 'support']);
                   
         if (!$isAssigned && !$isAdmin) {
-            return redirect()->route('current')
+            return redirect()->route('writer.current')
                 ->with('error', 'You do not have permission to view this order.');
         }
         
@@ -2022,6 +2041,11 @@ class HomeController extends Controller
         // Total unread messages for tab display
         $unreadMessages = $clientUnreadCount + $supportUnreadCount;
         
+        // Register human_filesize helper function in the view
+        view()->share('human_filesize', function($bytes, $precision = 2) {
+            return $this->humanFilesize($bytes, $precision);
+        });
+        
         return view('writers.AssignedOrder', [
             'order' => $order,
             'clientMessages' => $clientMessages,
@@ -2032,150 +2056,7 @@ class HomeController extends Controller
         ]);
     }
     
-    /**
-     * Send a message for an order
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $orderId
-     * @return \Illuminate\Http\Response
-     */
-    public function sendMessage(Request $request, $orderId)
-    {
-        $request->validate([
-            'message' => 'required|string|max:1000',
-            'message_type' => 'required|in:client,support',
-            'attachment' => 'nullable|file|max:10240',
-        ]);
-
-        try {
-            // Get the order
-            $order = Order::findOrFail($orderId);
-            
-            // Check if user can send a message for this order
-            $isAssigned = $order->writer_id == Auth::id();
-            $isAdmin = in_array(Auth::user()->usertype, ['admin', 'support']);
-            
-            // Verify this is a valid assigned order
-            $isValidAssignedOrder = in_array($order->status, [
-                Order::STATUS_CONFIRMED, 
-                Order::STATUS_UNCONFIRMED,
-                Order::STATUS_IN_PROGRESS,
-                Order::STATUS_DONE,
-                Order::STATUS_DELIVERED,
-                Order::STATUS_REVISION
-            ]) && $order->writer_id !== null;
-            
-            if (!$isAssigned && !$isAdmin) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You must be assigned to this order to send messages'
-                ], 403);
-            }
-            
-            // Check for forbidden keywords
-            $forbiddenKeywords = ['dollar', 'money', 'pay', 'shillings', 'cash', 'price', 'payment'];
-            $messageText = strtolower($request->message);
-            $foundKeywords = [];
-            
-            foreach ($forbiddenKeywords as $keyword) {
-                if (strpos($messageText, $keyword) !== false) {
-                    $foundKeywords[] = $keyword;
-                }
-            }
-            
-            if (!empty($foundKeywords)) {
-                if ($request->ajax()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Your message contains prohibited keywords: ' . implode(', ', $foundKeywords)
-                    ], 400);
-                }
-                return back()->with('warning', 'Your message contains prohibited keywords: ' . implode(', ', $foundKeywords));
-            }
-            
-            // Create a new message
-            $message = new Message();
-            $message->order_id = $orderId;
-            $message->user_id = Auth::id();
-            $message->message = $request->message;
-            $message->message_type = $request->message_type;
-            $message->title = "Order #{$orderId} Message";
-            
-            // Set receiver based on message type
-            if ($request->message_type === 'client') {
-                $message->receiver_id = $order->client_id;
-            } else {
-                // For support messages, find an admin or support user
-                $supportUser = User::where('usertype', 'admin')
-                    ->orWhere('usertype', 'support')
-                    ->first();
-                    
-                if ($supportUser) {
-                    $message->receiver_id = $supportUser->id;
-                } else {
-                    throw new \Exception("No support staff available");
-                }
-            }
-            
-            $message->is_general = false;
-            $message->save();
-            
-            // Handle file attachment if present
-            if ($request->hasFile('attachment')) {
-                $file = $request->file('attachment');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-                $filePath = $file->storeAs("order_messages/{$orderId}", $fileName, 'public');
-                
-                $fileModel = new File([
-                    'name' => $file->getClientOriginalName(),
-                    'original_name' => $file->getClientOriginalName(),
-                    'path' => $filePath,
-                    'size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                    'uploaded_by' => Auth::id(),
-                    'uploader_type' => 'WRITER',
-                    'fileable_id' => $message->id,
-                    'fileable_type' => get_class($message)
-                ]);
-                
-                $message->files()->save($fileModel);
-            }
-            
-            // Mark messages from the other side as read
-            if ($request->message_type === 'client') {
-                Message::where('order_id', $orderId)
-                    ->where('message_type', 'client')
-                    ->where('user_id', $order->client_id)
-                    ->whereNull('read_at')
-                    ->update(['read_at' => now()]);
-            } else {
-                Message::where('order_id', $orderId)
-                    ->whereIn('message_type', ['admin', 'support', 'system'])
-                    ->whereNotIn('user_id', [Auth::id()])
-                    ->whereNull('read_at')
-                    ->update(['read_at' => now()]);
-            }
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => $message->load('files', 'user', 'receiver')
-                ]);
-            }
-            
-            return back()->with('success', 'Message sent successfully');
-        } catch (\Exception $e) {
-            Log::error('Error sending message: ' . $e->getMessage());
-            
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to send message: ' . $e->getMessage()
-                ], 500);
-            }
-            return back()->with('error', 'Failed to send message: ' . $e->getMessage());
-        }
-    }
+   
     
     /**
      * Mark messages as read for an order
@@ -2219,6 +2100,292 @@ class HomeController extends Controller
         }
     }
 
+    /**
+     * Upload files for an order and mark it as DONE if completed
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
+     */  
+    public function uploadFiles(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+            'files' => 'required|array',
+            'files.*' => 'required|file|max:99000', // 99MB limit
+            'descriptions' => 'required|array',
+            'descriptions.*' => 'nullable|string'
+        ]);
+        
+        $orderId = $request->order_id;
+        $order = Order::where('id', $orderId)
+            ->where('writer_id', Auth::id())
+            ->firstOrFail();
+        
+        try {
+            $uploadedFiles = [];
+            $hasCompletedFile = false;
+            
+            // Process each file
+            foreach ($request->file('files') as $index => $file) {
+                $originalName = $file->getClientOriginalName();
+                $extension = $file->getClientOriginalExtension();
+                $size = $file->getSize();
+                $mimeType = $file->getMimeType();
+                
+                // Generate unique filename
+                $filename = $order->id . '_' . uniqid() . '.' . $extension;
+                
+                // Store file in public storage for accessibility
+                $path = $file->storeAs('order_files', $filename, 'public');
+                
+                // Get description
+                $description = isset($request->descriptions[$index]) ? $request->descriptions[$index] : null;
+                
+                // Check if this is a completed file
+                if ($description === 'completed') {
+                    $hasCompletedFile = true;
+                }
+                
+                // Create file record with more complete information
+                $fileRecord = File::create([
+                    'name' => $originalName,
+                    'original_name' => $originalName,
+                    'path' => $path,
+                    'size' => $size,
+                    'mime_type' => $mimeType,
+                    'fileable_id' => $order->id,
+                    'fileable_type' => get_class($order),
+                    'uploaded_by' => Auth::id(),
+                    'uploader_type' => 'WRITER',
+                    'description' => $description
+                ]);
+                
+                $uploadedFiles[] = $fileRecord;
+            }
+            
+            // Update order status if a completed file was uploaded
+            $statusChanged = false;
+            if ($hasCompletedFile && !in_array($order->status, [Order::STATUS_DONE, Order::STATUS_DELIVERED])) {
+                $order->status = Order::STATUS_DONE;
+                $order->save();
+                $statusChanged = true;
+                
+                // Create system message indicating order is complete
+                Message::create([
+                    'order_id' => $orderId,
+                    'user_id' => Auth::id(),
+                    'message' => "Order has been marked as DONE. Files have been uploaded and are ready for review.",
+                    'message_type' => 'system',
+                    'title' => 'Order Completed',
+                    'is_general' => false
+                ]);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'files' => $uploadedFiles,
+                'status_changed' => $statusChanged,
+                'message' => 'Files uploaded successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error uploading files: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload files: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Download a file
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function download(Request $request)
+    {
+        $request->validate([
+            'file_id' => 'required|exists:files,id',
+        ]);
+    
+        $file = File::findOrFail($request->file_id);
+        
+        // Log file path for debugging
+        Log::info('Attempting to download file: ' . $file->path);
+        
+        // Check if file exists in storage
+        if (!Storage::disk('public')->exists($file->path)) {
+            Log::error('File not found in storage: ' . $file->path);
+            return back()->with('error', 'File not found in storage');
+        }
+    
+        return Storage::disk('public')->download($file->path, $file->name ?? 'download');
+    }
+
+    /**
+     * Download multiple files as a zip
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function downloadMultiple(Request $request)
+    {
+        $request->validate([
+            'file_ids' => 'required|array',
+            'file_ids.*' => 'exists:files,id',
+        ]);
+
+        $fileIds = $request->file_ids;
+        
+        // If only one file, download it directly
+        if (count($fileIds) === 1) {
+            return $this->download(new Request(['file_id' => $fileIds[0]]));
+        }
+
+        // For multiple files, create a zip
+        $zip = new ZipArchive();
+        $zipName = 'order_files_' . time() . '.zip';
+        $zipPath = storage_path('app/public/temp/' . $zipName);
+        
+        // Create temp directory if it doesn't exist
+        if (!Storage::disk('public')->exists('temp')) {
+            Storage::disk('public')->makeDirectory('temp');
+        }
+
+        if ($zip->open($zipPath, ZipArchive::CREATE) !== true) {
+            return response()->json(['error' => 'Cannot create zip file'], 500);
+        }
+
+        $files = File::whereIn('id', $fileIds)->get();
+        
+        foreach ($files as $file) {
+            // Verify the file exists
+            if (Storage::disk('public')->exists($file->path)) {
+                $fileContent = Storage::disk('public')->get($file->path);
+                // Generate a unique name to avoid conflicts
+                $fileNameInZip = Str::slug(pathinfo($file->name, PATHINFO_FILENAME)) . '_' . 
+                                substr(md5($file->id), 0, 6) . '.' . 
+                                pathinfo($file->name, PATHINFO_EXTENSION);
+                $zip->addFromString($fileNameInZip, $fileContent);
+            }
+        }
+
+        $zip->close();
+
+        return response()->download($zipPath, $zipName)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Writer confirms order assignment
+     *
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function confirmAssignment($id)
+    {
+        $order = Order::findOrFail($id);
+        
+        // Check if the order belongs to the current writer
+        if ($order->writer_id != Auth::id()) {
+            return redirect()->route('writer.current')->with('error', 'You are not assigned to this order.');
+        }
+        
+        // Check if the order is in UNCONFIRMED status
+        if ($order->status != Order::STATUS_UNCONFIRMED) {
+            return redirect()->route('writer.assigned', $id)->with('error', 'This order cannot be confirmed at this time.');
+        }
+        
+        // Update order status
+        $order->status = Order::STATUS_CONFIRMED;
+        $order->save();
+        
+        // Create system message confirming the assignment
+        Message::create([
+            'order_id' => $id,
+            'user_id' => Auth::id(),
+            'message' => "Order assignment has been accepted. I will start working on this order immediately.",
+            'message_type' => 'system',
+            'title' => 'Assignment Confirmed',
+            'is_general' => false
+        ]);
+        
+        // Notify admin about the confirmation
+        $adminUsers = User::whereIn('usertype', ['admin', 'super_admin', 'support'])->get();
+        foreach ($adminUsers as $admin) {
+            Message::create([
+                'order_id' => $id,
+                'user_id' => Auth::id(),
+                'receiver_id' => $admin->id,
+                'message' => "Writer has accepted the order assignment.",
+                'message_type' => 'notification',
+                'title' => 'Order Assignment Accepted',
+                'is_general' => false
+            ]);
+        }
+        
+        return redirect()->route('writer.assigned', $id)
+            ->with('success', 'You have successfully accepted this order. You can now start working on it.');
+    }
+
+    /**
+     * Writer rejects order assignment
+     *
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function rejectAssignment($id)
+    {
+        $order = Order::findOrFail($id);
+        
+        // Check if the order belongs to the current writer
+        if ($order->writer_id != Auth::id()) {
+            return redirect()->route('writer.current')
+                ->with('error', 'You are not assigned to this order.');
+        }
+        
+        // Check if the order is in UNCONFIRMED status
+        if ($order->status != Order::STATUS_UNCONFIRMED) {
+            return redirect()->route('writer.assigned', $id)
+                ->with('error', 'This order cannot be rejected at this time.');
+        }
+        
+        // Reset order status and writer
+        $order->status = Order::STATUS_AVAILABLE;
+        $oldWriterId = $order->writer_id;
+        $order->writer_id = null;
+        $order->save();
+        
+        // Create system message recording the rejection
+        Message::create([
+            'order_id' => $id,
+            'user_id' => Auth::id(),
+            'message' => "Order assignment has been declined by the writer.",
+            'message_type' => 'system',
+            'title' => 'Assignment Rejected',
+            'is_general' => false
+        ]);
+        
+        // Notify admin about the rejection
+        $adminUsers = User::whereIn('usertype', ['admin', 'super_admin', 'support'])->get();
+        foreach ($adminUsers as $admin) {
+            Message::create([
+                'order_id' => $id,
+                'user_id' => Auth::id(),
+                'receiver_id' => $admin->id,
+                'message' => "Writer has declined the order assignment. Order is now available again.",
+                'message_type' => 'notification',
+                'title' => 'Order Assignment Rejected',
+                'is_general' => false
+            ]);
+        }
+        
+        return redirect()->route('writer.current')
+            ->with('info', 'You have declined the order assignment.');
+    }
+    
+    
+   
     /**
      * Display available order details
      *
@@ -2490,178 +2657,5 @@ class HomeController extends Controller
         }
     }
 
-    /**
-     * Download a file
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function download(Request $request)
-    {
-        $request->validate([
-            'file_id' => 'required|exists:files,id',
-        ]);
     
-        $file = File::findOrFail($request->file_id);
-        
-        // Log file path for debugging
-        Log::info('Attempting to download file: ' . $file->path);
-        
-        // Check if file exists in storage
-        if (!Storage::disk('public')->exists($file->path)) {
-            Log::error('File not found in storage: ' . $file->path);
-            return back()->with('error', 'File not found in storage');
-        }
-    
-        return Storage::disk('public')->download($file->path, $file->name ?? 'download');
-    }
-
-    /**
-     * Download multiple files
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function downloadMultiple(Request $request)
-    {
-        $request->validate([
-            'file_ids' => 'required|array',
-            'file_ids.*' => 'exists:files,id',
-        ]);
-
-        $fileIds = $request->file_ids;
-        
-        // If only one file, download it directly
-        if (count($fileIds) === 1) {
-            return $this->download(new Request(['file_id' => $fileIds[0]]));
-        }
-
-        // For multiple files, create a zip
-        $zip = new ZipArchive();
-        $zipName = 'order_files_' . time() . '.zip';
-        $zipPath = storage_path('app/public/temp/' . $zipName);
-        
-        // Create temp directory if it doesn't exist
-        if (!Storage::disk('public')->exists('temp')) {
-            Storage::disk('public')->makeDirectory('temp');
-        }
-
-        if ($zip->open($zipPath, ZipArchive::CREATE) !== true) {
-            return response()->json(['error' => 'Cannot create zip file'], 500);
-        }
-
-        $files = File::whereIn('id', $fileIds)->get();
-        
-        foreach ($files as $file) {
-            // Verify the file exists
-            if (Storage::disk('public')->exists($file->path)) {
-                $fileContent = Storage::disk('public')->get($file->path);
-                // Generate a unique name to avoid conflicts
-                $fileNameInZip = Str::slug(pathinfo($file->name, PATHINFO_FILENAME)) . '_' . 
-                                substr(md5($file->id), 0, 6) . '.' . 
-                                pathinfo($file->name, PATHINFO_EXTENSION);
-                $zip->addFromString($fileNameInZip, $fileContent);
-            }
-        }
-
-        $zip->close();
-
-        return response()->download($zipPath, $zipName)->deleteFileAfterSend(true);
-    }
-
-    /**
-     * Mark messages as read for an order
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @param int $id
-     * @return \Illuminate\Http\Response
-     */
-    
-
-    /**
-     * Upload files for an order and mark it as DONE if completed
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */  
-    public function uploadFiles(Request $request)
-    {
-        $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'files' => 'required|array',
-            'files.*' => 'required|file|max:99000', // 99MB limit
-            'descriptions' => 'required|array',
-            'descriptions.*' => 'nullable|string'
-        ]);
-        
-        $orderId = $request->order_id;
-        $order = Order::where('id', $orderId)
-            ->where('writer_id', Auth::id())
-            ->firstOrFail();
-        
-        try {
-            $uploadedFiles = [];
-            $hasCompletedFile = false;
-            
-            // Process each file
-            foreach ($request->file('files') as $index => $file) {
-                $originalName = $file->getClientOriginalName();
-                $extension = $file->getClientOriginalExtension();
-                $size = $file->getSize();
-                $mimeType = $file->getMimeType();
-                
-                // Generate unique filename
-                $filename = $order->id . '_' . uniqid() . '.' . $extension;
-                
-                // Store file in public storage for accessibility
-                $path = $file->storeAs('order_files', $filename, 'public');
-                
-                // Get description
-                $description = isset($request->descriptions[$index]) ? $request->descriptions[$index] : null;
-                
-                // Check if this is a completed file
-                if ($description === 'completed') {
-                    $hasCompletedFile = true;
-                }
-                
-                // Create file record with more complete information
-                $fileRecord = File::create([
-                    'name' => $originalName,
-                    'original_name' => $originalName,
-                    'path' => $path,
-                    'size' => $size,
-                    'mime_type' => $mimeType,
-                    'fileable_id' => $order->id,
-                    'fileable_type' => get_class($order),
-                    'uploaded_by' => Auth::id(),
-                    'uploader_type' => 'WRITER',
-                    'description' => $description
-                ]);
-                
-                $uploadedFiles[] = $fileRecord;
-            }
-            
-            // Update order status if a completed file was uploaded
-            $statusChanged = false;
-            if ($hasCompletedFile && !in_array($order->status, [Order::STATUS_DONE, Order::STATUS_DELIVERED])) {
-                $order->status = Order::STATUS_DONE;
-                $order->save();
-                $statusChanged = true;
-            }
-            
-            return response()->json([
-                'success' => true,
-                'files' => $uploadedFiles,
-                'status_changed' => $statusChanged,
-                'message' => 'Files uploaded successfully'
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error uploading files: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to upload files: ' . $e->getMessage()
-            ], 500);
-        }
-    }
 }

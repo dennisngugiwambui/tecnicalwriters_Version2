@@ -59,7 +59,7 @@ Route::middleware(['auth'])->group(function () {
     
     // Order management routes
     Route::post('/bid/submit/{id}', [HomeController::class, 'submitBid'])->name('writer.bid.submit');
-    Route::post('/file/download', [HomeController::class, 'download'])->name('writer.file.download');
+    Route::post('/file/download', [HomeController::class, 'download'])->name('writer.download');
     Route::post('/file/download-multiple', [HomeController::class, 'downloadMultiple'])->name('writer.file.downloadMultiple');
     Route::get('/writer/order/{id}/details', [HomeController::class, 'availableOrderDetails'])->name('writer.order.details');
     Route::post('/writer/order/{id}/message', [HomeController::class, 'sendMessage'])->name('writer.message.send');
@@ -69,6 +69,7 @@ Route::middleware(['auth'])->group(function () {
     
     // Message routes
     Route::post('/writer/messages/send', [HomeController::class, 'sendNewMessage'])->name('writer.message.sendNew');
+    Route::post('/writer/messages/send', [HomeController::class, 'sendNewMessage'])->name('writer.send.message');
     Route::get('/writer/messages/thread/{orderId}', [HomeController::class, 'viewMessageThread'])->name('writer.message.thread');
     Route::post('/writer/messages/reply', [HomeController::class, 'replyToMessage'])->name('writer.message.reply');
     Route::get('/writer/order/{id}/check-messages', [HomeController::class, 'checkNewMessages'])->name('writer.message.check');
@@ -81,6 +82,14 @@ Route::middleware(['auth'])->group(function () {
     //Route::post('/upload/submit', [UploadController::class, 'submitFinalWork'])->name('upload.submit');
     //Route::delete('/upload/{uploadId}', [UploadController::class, 'deleteUpload'])->name('upload.delete');
    // Route::get('/upload/download/{uploadId}', [UploadController::class, 'downloadFile'])->name('upload.download');
+
+
+   // Order confirmation/rejection routes
+   // Add these routes to the existing routes file within the auth middleware group
+
+// Order confirmation/rejection routes
+Route::get('/writer/order/{id}/confirm', [App\Http\Controllers\HomeController::class, 'confirmAssignment'])->name('writer.confirm.assignment');
+Route::get('/writer/order/{id}/reject', [App\Http\Controllers\HomeController::class, 'rejectAssignment'])->name('writer.reject.assignment');
 
 
     //Route::get('/finance', [HomeController::class, 'userFinance'])->name('writer.finance');
