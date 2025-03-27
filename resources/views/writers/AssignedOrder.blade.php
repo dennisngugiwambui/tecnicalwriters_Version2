@@ -680,7 +680,7 @@
         
         // Function to mark messages as read
         function markMessagesAsRead(type = 'all') {
-            fetch('{{ route("writer.mark.messages.read", $order->id) }}', {
+            fetch('{{ route("writer.order.mark-messages-read", $order->id) }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
