@@ -1946,23 +1946,24 @@ class HomeController extends Controller
         ]);
     }
     
-      /**
-     * Helper function to format file size in human-readable format
+     
+   /**
+     * Format file size in human-readable format
      *
      * @param int $bytes
      * @param int $precision
      * @return string
      */
-    private function humanFilesize($bytes, $precision = 2) 
+    public function human_filesize($bytes, $precision = 2) 
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB']; 
-    
+
         $bytes = max($bytes, 0); 
         $pow = floor(($bytes ? log($bytes) : 0) / log(1024)); 
         $pow = min($pow, count($units) - 1); 
-    
+
         $bytes /= pow(1024, $pow);
-    
+
         return round($bytes, $precision) . ' ' . $units[$pow]; 
     }
 
@@ -1994,7 +1995,7 @@ class HomeController extends Controller
         // Check if current user can view this order
         $isAssigned = $order->writer_id == Auth::id();
         $isAdmin = in_array(Auth::user()->usertype, ['admin', 'support']);
-                  
+                
         if (!$isAssigned && !$isAdmin) {
             return redirect()->route('writer.current')
                 ->with('error', 'You do not have permission to view this order.');
@@ -2040,11 +2041,6 @@ class HomeController extends Controller
         
         // Total unread messages for tab display
         $unreadMessages = $clientUnreadCount + $supportUnreadCount;
-        
-        // Register human_filesize helper function in the view
-        view()->share('human_filesize', function($bytes, $precision = 2) {
-            return $this->humanFilesize($bytes, $precision);
-        });
         
         return view('writers.AssignedOrder', [
             'order' => $order,

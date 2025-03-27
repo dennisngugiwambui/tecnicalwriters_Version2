@@ -184,7 +184,7 @@
                                     <div class="flex items-center text-xs text-gray-500">
                                         <span>{{ $file->created_at->format('M d, Y') }}</span>
                                         <span class="mx-1">•</span>
-                                        
+                                        <span>{{ $file->size ? number_format($file->size / 1024, 1) . ' KB' : 'N/A' }}</span>
                                         @if($file->description)
                                         <span class="mx-1">•</span>
                                         <span class="px-1.5 py-0.5 bg-gray-100 rounded-full">{{ $file->description }}</span>
@@ -280,7 +280,7 @@
                                                                     <input type="hidden" name="file_id" value="{{ $file->id }}">
                                                                     <button type="submit" class="text-blue-600 hover:underline">{{ $file->name }}</button>
                                                                 </form>
-                                                                <span class="ml-1 text-gray-500">({{ human_filesize($file->size) }})</span>
+                                                                <span class="ml-1 text-gray-500">({{ number_format($file->size / 1024, 1) }} KB)</span>
                                                             </div>
                                                         @endforeach
                                                     </div>
@@ -355,7 +355,7 @@
                                                                     <input type="hidden" name="file_id" value="{{ $file->id }}">
                                                                     <button type="submit" class="text-blue-600 hover:underline">{{ $file->name }}</button>
                                                                 </form>
-                                                                <span class="ml-1 text-gray-500">({{ human_filesize($file->size) }})</span>
+                                                                <span class="ml-1 text-gray-500">({{ number_format($file->size / 1024, 1) }} KB)</span>
                                                             </div>
                                                         @endforeach
                                                     </div>
@@ -781,6 +781,11 @@
                         const now = new Date();
                         const formattedTime = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
                         
+                        // Format file size (kb)
+                        const formatFileSize = (size) => {
+                            return (size / 1024).toFixed(1) + ' KB';
+                        };
+                        
                         // Build message HTML
                         messageDiv.innerHTML = `
                             <div class="ml-2 flex-shrink-0 h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
@@ -831,15 +836,6 @@
                 submitButton.disabled = false;
                 submitButton.innerHTML = originalButtonText;
             });
-        }
-        
-        // Helper function to format file size
-        function formatFileSize(bytes) {
-            if (!bytes) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
         
         // Upload Files Modal
@@ -1018,7 +1014,7 @@
         }
         
         // Handle file selection via input
-        function handleFileSelect(event) {
+        window.handleFileSelect = function(event) {
             const files = event.target.files;
             if (files.length > 0) {
                 addFilesToUpload(files);
@@ -1026,7 +1022,7 @@
         }
         
         // Handle drag and drop
-        function handleFileDrop(event) {
+        window.handleFileDrop = function(event) {
             event.preventDefault();
             event.stopPropagation();
             
@@ -1040,7 +1036,7 @@
             }
         }
         
-        function handleDragOver(event) {
+        window.handleDragOver = function(event) {
             event.preventDefault();
             event.stopPropagation();
             
@@ -1049,7 +1045,7 @@
             dropZone.classList.add('border-green-500', 'bg-green-50');
         }
         
-        function handleDragLeave(event) {
+        window.handleDragLeave = function(event) {
             event.preventDefault();
             event.stopPropagation();
             
@@ -1104,7 +1100,8 @@
                     bgClass = 'bg-indigo-100';
                 }
                 
-                const fileSize = formatFileSize(file.size);
+                // Calculate file size in KB
+                const fileSize = (file.size / 1024).toFixed(1) + ' KB';
                 const fileIndex = selectedFiles.length - 1;
                 
                 fileElement.innerHTML = `
@@ -1187,7 +1184,8 @@
                     bgClass = 'bg-indigo-100';
                 }
                 
-                const fileSize = formatFileSize(file.size);
+                // Calculate file size in KB
+                const fileSize = (file.size / 1024).toFixed(1) + ' KB';
                 
                 fileElement.innerHTML = `
                     <div class="flex justify-between items-center">
