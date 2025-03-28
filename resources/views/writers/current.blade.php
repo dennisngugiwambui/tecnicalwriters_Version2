@@ -156,7 +156,7 @@
                     <div class="text-gray-600 font-bold time-{{ $order->time_status }}">{{ $order->time_remaining }}</div>
                     <div class="truncate-text">{{ Str::limit($order->customer_comments, 30) }}</div>
                     <div>{{ $order->number_of_pages ?? '-' }}</div>
-                    <div class="text-gray-800 font-semibold text-lg">${{ number_format($order->amount, 2) }}</div>
+                    <div class="text-gray-800 font-semibold text-lg">${{ number_format($order->price, 2) }}</div>
                 </a>
             @endforeach
         @else
@@ -192,7 +192,7 @@
                     <div class="text-gray-600 font-bold">Completed</div>
                     <div class="truncate-text">{{ Str::limit($order->customer_comments, 30) }}</div>
                     <div>{{ $order->number_of_pages ?? '-' }}</div>
-                    <div class="text-gray-800 font-semibold text-lg">${{ number_format($order->amount, 2) }}</div>
+                    <div class="text-gray-800 font-semibold text-lg">${{ number_format($order->price, 2) }}</div>
                 </a>
             @endforeach
         @else
