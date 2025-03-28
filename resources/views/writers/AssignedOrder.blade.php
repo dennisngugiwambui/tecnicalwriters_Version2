@@ -550,7 +550,7 @@
                         @csrf
                         <input type="hidden" name="message_type" value="client">
                         <div class="mb-2">
-                            <textarea name="message" rows="3" class="block w-full rounded-lg shadow-sm border-gray-300 focus:ring-green-500 focus:border-green-500 sm:text-sm" placeholder="Type yor message to the client here..."></textarea>
+                            <textarea name="message" rows="3" class="block w-full rounded-lg shadow-sm border-gray-300 focus:ring-green-500 focus:border-green-500 sm:text-sm" placeholder="Type your message to the client here..."></textarea>
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
