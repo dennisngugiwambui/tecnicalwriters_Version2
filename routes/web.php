@@ -75,6 +75,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/writer/order/{id}/check-messages', [HomeController::class, 'checkNewMessages'])->name('writer.message.check');
     Route::get('/writer/messages/list', [HomeController::class, 'getMessagesList'])->name('writer.messages.list');
     Route::get('/writer/messages/search', [HomeController::class, 'searchMessages'])->name('writer.messages.search');
+
+    Route::post('/writer/order/{id}/confirm', [App\Http\Controllers\HomeController::class, 'confirmAssignment'])->name('writer.confirm.assignment');
+    Route::post('/writer/order/{id}/reject', [App\Http\Controllers\HomeController::class, 'rejectAssignment'])->name('writer.reject.assignment');
     
     // File upload routes
    // Route::get('/upload/modal/{orderId}', [UploadController::class, 'showUploadModal'])->name('upload.modal');
