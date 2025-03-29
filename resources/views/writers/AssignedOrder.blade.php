@@ -548,7 +548,7 @@
                     <!-- Client Message Form -->
                     <form id="clientMessageForm" action="{{ route('writer.send.message', $order->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        <input type="hidden" name="message_type" value="client">
+                        <input type="hidden" name="message_type" value="cliet">
                         <div class="mb-2">
                             <textarea name="message" rows="3" class="block w-full rounded-lg shadow-sm border-gray-300 focus:ring-green-500 focus:border-green-500 sm:text-sm" placeholder="Type your message to the client here..."></textarea>
                         </div>
