@@ -59,7 +59,7 @@ Route::middleware(['auth'])->group(function () {
     
     // Order management routes
     Route::post('/bid/submit/{id}', [HomeController::class, 'submitBid'])->name('writer.bid.submit');
-    Route::post('/file/download', [HomeController::class, 'download'])->name('writer.download');
+    Route::post('/writer/order/{id}/confirm', [App\Http\Controllers\HomeController::class, 'confirmAssignment'])->name('writer.confirm.assignment');
     Route::post('/file/download-multiple', [HomeController::class, 'downloadMultiple'])->name('writer.file.downloadMultiple');
     Route::get('/writer/order/{id}/details', [HomeController::class, 'availableOrderDetails'])->name('writer.order.details');
     Route::post('/writer/order/{id}/message', [HomeController::class, 'sendMessage'])->name('writer.message.send');
