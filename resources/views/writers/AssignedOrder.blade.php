@@ -1969,7 +1969,7 @@ function uploadFiles() {
         
         xhr.open('POST', endpoint, true);
         xhr.send(formData);
-        console.log(`Trying upload to ${endpoint}`);
+        console.log(`Trying upload to ${endpoint}`)
     };
     
     // Start trying endpoints
