@@ -1971,7 +1971,7 @@ function uploadFiles() {
 function closeProcessingModal() {
     const processingModal = document.getElementById('processingModal');
     if (!processingModal.classList.contains('hidden')) {
-        const processingContent = document.getElementById('processingModalContent')
+        const processingContent = document.getElementById('processingModalContent');
         
         processingContent.classList.remove('scale-100', 'opacity-100');
         processingContent.classList.add('scale-95', 'opacity-0');
