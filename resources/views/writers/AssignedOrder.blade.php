@@ -1977,7 +1977,7 @@ function closeProcessingModal() {
         processingContent.classList.add('scale-95', 'opacity-0');
         
         setTimeout(() => {
-            processingModal.classList.add('hidden');
+            processingModal.classList.add('hidden')
         }, 300);
     }
 }
