@@ -1965,7 +1965,7 @@ function uploadFiles() {
     };
     
     // Start with primary URL
-    tryUpload('/writer/order/upload-files')
+    tryUpload('/writer/order/upload-files');
 }
 
 function closeProcessingModal() {
