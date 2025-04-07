@@ -1978,7 +1978,7 @@ function closeProcessingModal() {
         
         setTimeout(() => {
             processingModal.classList.add('hidden');
-        }, 30);
+        }, 300);
     }
 }
 
