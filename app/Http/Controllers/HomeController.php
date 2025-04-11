@@ -235,6 +235,97 @@ class HomeController extends Controller
     }
 
     /**
+     * Display files for a specific order.
+     *
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function orderFiles($id)
+    {
+        // Find order and verify permissions
+        $order = Order::where(function($query) use ($id) {
+                $query->where('id', $id)
+                    ->where('writer_id', Auth::id());
+            })
+            ->with('files')
+            ->firstOrFail();
+        
+        // Format files for the view
+        $files = $order->files->map(function($file) {
+            return [
+                'id' => $file->id,
+                'name' => $file->original_name,
+                'size' => $this->humanFilesize($file->size),
+                'uploaded_by' => $file->uploader_type === 'CUSTOMER' ? 'Client' : 
+                                ($file->uploader_type === 'ADMIN' ? 'Admin' : 'Writer'),
+                'uploaded_at' => $file->created_at->format('M d, Y h:i A'),
+                'description' => $file->description,
+                'mime_type' => $file->mime_type
+            ];
+        });
+        
+        return view('writers.order-files', compact('order', 'files'));
+    }
+
+    /**
+     * Download multiple files as a ZIP
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function downloadMultipleFiles(Request $request)
+    {
+        try {
+            $request->validate([
+                'file_ids' => 'required|array',
+                'file_ids.*' => 'exists:files,id'
+            ]);
+            
+            $fileIds = $request->file_ids;
+            
+            // Get the files
+            $files = File::whereIn('id', $fileIds)->get();
+            
+            // Create a temporary zip file
+            $zipFileName = 'order-files-' . time() . '.zip';
+            $tempPath = storage_path('app/public/temp');
+            
+            // Create temp directory if it doesn't exist
+            if (!file_exists($tempPath)) {
+                mkdir($tempPath, 0755, true);
+            }
+            
+            $zipPath = $tempPath . '/' . $zipFileName;
+            
+            $zip = new \ZipArchive();
+            if ($zip->open($zipPath, \ZipArchive::CREATE) !== true) {
+                throw new \Exception('Cannot create zip file');
+            }
+            
+            // Add files to the zip
+            foreach ($files as $file) {
+                if (Storage::disk('public')->exists($file->path)) {
+                    $fileContent = Storage::disk('public')->get($file->path);
+                    $zip->addFromString($file->original_name, $fileContent);
+                }
+            }
+            
+            $zip->close();
+            
+            // Return the zip file
+            return response()->download($zipPath, $zipFileName)->deleteFileAfterSend(true);
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error downloading multiple files: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error downloading files: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Display orders that are on revision
      *
      * @return \Illuminate\Contracts\Support\Renderable
@@ -2140,15 +2231,23 @@ class HomeController extends Controller
                 ->firstOrFail();
                 
             // Check if order status allows uploads
-            if (!in_array($order->status, ['confirmed', 'revision'])) {
+            if (!in_array($order->status, ['confirmed', 'in_progress', 'revision'])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You can only upload files when an order is in confirmed or revision status'
+                    'message' => 'You can only upload files when an order is in confirmed, in progress, or revision status'
                 ], 403);
             }
             
             $uploadedFiles = [];
             $hasCompletedFile = false;
+            
+            // Create storage directory if it doesn't exist
+            $storageDirectory = 'order_files/' . $order->id;
+            $fullPath = storage_path('app/public/' . $storageDirectory);
+            
+            if (!file_exists($fullPath)) {
+                mkdir($fullPath, 0755, true);
+            }
             
             // Process each file
             foreach ($request->file('files') as $index => $file) {
@@ -2160,8 +2259,8 @@ class HomeController extends Controller
                 // Generate unique filename
                 $fileName = $order->id . '_' . uniqid() . '.' . $extension;
                 
-                // Store file in public storage
-                $path = $file->storeAs('order_files/' . $order->id, $fileName, 'public');
+                // Store file
+                $path = $file->storeAs($storageDirectory, $fileName, 'public');
                 
                 // Get description
                 $description = isset($request->descriptions[$index]) ? $request->descriptions[$index] : null;
@@ -2216,7 +2315,7 @@ class HomeController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Error uploading files: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error uploading files: ' . $e->getMessage());
             
             return response()->json([
                 'success' => false,
@@ -2231,16 +2330,27 @@ class HomeController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function downloadFile(Request $request)
+    /**
+     * Download a file
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function downloadFile($id)
     {
         try {
-            // Validate request
-            $request->validate([
-                'file_id' => 'required|exists:files,id'
-            ]);
-            
             // Get file
-            $file = File::findOrFail($request->file_id);
+            $file = File::findOrFail($id);
+            
+            // Check user permissions
+            $order = Order::find($file->fileable_id);
+            
+            if (!$order || ($order->writer_id != Auth::id() && Auth::user()->usertype !== 'admin')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to download this file'
+                ], 403);
+            }
             
             // Check if file exists in storage
             if (!Storage::disk('public')->exists($file->path)) {
@@ -2254,7 +2364,7 @@ class HomeController extends Controller
             return Storage::disk('public')->download($file->path, $file->original_name);
             
         } catch (\Exception $e) {
-            Log::error('Error downloading file: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error downloading file: ' . $e->getMessage());
             
             return response()->json([
                 'success' => false,

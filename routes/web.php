@@ -79,6 +79,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/writer/order/{id}/confirm', [App\Http\Controllers\HomeController::class, 'confirmAssignment'])->name('writer.confirm.assignment');
     Route::post('/writer/order/{id}/reject', [App\Http\Controllers\HomeController::class, 'rejectAssignment'])->name('writer.reject.assignment');
     
+
+    // Add these routes inside the auth middleware group
+    // File Management for Writers
+     // File Management - updated for consistency
+     Route::post('/writer/order/upload-files', [HomeController::class, 'uploadFiles'])->name('writer.order.upload');
+     Route::get('/writer/order/{id}/files', [HomeController::class, 'orderFiles'])->name('writer.order.files');
+     
+     // Use FileController for downloads to keep code DRY
+     Route::get('/writer/file/{id}/download', [FileController::class, 'writerDownload'])->name('writer.file.download');
+     Route::post('/writer/file/download-multiple', [FileController::class, 'writerDownloadMultiple'])->name('writer.file.download-multiple');
     // File upload routes
    // Route::get('/upload/modal/{orderId}', [UploadController::class, 'showUploadModal'])->name('upload.modal');
    // Route::post('/upload/file', [UploadController::class, 'uploadFile'])->name('upload.file');
