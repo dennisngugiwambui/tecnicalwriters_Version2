@@ -1,4 +1,4 @@
-{{-- resources/views/orders/index.blade.php --}
+{{-- resources/views/orders/index.blade.php --}}
 @extends('layouts.app')
 
 @section('styles')
