@@ -144,6 +144,39 @@ class HomeController extends Controller
     }
 
     /**
+     * Display files for a specific order.
+     *
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function orderFiles($id)
+    {
+        // Find order and verify permissions
+        $order = Order::where(function($query) use ($id) {
+                $query->where('id', $id)
+                    ->where('writer_id', Auth::id());
+            })
+            ->with('files')
+            ->firstOrFail();
+        
+        // Format files for the view
+        $files = $order->files->map(function($file) {
+            return [
+                'id' => $file->id,
+                'name' => $file->original_name ?? $file->name,
+                'size' => $this->humanFilesize($file->size),
+                'uploaded_by' => $file->uploader_type === 'CUSTOMER' ? 'Client' : 
+                                ($file->uploader_type === 'ADMIN' ? 'Admin' : 'Writer'),
+                'uploaded_at' => $file->created_at->format('M d, Y h:i A'),
+                'description' => $file->description,
+                'mime_type' => $file->mime_type
+            ];
+        });
+        
+        return view('writers.order-files', compact('order', 'files'));
+    }
+
+    /**
      * Display current orders - split between active (CONFIRMED/UNCONFIRMED) and completed (DONE/DELIVERED)
      *
      * @return \Illuminate\Contracts\Support\Renderable
@@ -234,38 +267,7 @@ class HomeController extends Controller
         return view('writers.bids', compact('bidOrders'));
     }
 
-    /**
-     * Display files for a specific order.
-     *
-     * @param  int  $id
-     * @return \Illuminate\View\View
-     */
-    public function orderFiles($id)
-    {
-        // Find order and verify permissions
-        $order = Order::where(function($query) use ($id) {
-                $query->where('id', $id)
-                    ->where('writer_id', Auth::id());
-            })
-            ->with('files')
-            ->firstOrFail();
-        
-        // Format files for the view
-        $files = $order->files->map(function($file) {
-            return [
-                'id' => $file->id,
-                'name' => $file->original_name,
-                'size' => $this->humanFilesize($file->size),
-                'uploaded_by' => $file->uploader_type === 'CUSTOMER' ? 'Client' : 
-                                ($file->uploader_type === 'ADMIN' ? 'Admin' : 'Writer'),
-                'uploaded_at' => $file->created_at->format('M d, Y h:i A'),
-                'description' => $file->description,
-                'mime_type' => $file->mime_type
-            ];
-        });
-        
-        return view('writers.order-files', compact('order', 'files'));
-    }
+    
 
     /**
      * Download multiple files as a ZIP

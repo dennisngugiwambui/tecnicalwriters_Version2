@@ -6,6 +6,8 @@ use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\ProfileSetupController;
 use App\Http\Controllers\UploadController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\FileController;
+use App\Http\Controllers\WriterController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -97,13 +99,18 @@ Route::middleware(['auth'])->group(function () {
    // Route::get('/upload/download/{uploadId}', [UploadController::class, 'downloadFile'])->name('upload.download');
 
 
-   // Order confirmation/rejection routes
+   // Order confirmation/rejection route
    // Add these routes to the existing routes file within the auth middleware group
 
-// Order confirmation/rejection routes
-Route::get('/writer/order/{id}/confirm', [App\Http\Controllers\HomeController::class, 'confirmAssignment'])->name('writer.confirm.assignment');
-Route::get('/writer/order/{id}/reject', [App\Http\Controllers\HomeController::class, 'rejectAssignment'])->name('writer.reject.assignment');
-
+    // Order confirmation/rejection routes
+    Route::get('/writer/order/{id}/confirm', [App\Http\Controllers\HomeController::class, 'confirmAssignment'])->name('writer.confirm.assignment');
+    Route::get('/writer/order/{id}/reject', [App\Http\Controllers\HomeController::class, 'rejectAssignment'])->name('writer.reject.assignment');
+    Route::post('/writer/messages/send', [HomeController::class, 'sendNewMessage'])->name('writer.message.sendNew');
+    Route::get('/writer/messages/thread/{orderId}', [HomeController::class, 'viewMessageThread'])->name('writer.message.thread');
+    Route::post('/writer/messages/reply', [HomeController::class, 'replyToMessage'])->name('writer.message.reply');
+    Route::get('/writer/order/{id}/check-messages', [HomeController::class, 'checkNewMessages'])->name('writer.message.check');
+    Route::get('/writer/messages/list', [HomeController::class, 'getMessagesList'])->name('writer.messages.list');
+    Route::get('/writer/messages/search', [HomeController::class, 'searchMessages'])->name('writer.messages.search');
 
     //Route::get('/finance', [HomeController::class, 'userFinance'])->name('writer.finance');
     Route::post('/finance/request-payment', [HomeController::class, 'requestPayment'])->name('finance.request-payment');
