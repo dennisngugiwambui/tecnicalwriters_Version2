@@ -99,8 +99,8 @@ Route::middleware(['auth'])->group(function () {
    // Route::get('/upload/download/{uploadId}', [UploadController::class, 'downloadFile'])->name('upload.download');
 
 
-   // Order confirmation/rejection route
-   // Add these routes to the existing routes file within the auth middleware group
+   // Order confirmation/rejection routes
+   // Add these routes to the existing routes file within the auth middleware grou
 
     // Order confirmation/rejection routes
     Route::get('/writer/order/{id}/confirm', [App\Http\Controllers\HomeController::class, 'confirmAssignment'])->name('writer.confirm.assignment');
