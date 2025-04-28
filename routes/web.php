@@ -99,7 +99,7 @@ Route::middleware(['auth'])->group(function () {
    // Route::get('/upload/download/{uploadId}', [UploadController::class, 'downloadFile'])->name('upload.download');
 
 
-   // Order confirmation/rejection routes
+   // Order confirmation/rejection route
    // Add these routes to the existing routes file within the auth middleware gro
 
     // Order confirmation/rejection routes
