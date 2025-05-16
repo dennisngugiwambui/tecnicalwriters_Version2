@@ -100,7 +100,7 @@ Route::middleware(['auth'])->group(function () {
 
 
    // Order confirmation/rejection route
-   // Add these routes to the existing routes file within the auth middleware grou
+   // Add these routes to the existing routes file within the auth middleware gr
 
     // Order confirmation/rejection routes
     Route::get('/writer/order/{id}/confirm', [App\Http\Controllers\HomeController::class, 'confirmAssignment'])->name('writer.confirm.assignment');
