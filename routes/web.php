@@ -103,7 +103,7 @@ Route::middleware(['auth'])->group(function () {
    // Add these routes to the existing routes file within the auth middleware group
 
     // Order confirmation/rejection routes 
-    //1234123456
+    //123412345
     Route::get('/writer/order/{id}/confirm', [App\Http\Controllers\HomeController::class, 'confirmAssignment'])->name('writer.confirm.assignment');
     Route::get('/writer/order/{id}/reject', [App\Http\Controllers\HomeController::class, 'rejectAssignment'])->name('writer.reject.assignment');
     Route::post('/writer/messages/send', [HomeController::class, 'sendNewMessage'])->name('writer.message.sendNew');
