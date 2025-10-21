@@ -1,4 +1,5 @@
 
+
 {{-- resources/views/orders/index.blade.php --}}
 @extends('layouts.app')
 
